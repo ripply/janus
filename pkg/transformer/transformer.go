@@ -73,7 +73,7 @@ func (t *Transformer) Transform(req *eth.JSONRPCRequest) (interface{}, error) {
 func (t *Transformer) getProxy(method string) (ETHProxy, error) {
 	proxy, ok := t.transformers[method]
 	if !ok {
-		return nil, errors.Errorf("method %s is unsupported", method)
+		return nil, errors.Errorf("The method %s does not exist/is not available", method)
 	}
 	return proxy, nil
 }
