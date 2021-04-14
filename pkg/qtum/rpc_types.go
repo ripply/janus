@@ -1529,3 +1529,37 @@ type (
 		Version     int64  `json:"version"`
 	}
 )
+
+// ========= getnetworkinfo ========== //
+type (
+	NetworkInfoResponse struct {
+		Version            int64                     `json:"version"`
+		Subversion         string                    `json:"subversion"`
+		ProtocolVersion    int64                     `json:"protocolversion"`
+		LocalServices      string                    `json:"localservices"`
+		LocalServicesNames []string                  `json:"localservicesnames`
+		LocalRelay         bool                      `json:"localrelay"`
+		TimeOffset         int64                     `json:"timeoffset"`
+		Connections        int64                     `json:"connections"`
+		NetworkActive      bool                      `json:"networkactive"`
+		Networks           []NetworkInfoNetworkInfo  `json:"networks"`
+		RelayFee           decimal.Decimal           `json:"relayfee"`
+		IncrementalFee     decimal.Decimal           `json:"incrementalfee"`
+		LocalAddresses     []NetworkInfoLocalAddress `json:"localaddresses"`
+		Warnings           string                    `json:"warnings"`
+	}
+
+	NetworkInfoNetworkInfo struct {
+		Name                      string `json:"name"`
+		Limited                   bool   `json:"limited"`
+		Reachable                 bool   `json:"reachable"`
+		Proxy                     string `json:"proxy"`
+		ProxyRandomizeCredentials bool   `json:"proxy_randomize_credentials"`
+	}
+
+	NetworkInfoLocalAddress struct {
+		Address string `json:"address"`
+		Port    uint64 `json:"port"`
+		Score   int64  `json:"score"`
+	}
+)
