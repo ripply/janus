@@ -367,3 +367,16 @@ func (m *Method) SendRawTransaction(req *SendRawTransactionRequest) (resp *SendR
 	}
 	return
 }
+
+func (m *Method) GetPeerInfo() (resp []GetPeerInfoResponse, err error) {
+	if err := m.Request(MethodGetPeerInfo, []string{}, &resp); err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("function", "GetPeerInfo", "error", err)
+		}
+		return nil, err
+	}
+	if m.IsDebugEnabled() {
+		m.GetDebugLogger().Log("function", "GetPeerInfo", "msg", "Successfully got peer info")
+	}
+	return
+}

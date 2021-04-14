@@ -1456,3 +1456,76 @@ func (req *GetAddressBalanceRequest) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(params)
 }
+
+// ======== getpeerinfo ========= //
+type (
+	GetPeerInfoResponse struct {
+		// Peer index
+		Id int `json:"id"`
+		// The IP address and port of the peer - host:port
+		Address string `json:"addr"`
+		// Bind address of the connection to the peer - ip:port
+		AddressBind string `json:"addrbind"`
+		// Local address as reported by the peer - ip:port
+		AddressLocal string `json:"addrlocal"`
+		// The services offered
+		Services string `json:"services"`
+		// Whether peer has asked us to relay transactions to it
+		RelayTransactions bool `json:"relaytxes"`
+		// The time in seconds since epoch (Jan 1 1970 GMT) of the last send
+		LastSend uint64 `json:"lastsend"`
+		// The time in seconds since epoch (Jan 1 1970 GMT) of the last receive
+		LastReceive uint64 `json:"lastrecv"`
+		// The total bytes sent
+		BytesSent uint64 `json:"bytessent"`
+		// The total bytes received
+		BytesReceived uint64 `json:"bytesrecv"`
+		// The connection time in seconds since epoch (Jan 1 1970 GMT)
+		ConnectionTime uint64 `json:"conntime"`
+		// The time offset in seconds
+		TimeOffset uint64 `json:"timeoffset"`
+		// ping time (if available)
+		PingTime decimal.Decimal `json:"pingtime"`
+		// minimum observed ping time (if any at all)
+		MinimumPing decimal.Decimal `json:"minping"`
+		// ping wait (if non-zero)
+		PingWait decimal.Decimal `json:"pingwait"`
+		// The peer version, such as 70001
+		Version int64 `json:"version"`
+		// The string version
+		Subversion string `json:"subver"`
+		// Inbound (true) or Outbound (false)
+		Inbound bool `json:"inbound"`
+		// Whether connection was due to addnode/-connect or if it was an automatic/inbound connection
+		Addnode bool `json:"addnode"`
+		// The starting height (block) of the peer
+		StartingHeight uint64 `json:"startingheight"`
+		// The ban score
+		BanScore int64 `json:"banscore"`
+		// The last header we have in common with this peer
+		SyncedHeaders int64 `json:"synced_headers"`
+		// The last block we have in common with this peer
+		SyncedBlocks int64 `json:"synced_blocks"`
+		// The heights of blocks we're currently asking from this peer
+		Inflight []int64 `json:"inflight"`
+		// Whether the peer is whitelisted
+		Whitelisted bool `json:"whitelisted"`
+		// The total bytes sent aggregated by message type
+		BytesSentPerMessage PeerInfoBytesPerMessage `json:"bytessent_per_msg"`
+		// The total bytes received aggregated by message type
+		BytesReceivedPerMessage PeerInfoBytesPerMessage `json:"bytesrecv_per_msg"`
+	}
+
+	PeerInfoBytesPerMessage struct {
+		Address     int64  `json:"addr"`
+		FeeFilter   uint64 `json:"feefilter"`
+		GetHeaders  uint64 `json:"getheaders"`
+		Headers     uint64 `json:"headers"`
+		Ping        uint64 `json:"ping"`
+		Pong        uint64 `json:"pong"`
+		SendCompact uint64 `json:"sendcmpct"`
+		SendHeaders uint64 `json:"sendheaders"`
+		Verack      uint64 `json:"verack"`
+		Version     int64  `json:"version"`
+	}
+)
