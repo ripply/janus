@@ -276,6 +276,42 @@ func (r *GetTransactionByHashRequest) UnmarshalJSON(data []byte) error {
 	}
 }
 
+// ========== GetTransactionByBlockNumberAndIndex ========== //
+
+type GetTransactionByBlockNumberAndIndex struct {
+	TransactionHash  string
+	TransactionIndex string
+}
+
+func (r *GetTransactionByBlockNumberAndIndex) UnmarshalJSON(data []byte) error {
+	var params []interface{}
+	if err := json.Unmarshal(data, &params); err != nil {
+		return errors.Wrap(err, "couldn't unmarhsal parameters")
+	}
+	paramsNum := len(params)
+	if paramsNum == 0 {
+		return errors.Errorf("missing value for required argument 0")
+	} else if paramsNum == 1 {
+		return errors.Errorf("missing value for required argument 1")
+	} else if paramsNum > 2 {
+		return errors.Errorf("too many arguments, want at most 2")
+	}
+
+	transactionHash, ok := params[0].(string)
+	if !ok {
+		return newErrInvalidParameterType(1, params[0], "")
+	}
+	r.TransactionHash = transactionHash
+
+	transactionIndex, ok := params[1].(string)
+	if !ok {
+		return newErrInvalidParameterType(2, params[1], "")
+	}
+	r.TransactionIndex = transactionIndex
+
+	return nil
+}
+
 // ========== GetTransactionReceipt ============= //
 
 type (
