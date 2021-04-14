@@ -645,6 +645,32 @@ type GetUTXOsRequest struct {
 	MinSumAmount decimal.Decimal
 }
 
+// ======= web3_sha3 ======= //
+type Web3Sha3Request struct {
+	Message string
+}
+
+func (r *Web3Sha3Request) UnmarshalJSON(data []byte) error {
+	var params []interface{}
+	if err := json.Unmarshal(data, &params); err != nil {
+		return errors.Wrap(err, "couldn't unmarhsal parameters")
+	}
+	paramsNum := len(params)
+	if paramsNum == 0 {
+		return errors.Errorf("missing value for required argument 0")
+	} else if paramsNum > 1 {
+		return errors.Errorf("too many arguments, want at most 1")
+	}
+
+	message, ok := params[0].(string)
+	if !ok {
+		return newErrInvalidParameterType(1, params[0], "")
+	}
+	r.Message = message
+
+	return nil
+}
+
 func (req *GetUTXOsRequest) UnmarshalJSON(params []byte) error {
 	paramsBytesNum := len(params)
 	if paramsBytesNum < 2 {
