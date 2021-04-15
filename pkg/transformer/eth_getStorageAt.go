@@ -1,7 +1,6 @@
 package transformer
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/qtumproject/janus/pkg/eth"
@@ -25,7 +24,7 @@ func (p *ProxyETHGetStorageAt) Request(rawreq *eth.JSONRPCRequest) (interface{},
 	}
 
 	qtumAddress := utils.RemoveHexPrefix(req.Address)
-	blockNumber, err := getBlockNumberByParam(p.Qtum, json.RawMessage(fmt.Sprintf("\"%s\"", req.BlockNumber)), false)
+	blockNumber, err := getBlockNumberByParam(p.Qtum, req.BlockNumber, false)
 	if err != nil {
 		p.GetDebugLogger().Log("msg", fmt.Sprintf("Failed to get block number by param for '%s'", req.BlockNumber), "err", err)
 		return nil, err

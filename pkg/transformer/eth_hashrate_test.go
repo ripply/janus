@@ -39,7 +39,7 @@ func TestHashrateRequest(t *testing.T) {
 	if !reflect.DeepEqual(got, &want) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
-			request,
+			*request,
 			want,
 			got,
 		)

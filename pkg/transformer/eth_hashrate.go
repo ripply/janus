@@ -1,10 +1,11 @@
 package transformer
 
 import (
+	"math"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
-	"math"
 )
 
 //ProxyETHGetHashrate implements ETHProxy

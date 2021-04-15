@@ -153,8 +153,17 @@ func formatQtumNonce(nonce int) string {
 // 	- string "earliest" for the genesis block
 // 	- string "pending" - for the pending state/transactions
 // Uses defaultVal to differntiate from a eth_getBlockByNumber req and eth_getLogs/eth_newFilter
-func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bool) (*big.Int, error) {
-	if len(rawParam) < 1 {
+func getBlockNumberByRawParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bool) (*big.Int, error) {
+	if !isBytesOfString(rawParam) {
+		return nil, errors.Errorf("invalid parameter format - string is expected")
+	}
+
+	param := string(rawParam[1 : len(rawParam)-1]) // trim \" runes
+	return getBlockNumberByParam(p, param, defaultVal)
+}
+
+func getBlockNumberByParam(p *qtum.Qtum, param string, defaultVal bool) (*big.Int, error) {
+	if len(param) < 1 {
 		if defaultVal {
 			res, err := p.GetBlockChainInfo()
 			if err != nil {
@@ -167,11 +176,7 @@ func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bo
 		}
 
 	}
-	if !isBytesOfString(rawParam) {
-		return nil, errors.Errorf("invalid parameter format - string is expected")
-	}
 
-	param := string(rawParam[1 : len(rawParam)-1]) // trim \" runes
 	switch param {
 	case "latest":
 		res, err := p.GetBlockChainInfo()
@@ -194,6 +199,7 @@ func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bo
 	default: // hex number
 		n, err := utils.DecodeBig(param)
 		if err != nil {
+			p.GetDebugLogger().Log("function", "getBlockNumberByParam", "msg", "Failed to decode hex parameter", "value", param)
 			return nil, errors.Wrap(err, "couldn't decode hex number to big int")
 		}
 		return n, nil

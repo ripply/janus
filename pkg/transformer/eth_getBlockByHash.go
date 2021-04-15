@@ -30,6 +30,7 @@ func (p *ProxyETHGetBlockByHash) Request(rawreq *eth.JSONRPCRequest) (interface{
 func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.GetBlockByHashResponse, error) {
 	blockHeader, err := p.GetBlockHeader(req.BlockHash)
 	if err != nil {
+		p.GetDebugLogger().Log("msg", "couldn't get block header", "blockHash", req.BlockHash)
 		return nil, errors.WithMessage(err, "couldn't get block header")
 	}
 	block, err := p.GetBlock(req.BlockHash)

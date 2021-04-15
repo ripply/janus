@@ -23,7 +23,7 @@ func (p *ProxyETHGetTransactionByBlockNumberAndIndex) Request(rawreq *eth.JSONRP
 	if err := json.Unmarshal(rawreq.Params, &req); err != nil {
 		return nil, errors.Wrap(err, "couldn't unmarshal request")
 	}
-	if req.TransactionHash == "" {
+	if req.BlockNumber == "" {
 		return nil, errors.New("invalid argument 0: empty hex string")
 	}
 
@@ -31,26 +31,31 @@ func (p *ProxyETHGetTransactionByBlockNumberAndIndex) Request(rawreq *eth.JSONRP
 }
 
 func (p *ProxyETHGetTransactionByBlockNumberAndIndex) request(req *eth.GetTransactionByBlockNumberAndIndex) (interface{}, error) {
-	transactionIndex, err := hexutil.DecodeUint64(req.TransactionIndex)
+	// Decoded by ProxyETHGetTransactionByBlockHashAndIndex, quickly decode so we can fail cheaply without making any calls
+	_, err := hexutil.DecodeUint64(req.TransactionIndex)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid argument 1")
 	}
 
-	// Proxy eth_getBlockByNumber and return the transaction at requested index
-	getBlockByNumber := ProxyETHGetBlockByNumber{p.Qtum}
-	blockByNumber, err := getBlockByNumber.request(&eth.GetBlockByNumberRequest{BlockNumber: json.RawMessage([]byte(`"` + req.TransactionHash + `"`)), FullTransaction: true})
+	blockNum, err := getBlockNumberByParam(p.Qtum, req.BlockNumber, false)
+	if err != nil {
+		return nil, errors.WithMessage(err, "couldn't get block number by parameter")
+	}
 
+	blockHash, err := proxyETHGetBlockByHash(p, p.Qtum, blockNum)
 	if err != nil {
 		return nil, err
 	}
-
-	if blockByNumber == nil {
+	if blockHash == nil {
 		return nil, nil
 	}
 
-	if len(blockByNumber.Transactions) < int(transactionIndex) {
-		return nil, nil
-	}
-
-	return blockByNumber.Transactions[int(transactionIndex)], nil
+	var (
+		getBlockByHashReq = &eth.GetTransactionByBlockHashAndIndex{
+			BlockHash:        string(*blockHash),
+			TransactionIndex: req.TransactionIndex,
+		}
+		proxy = &ProxyETHGetTransactionByBlockHashAndIndex{Qtum: p.Qtum}
+	)
+	return proxy.request(getBlockByHashReq)
 }
