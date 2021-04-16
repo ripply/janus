@@ -38,7 +38,7 @@ func TestGetAccountInfoRequest(t *testing.T) {
 		// Storage json.RawMessage `json:"storage"`,
 		Code: "606060405236156100ad576000357c0100000000000000000...",
 	}
-	err = mockedClientDoer.AddResponse(3, qtum.MethodGetAccountInfo, getAccountInfoResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodGetAccountInfo, getAccountInfoResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestGetCodeInvalidAddressRequest(t *testing.T) {
 	if getAccountInfoErrorResponse == nil {
 		panic("mocked error response is nil")
 	}
-	err = mockedClientDoer.AddError(3, qtum.MethodGetAccountInfo, getAccountInfoErrorResponse)
+	err = mockedClientDoer.AddError(qtum.MethodGetAccountInfo, getAccountInfoErrorResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

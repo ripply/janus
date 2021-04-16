@@ -12,7 +12,7 @@ import (
 func TestGetStorageAtRequest(t *testing.T) {
 	index := "abcde"
 	blockNumber := "0x1234"
-	requestParams := []json.RawMessage{[]byte(`"0x1b4"`), []byte(`"0x` + index + `"`), []byte(`"` + blockNumber + `"`)}
+	requestParams := []json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`"0x` + index + `"`), []byte(`"` + blockNumber + `"`)}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
@@ -26,7 +26,7 @@ func TestGetStorageAtRequest(t *testing.T) {
 	getStorageResponse := qtum.GetStorageResponse{}
 	getStorageResponse["12345"] = make(map[string]string)
 	getStorageResponse["12345"][index] = value
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetStorage, getStorageResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetStorage, getStorageResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestGetStorageAtRequest(t *testing.T) {
 func TestGetStorageAtUnknownFieldRequest(t *testing.T) {
 	index := "abcde"
 	blockNumber := "0x1234"
-	requestParams := []json.RawMessage{[]byte(`"0x1b4"`), []byte(`"0x1234"`), []byte(`"` + blockNumber + `"`)}
+	requestParams := []json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`"0x1234"`), []byte(`"` + blockNumber + `"`)}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
@@ -68,7 +68,7 @@ func TestGetStorageAtUnknownFieldRequest(t *testing.T) {
 	getStorageResponse := qtum.GetStorageResponse{}
 	getStorageResponse["12345"] = make(map[string]string)
 	getStorageResponse["12345"][index] = value
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetStorage, getStorageResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetStorage, getStorageResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

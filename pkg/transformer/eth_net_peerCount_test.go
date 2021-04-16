@@ -38,7 +38,7 @@ func testPeerCountRequest(t *testing.T, clients int) {
 	for i := 0; i < clients; i++ {
 		getPeerInfoResponse = append(getPeerInfoResponse, qtum.GetPeerInfoResponse{})
 	}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetPeerInfo, getPeerInfoResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetPeerInfo, getPeerInfoResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

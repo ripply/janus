@@ -30,7 +30,14 @@ func newDoerMappedMock() *doerMappedMock {
 //type for mocking requests to client with request -> response mapping
 type doerMappedMock struct {
 	mutex     sync.Mutex
+	latestId  int
 	Responses map[string][]byte
+}
+
+func (d doerMappedMock) updateId(id int) {
+	if id > d.latestId {
+		d.latestId = id
+	}
 }
 
 func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
@@ -105,7 +112,21 @@ func (d *doerMappedMock) AddRawResponse(requestType string, rawResponse []byte) 
 	d.mutex.Unlock()
 }
 
-func (d *doerMappedMock) AddResponse(requestID int, requestType string, responseResult interface{}) error {
+func (d *doerMappedMock) AddResponse(requestType string, responseResult interface{}) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	requestID := d.latestId + 1
+	responseRaw, err := prepareRawResponse(requestID, responseResult, nil)
+	if err != nil {
+		return err
+	}
+
+	d.updateId(requestID)
+	d.Responses[requestType] = responseRaw
+	return nil
+}
+
+func (d *doerMappedMock) AddResponseWithRequestID(requestID int, requestType string, responseResult interface{}) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	responseRaw, err := prepareRawResponse(requestID, responseResult, nil)
@@ -113,11 +134,26 @@ func (d *doerMappedMock) AddResponse(requestID int, requestType string, response
 		return err
 	}
 
+	d.updateId(requestID)
 	d.Responses[requestType] = responseRaw
 	return nil
 }
 
-func (d *doerMappedMock) AddError(requestID int, requestType string, responseError *eth.JSONRPCError) error {
+func (d *doerMappedMock) AddError(requestType string, responseError *eth.JSONRPCError) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	requestID := d.latestId + 1
+	responseRaw, err := prepareRawResponse(requestID, nil, responseError)
+	if err != nil {
+		return err
+	}
+
+	d.updateId(requestID)
+	d.Responses[requestType] = responseRaw
+	return nil
+}
+
+func (d *doerMappedMock) AddErrorWithRequestID(requestID int, requestType string, responseError *eth.JSONRPCError) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	responseRaw, err := prepareRawResponse(requestID, nil, responseError)
@@ -125,6 +161,7 @@ func (d *doerMappedMock) AddError(requestID int, requestType string, responseErr
 		return err
 	}
 
+	d.updateId(requestID)
 	d.Responses[requestType] = responseRaw
 	return nil
 }

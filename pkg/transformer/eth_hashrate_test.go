@@ -24,7 +24,7 @@ func TestHashrateRequest(t *testing.T) {
 	}
 
 	getHashrateResponse := qtum.GetHashrateResponse{Difficulty: float64(457134700)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetStakingInfo, getHashrateResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetStakingInfo, getHashrateResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

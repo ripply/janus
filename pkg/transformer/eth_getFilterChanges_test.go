@@ -26,7 +26,7 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 
 	//preparing client response
 	getBlockCountResponse := qtum.GetBlockCountResponse{Int: big.NewInt(657660)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetBlockCount, getBlockCountResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetBlockCount, getBlockCountResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 	searchLogsResponse := qtum.SearchLogsResponse{
 		//TODO: add
 	}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodSearchLogs, searchLogsResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodSearchLogs, searchLogsResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 
 	//preparing client response
 	getBlockCountResponse := qtum.GetBlockCountResponse{Int: big.NewInt(657655)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetBlockCount, getBlockCountResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetBlockCount, getBlockCountResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -68,7 +68,7 @@ func TestGetLogs(t *testing.T) {
 	}
 
 	//Add response
-	err = clientDoerMock.AddResponse(2, qtum.MethodSearchLogs, searchLogsResponse)
+	err = clientDoerMock.AddResponseWithRequestID(2, qtum.MethodSearchLogs, searchLogsResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

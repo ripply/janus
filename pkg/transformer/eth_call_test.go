@@ -56,13 +56,13 @@ func TestEthCallRequest(t *testing.T) {
 			Bloom:     "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
 		},
 	}
-	err = clientDoerMock.AddResponse(1, qtum.MethodCallContract, callContractResponse)
+	err = clientDoerMock.AddResponseWithRequestID(1, qtum.MethodCallContract, callContractResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
-	err = clientDoerMock.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = clientDoerMock.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestRetry(t *testing.T) {
 	// async set the correct response after a time has elapsed
 	go func() {
 		time.Sleep(2 * time.Second)
-		err = clientDoerMock.AddResponse(1, qtum.MethodCallContract, callContractResponse)
+		err = clientDoerMock.AddResponseWithRequestID(1, qtum.MethodCallContract, callContractResponse)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -159,7 +159,7 @@ func TestRetry(t *testing.T) {
 	}()
 
 	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
-	err = clientDoerMock.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = clientDoerMock.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -33,13 +33,13 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 
 	//prepare responses
 	fromHexAddressResponse := qtum.FromHexAddressResponse("5JK4Gu9nxCvsCxiq9Zf3KdmA9ACza6dUn5BRLVWAYEtQabdnJ89")
-	err = mockedClientDoer.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	listUnspentResponse := qtum.ListUnspentResponse{{Amount: decimal.NewFromInt(100)}, {Amount: decimal.NewFromInt(100000)}}
-	err = mockedClientDoer.AddResponse(3, qtum.MethodListUnspent, listUnspentResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodListUnspent, listUnspentResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +94,7 @@ func TestGetBalanceRequestContract(t *testing.T) {
 		// Storage json.RawMessage `json:"storage"`,
 		// Code    string          `json:"code"`,
 	}
-	err = mockedClientDoer.AddResponse(3, qtum.MethodGetAccountInfo, getAccountInfoResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodGetAccountInfo, getAccountInfoResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

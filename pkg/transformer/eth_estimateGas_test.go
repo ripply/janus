@@ -33,7 +33,7 @@ func TestEstimateGasRequest(t *testing.T) {
 
 	//preparing responses
 	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
-	err = mockedClientDoer.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestEstimateGasRequest(t *testing.T) {
 			Excepted: "None",
 		},
 	}
-	err = mockedClientDoer.AddResponse(1, qtum.MethodCallContract, callContractResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(1, qtum.MethodCallContract, callContractResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

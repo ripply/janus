@@ -24,7 +24,7 @@ func TestMiningRequest(t *testing.T) {
 	}
 
 	getMiningResponse := qtum.GetMiningResponse{Staking: true}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetStakingInfo, getMiningResponse)
+	err = mockedClientDoer.AddResponse(qtum.MethodGetStakingInfo, getMiningResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

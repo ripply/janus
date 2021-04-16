@@ -26,7 +26,7 @@ func TestBlockNumberRequest(t *testing.T) {
 
 	//preparing client response
 	getBlockCountResponse := qtum.GetBlockCountResponse{Int: big.NewInt(11284900)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetBlockCount, getBlockCountResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetBlockCount, getBlockCountResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
