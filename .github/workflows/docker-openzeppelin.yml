@@ -25,6 +25,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Pull openzeppelin
+        run: cd testing && make init
+
       # Runs a single command using the runners shell
       - name: Run openzeppelin truffle tests
         run: make openzeppelin-docker-compose
