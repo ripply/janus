@@ -61,7 +61,7 @@ docker-build-unit-tests:
 	docker build -t qtum/tests.janus -f ./docker/unittests.Dockerfile .
 
 docker-unit-tests:
-	docker run -it --rm -v `pwd`:/go/src/github.com/qtumproject/janus qtum/tests.janus
+	docker run --rm -v `pwd`:/go/src/github.com/qtumproject/janus qtum/tests.janus
 
 docker-tests: docker-build-unit-tests docker-unit-tests openzeppelin-docker-compose
 
