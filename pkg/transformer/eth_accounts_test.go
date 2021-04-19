@@ -14,22 +14,22 @@ func TestAccountRequest(t *testing.T) {
 	requestParams := []json.RawMessage{}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	exampleAcc1, err := btcutil.DecodeWIF("5JK4Gu9nxCvsCxiq9Zf3KdmA9ACza6dUn5BRLVWAYEtQabdnJ89")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	exampleAcc2, err := btcutil.DecodeWIF("5JwvXtv6YCa17XNDHJ6CJaveg4mrpqFvcjdrh9FZWZEvGFpUxec")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	qtumClient.Accounts = append(qtumClient.Accounts, exampleAcc1, exampleAcc2)
@@ -38,7 +38,7 @@ func TestAccountRequest(t *testing.T) {
 	proxyEth := ProxyETHAccounts{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.AccountsResponse{"0x6d358cf96533189dd5a602d0937fddf0888ad3ae", "0x7e22630f90e6db16283af2c6b04f688117a55db4"}
@@ -56,7 +56,7 @@ func TestAccountMethod(t *testing.T) {
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//preparing proxy & executing request
 	proxyEth := ProxyETHAccounts{qtumClient}
@@ -75,7 +75,7 @@ func TestAccountToResponse(t *testing.T) {
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	proxyEth := ProxyETHAccounts{qtumClient}
 	callResponse := qtum.CallContractResponse{

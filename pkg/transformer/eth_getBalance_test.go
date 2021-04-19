@@ -15,33 +15,33 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960"`), []byte(`"123"`)}
 	requestRPC, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//prepare client
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//prepare account
 	account, err := btcutil.DecodeWIF("5JK4Gu9nxCvsCxiq9Zf3KdmA9ACza6dUn5BRLVWAYEtQabdnJ89")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	qtumClient.Accounts = append(qtumClient.Accounts, account)
 
 	//prepare responses
 	fromHexAddressResponse := qtum.FromHexAddressResponse("5JK4Gu9nxCvsCxiq9Zf3KdmA9ACza6dUn5BRLVWAYEtQabdnJ89")
-	err = mockedClientDoer.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	listUnspentResponse := qtum.ListUnspentResponse{{Amount: decimal.NewFromInt(100)}, {Amount: decimal.NewFromInt(100000)}}
-	err = mockedClientDoer.AddResponse(3, qtum.MethodListUnspent, listUnspentResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodListUnspent, listUnspentResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	// TODO: Need getaccountinfo to return an account for unit test
@@ -52,7 +52,7 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 	proxyEth := ProxyETHGetBalance{qtumClient}
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := string("0x91aa27e8400") //(100000+100)*10^8 == 10010000000000 == 0x91AA27E8400
@@ -71,19 +71,19 @@ func TestGetBalanceRequestContract(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960"`), []byte(`"123"`)}
 	requestRPC, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//prepare client
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//prepare account
 	account, err := btcutil.DecodeWIF("5JK4Gu9nxCvsCxiq9Zf3KdmA9ACza6dUn5BRLVWAYEtQabdnJ89")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	qtumClient.Accounts = append(qtumClient.Accounts, account)
 
@@ -94,16 +94,16 @@ func TestGetBalanceRequestContract(t *testing.T) {
 		// Storage json.RawMessage `json:"storage"`,
 		// Code    string          `json:"code"`,
 	}
-	err = mockedClientDoer.AddResponse(3, qtum.MethodGetAccountInfo, getAccountInfoResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodGetAccountInfo, getAccountInfoResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetBalance{qtumClient}
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := string("0xbdaf8b")

@@ -16,26 +16,26 @@ func TestEstimateGasRequest(t *testing.T) {
 	}
 	requestRaw, err := json.Marshal(&request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
 	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
 
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing responses
 	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
-	err = mockedClientDoer.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	callContractResponse := qtum.CallContractResponse{
@@ -55,9 +55,9 @@ func TestEstimateGasRequest(t *testing.T) {
 			Excepted: "None",
 		},
 	}
-	err = mockedClientDoer.AddResponse(1, qtum.MethodCallContract, callContractResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(1, qtum.MethodCallContract, callContractResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
@@ -65,7 +65,7 @@ func TestEstimateGasRequest(t *testing.T) {
 	proxyEthEstimateGas := ProxyETHEstimateGas{&proxyEth}
 	got, err := proxyEthEstimateGas.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.EstimateGasResponse("0x54ae")

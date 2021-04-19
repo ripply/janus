@@ -329,6 +329,19 @@ func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse
 	return
 }
 
+func (m *Method) GetStorage(req *GetStorageRequest) (resp *GetStorageResponse, err error) {
+	if err := m.Request(MethodGetStorage, req, &resp); err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("function", "GetStorage", "error", err)
+		}
+		return nil, err
+	}
+	if m.IsDebugEnabled() {
+		m.GetDebugLogger().Log("function", "GetStorage", "request", marshalToString(req), "msg", "Successfully got storage")
+	}
+	return
+}
+
 func (m *Method) GetAddressBalance(req *GetAddressBalanceRequest) (resp *GetAddressBalanceResponse, err error) {
 	if err := m.Request(MethodGetAddressBalance, req, &resp); err != nil {
 		if m.IsDebugEnabled() {
@@ -351,6 +364,32 @@ func (m *Method) SendRawTransaction(req *SendRawTransactionRequest) (resp *SendR
 	}
 	if m.IsDebugEnabled() {
 		m.GetDebugLogger().Log("function", "SendRawTransaction", "request", marshalToString(req), "msg", "Successfully sent raw transaction request")
+	}
+	return
+}
+
+func (m *Method) GetPeerInfo() (resp []GetPeerInfoResponse, err error) {
+	if err := m.Request(MethodGetPeerInfo, []string{}, &resp); err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("function", "GetPeerInfo", "error", err)
+		}
+		return nil, err
+	}
+	if m.IsDebugEnabled() {
+		m.GetDebugLogger().Log("function", "GetPeerInfo", "msg", "Successfully got peer info")
+	}
+	return
+}
+
+func (m *Method) GetNetworkInfo() (resp *NetworkInfoResponse, err error) {
+	if err := m.Request(MethodGetNetworkInfo, []string{}, &resp); err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("function", "GetPeerInfo", "error", err)
+		}
+		return nil, err
+	}
+	if m.IsDebugEnabled() {
+		m.GetDebugLogger().Log("function", "GetPeerInfo", "msg", "Successfully got peer info")
 	}
 	return
 }

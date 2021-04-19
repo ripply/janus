@@ -92,7 +92,8 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 		return nil, errors.WithMessage(err, "couldn't extract contract info")
 	}
 	if isContractTx {
-		ethTx.Input = utils.AddHexPrefix(qtum.ZeroUserInput)
+		// TODO: research is this allowed? ethTx.Input = utils.AddHexPrefix(qtumTxContractInfo.UserInput)
+		ethTx.Input = "0x"
 		if qtumTxContractInfo.UserInput == "" {
 			ethTx.Input = utils.AddHexPrefix(qtumTxContractInfo.UserInput)
 		}
@@ -132,7 +133,7 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 
 	// TODO: researching
 	// ! Temporary solution
-	ethTx.Input = utils.AddHexPrefix(qtum.ZeroUserInput)
+	ethTx.Input = "0x"
 	for _, detail := range qtumTx.Details {
 		if detail.Label != "" {
 			ethTx.Input = utils.AddHexPrefix(detail.Label)
@@ -162,7 +163,8 @@ func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionB
 
 		// TODO: discuss
 		// ? Expect this value to be always zero
-		Input: utils.AddHexPrefix(qtum.ZeroUserInput),
+		// Geth returns 0x if there is no input data for a transaction
+		Input: "0x",
 
 		// TODO: discuss
 		// ? Are zero values applicable

@@ -29,12 +29,12 @@ func (p *ProxyETHNewFilter) Request(rawreq *eth.JSONRPCRequest) (interface{}, er
 
 func (p *ProxyETHNewFilter) request(ethreq *eth.NewFilterRequest) (*eth.NewFilterResponse, error) {
 
-	from, err := getBlockNumberByParam(p.Qtum, ethreq.FromBlock, true)
+	from, err := getBlockNumberByRawParam(p.Qtum, ethreq.FromBlock, true)
 	if err != nil {
 		return nil, err
 	}
 
-	to, err := getBlockNumberByParam(p.Qtum, ethreq.ToBlock, true)
+	to, err := getBlockNumberByRawParam(p.Qtum, ethreq.ToBlock, true)
 	if err != nil {
 		return nil, err
 	}

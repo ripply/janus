@@ -15,28 +15,28 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
 	requestRPC, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//prepare client
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing client response
 	getBlockCountResponse := qtum.GetBlockCountResponse{Int: big.NewInt(657660)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetBlockCount, getBlockCountResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetBlockCount, getBlockCountResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	searchLogsResponse := qtum.SearchLogsResponse{
 		//TODO: add
 	}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodSearchLogs, searchLogsResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodSearchLogs, searchLogsResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing filter
@@ -51,7 +51,7 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 	proxyEth := ProxyETHGetFilterChanges{qtumClient, filterSimulator}
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.GetFilterChangesResponse{}
@@ -70,20 +70,20 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
 	requestRPC, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//prepare client
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing client response
 	getBlockCountResponse := qtum.GetBlockCountResponse{Int: big.NewInt(657655)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetBlockCount, getBlockCountResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetBlockCount, getBlockCountResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing filter
@@ -97,7 +97,7 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 	proxyEth := ProxyETHGetFilterChanges{qtumClient, filterSimulator}
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.GetFilterChangesResponse{}
@@ -116,13 +116,13 @@ func TestGetFilterChangesRequest_NoSuchFilter(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
 	requestRPC, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//prepare client
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request

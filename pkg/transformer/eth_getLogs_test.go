@@ -27,19 +27,19 @@ func TestGetLogs(t *testing.T) {
 
 	requestRaw, err := json.Marshal(&request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	requestParamsArray := []json.RawMessage{requestRaw}
 	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	clientDoerMock := newDoerMappedMock()
 	qtumClient, err := createMockedClient(clientDoerMock)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//prepare response
 	searchLogsResponse := qtum.SearchLogsResponse{
@@ -68,9 +68,9 @@ func TestGetLogs(t *testing.T) {
 	}
 
 	//Add response
-	err = clientDoerMock.AddResponse(2, qtum.MethodSearchLogs, searchLogsResponse)
+	err = clientDoerMock.AddResponseWithRequestID(2, qtum.MethodSearchLogs, searchLogsResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//Prepare proxy & execute
@@ -79,7 +79,7 @@ func TestGetLogs(t *testing.T) {
 
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.GetLogsResponse{

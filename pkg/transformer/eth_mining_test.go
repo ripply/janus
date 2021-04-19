@@ -14,25 +14,25 @@ func TestMiningRequest(t *testing.T) {
 	requestParams := []json.RawMessage{} //eth_hashrate has no params
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getMiningResponse := qtum.GetMiningResponse{Staking: true}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetStakingInfo, getMiningResponse)
+	err = mockedClientDoer.AddResponse(qtum.MethodGetStakingInfo, getMiningResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	proxyEth := ProxyETHMining{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.MiningResponse(true)

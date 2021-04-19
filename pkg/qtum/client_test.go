@@ -34,13 +34,13 @@ func TestComputeBackoffWithRandom(t *testing.T) {
 		backoff := computeBackoff(0, true)
 		min := (250 - randomRange) * time.Millisecond
 		max := (250 + randomRange) * time.Millisecond
-		if backoff >= min && backoff <= max {
-			t.Errorf("Unexpected backoff time %d <= (%d) <= %d", min, backoff.Milliseconds(), max)
+		if backoff < min || backoff > max {
+			t.Fatalf("Unexpected backoff time %d <= (%d) <= %d", min, backoff.Milliseconds(), max)
 		}
 	}
 
 	overflow := computeBackoff(1000000, true)
 	if overflow != 2000*time.Millisecond {
-		t.Errorf("Unexpected backoff time %d != %d", overflow.Milliseconds(), (2000 * time.Millisecond).Milliseconds())
+		t.Fatalf("Unexpected backoff time %d != %d", overflow.Milliseconds(), (2000 * time.Millisecond).Milliseconds())
 	}
 }

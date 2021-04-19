@@ -11,20 +11,20 @@ func TestGasPriceRequest(t *testing.T) {
 	requestParams := []json.RawMessage{}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGasPrice{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := string("0x28") //price is hardcoded inside the implement

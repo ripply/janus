@@ -55,13 +55,13 @@ func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResp
 
 func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLogsRequest, error) {
 	//transform EthRequest fromBlock to QtumReq fromBlock:
-	from, err := getBlockNumberByParam(p.Qtum, ethreq.FromBlock, true)
+	from, err := getBlockNumberByRawParam(p.Qtum, ethreq.FromBlock, true)
 	if err != nil {
 		return nil, err
 	}
 
 	//transform EthRequest toBlock to QtumReq toBlock:
-	to, err := getBlockNumberByParam(p.Qtum, ethreq.ToBlock, true)
+	to, err := getBlockNumberByRawParam(p.Qtum, ethreq.ToBlock, true)
 	if err != nil {
 		return nil, err
 	}

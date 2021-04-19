@@ -73,7 +73,7 @@ func (t *Transformer) Transform(req *eth.JSONRPCRequest) (interface{}, error) {
 func (t *Transformer) getProxy(method string) (ETHProxy, error) {
 	proxy, ok := t.transformers[method]
 	if !ok {
-		return nil, errors.Errorf("method %s is unsupported", method)
+		return nil, errors.Errorf("The method %s does not exist/is not available", method)
 	}
 	return proxy, nil
 }
@@ -94,6 +94,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHMining{Qtum: qtumRPCClient},
 		&ProxyETHNetVersion{Qtum: qtumRPCClient},
 		&ProxyETHGetTransactionByHash{Qtum: qtumRPCClient},
+		&ProxyETHGetTransactionByBlockNumberAndIndex{Qtum: qtumRPCClient},
 		&ProxyETHGetLogs{Qtum: qtumRPCClient},
 		&ProxyETHGetTransactionReceipt{Qtum: qtumRPCClient},
 		&ProxyETHSendTransaction{Qtum: qtumRPCClient},
@@ -110,7 +111,11 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient},
 		&ProxyETHGetBlockByHash{Qtum: qtumRPCClient},
 		&ProxyETHGetBalance{Qtum: qtumRPCClient},
+		&ProxyETHGetStorageAt{Qtum: qtumRPCClient},
+		&ETHGetCompilers{},
+		&ETHGetUncleByBlockHashAndIndex{},
 		&Web3ClientVersion{},
+		&Web3Sha3{},
 		&ProxyETHSign{Qtum: qtumRPCClient},
 		&ProxyETHGasPrice{Qtum: qtumRPCClient},
 		&ProxyETHTxCount{Qtum: qtumRPCClient},
@@ -118,6 +123,8 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHSendRawTransaction{Qtum: qtumRPCClient},
 
 		&ProxyQTUMGetUTXOs{Qtum: qtumRPCClient},
+
+		&ProxyNetPeerCount{Qtum: qtumRPCClient},
 	}
 }
 

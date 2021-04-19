@@ -14,32 +14,32 @@ func TestHashrateRequest(t *testing.T) {
 	requestParams := []json.RawMessage{} //eth_hashrate has no params
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getHashrateResponse := qtum.GetHashrateResponse{Difficulty: float64(457134700)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetStakingInfo, getHashrateResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetStakingInfo, getHashrateResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	proxyEth := ProxyETHHashrate{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.HashrateResponse("0x1b3f526c")
 	if !reflect.DeepEqual(got, &want) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
-			request,
+			*request,
 			want,
 			got,
 		)

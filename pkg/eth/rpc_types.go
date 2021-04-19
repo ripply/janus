@@ -276,6 +276,78 @@ func (r *GetTransactionByHashRequest) UnmarshalJSON(data []byte) error {
 	}
 }
 
+// ========== GetTransactionByBlockHashAndIndex ========== //
+
+type GetTransactionByBlockHashAndIndex struct {
+	BlockHash        string
+	TransactionIndex string
+}
+
+func (r *GetTransactionByBlockHashAndIndex) UnmarshalJSON(data []byte) error {
+	var params []interface{}
+	if err := json.Unmarshal(data, &params); err != nil {
+		return errors.Wrap(err, "couldn't unmarhsal parameters")
+	}
+	paramsNum := len(params)
+	if paramsNum == 0 {
+		return errors.Errorf("missing value for required argument 0")
+	} else if paramsNum == 1 {
+		return errors.Errorf("missing value for required argument 1")
+	} else if paramsNum > 2 {
+		return errors.Errorf("too many arguments, want at most 2")
+	}
+
+	blockHash, ok := params[0].(string)
+	if !ok {
+		return newErrInvalidParameterType(1, params[0], "")
+	}
+	r.BlockHash = blockHash
+
+	transactionIndex, ok := params[1].(string)
+	if !ok {
+		return newErrInvalidParameterType(2, params[1], "")
+	}
+	r.TransactionIndex = transactionIndex
+
+	return nil
+}
+
+// ========== GetTransactionByBlockNumberAndIndex ========== //
+
+type GetTransactionByBlockNumberAndIndex struct {
+	BlockNumber      string
+	TransactionIndex string
+}
+
+func (r *GetTransactionByBlockNumberAndIndex) UnmarshalJSON(data []byte) error {
+	var params []interface{}
+	if err := json.Unmarshal(data, &params); err != nil {
+		return errors.Wrap(err, "couldn't unmarhsal parameters")
+	}
+	paramsNum := len(params)
+	if paramsNum == 0 {
+		return errors.Errorf("missing value for required argument 0")
+	} else if paramsNum == 1 {
+		return errors.Errorf("missing value for required argument 1")
+	} else if paramsNum > 2 {
+		return errors.Errorf("too many arguments, want at most 2")
+	}
+
+	blockNumber, ok := params[0].(string)
+	if !ok {
+		return newErrInvalidParameterType(1, params[0], "")
+	}
+	r.BlockNumber = blockNumber
+
+	transactionIndex, ok := params[1].(string)
+	if !ok {
+		return newErrInvalidParameterType(2, params[1], "")
+	}
+	r.TransactionIndex = transactionIndex
+
+	return nil
+}
+
 // ========== GetTransactionReceipt ============= //
 
 type (
@@ -618,6 +690,20 @@ type (
 	}
 )
 
+// ========== getstorage ============= //
+type (
+	GetStorageRequest struct {
+		Address     string
+		Index       string
+		BlockNumber string
+	}
+	GetStorageResponse string
+)
+
+func (r *GetStorageRequest) UnmarshalJSON(data []byte) error {
+	tmp := []interface{}{&r.Address, &r.Index, &r.BlockNumber}
+	return json.Unmarshal(data, &tmp)
+}
 
 // ======= eth_chainId ============= //
 type ChainIdResponse string
@@ -674,3 +760,31 @@ func (req GetUTXOsRequest) CheckHasValidValues() error {
 	}
 	return nil
 }
+
+// ======= web3_sha3 ======= //
+type Web3Sha3Request struct {
+	Message string
+}
+
+func (r *Web3Sha3Request) UnmarshalJSON(data []byte) error {
+	var params []interface{}
+	if err := json.Unmarshal(data, &params); err != nil {
+		return errors.Wrap(err, "couldn't unmarhsal parameters")
+	}
+	paramsNum := len(params)
+	if paramsNum == 0 {
+		return errors.Errorf("missing value for required argument 0")
+	} else if paramsNum > 1 {
+		return errors.Errorf("too many arguments, want at most 1")
+	}
+
+	message, ok := params[0].(string)
+	if !ok {
+		return newErrInvalidParameterType(1, params[0], "")
+	}
+	r.Message = message
+
+	return nil
+}
+
+type NetPeerCountResponse string

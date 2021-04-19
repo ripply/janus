@@ -18,7 +18,7 @@ func TestEthCallRequest(t *testing.T) {
 	}
 	requestRaw, err := json.Marshal(&request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
 	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
@@ -56,26 +56,26 @@ func TestEthCallRequest(t *testing.T) {
 			Bloom:     "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
 		},
 	}
-	err = clientDoerMock.AddResponse(1, qtum.MethodCallContract, callContractResponse)
+	err = clientDoerMock.AddResponseWithRequestID(1, qtum.MethodCallContract, callContractResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
-	err = clientDoerMock.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = clientDoerMock.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing
 	proxyEth := ProxyETHCall{qtumClient}
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.CallResponse("0x0000000000000000000000000000000000000000000000000000000000000001")
@@ -97,7 +97,7 @@ func TestRetry(t *testing.T) {
 	}
 	requestRaw, err := json.Marshal(&request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
 	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
@@ -143,9 +143,9 @@ func TestRetry(t *testing.T) {
 	// async set the correct response after a time has elapsed
 	go func() {
 		time.Sleep(2 * time.Second)
-		err = clientDoerMock.AddResponse(1, qtum.MethodCallContract, callContractResponse)
+		err = clientDoerMock.AddResponseWithRequestID(1, qtum.MethodCallContract, callContractResponse)
 		if err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 		timer := time.NewTimer(2 * time.Second)
 		select {
@@ -159,20 +159,20 @@ func TestRetry(t *testing.T) {
 	}()
 
 	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
-	err = clientDoerMock.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = clientDoerMock.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing
 	proxyEth := ProxyETHCall{qtumClient}
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	testFinished <- true
 

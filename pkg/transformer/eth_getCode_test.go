@@ -15,19 +15,19 @@ func TestGetAccountInfoRequest(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960"`), []byte(`"123"`)}
 	requestRPC, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//prepare client
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//prepare account
 	account, err := btcutil.DecodeWIF("5JK4Gu9nxCvsCxiq9Zf3KdmA9ACza6dUn5BRLVWAYEtQabdnJ89")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	qtumClient.Accounts = append(qtumClient.Accounts, account)
 
@@ -38,16 +38,16 @@ func TestGetAccountInfoRequest(t *testing.T) {
 		// Storage json.RawMessage `json:"storage"`,
 		Code: "606060405236156100ad576000357c0100000000000000000...",
 	}
-	err = mockedClientDoer.AddResponse(3, qtum.MethodGetAccountInfo, getAccountInfoResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodGetAccountInfo, getAccountInfoResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetCode{qtumClient}
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.GetCodeResponse("0x606060405236156100ad576000357c0100000000000000000...")
@@ -66,13 +66,13 @@ func TestGetCodeInvalidAddressRequest(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x0000000000000000000000000000000000000000"`), []byte(`"123"`)}
 	requestRPC, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	//prepare client
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//prepare responses
@@ -80,16 +80,16 @@ func TestGetCodeInvalidAddressRequest(t *testing.T) {
 	if getAccountInfoErrorResponse == nil {
 		panic("mocked error response is nil")
 	}
-	err = mockedClientDoer.AddError(3, qtum.MethodGetAccountInfo, getAccountInfoErrorResponse)
+	err = mockedClientDoer.AddError(qtum.MethodGetAccountInfo, getAccountInfoErrorResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetCode{qtumClient}
 	got, err := proxyEth.Request(requestRPC)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.GetCodeResponse("0x")

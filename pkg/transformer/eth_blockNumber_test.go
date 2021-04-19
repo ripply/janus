@@ -15,27 +15,27 @@ func TestBlockNumberRequest(t *testing.T) {
 	requestParams := []json.RawMessage{}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing client response
 	getBlockCountResponse := qtum.GetBlockCountResponse{Int: big.NewInt(11284900)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetBlockCount, getBlockCountResponse)
+	err = mockedClientDoer.AddResponseWithRequestID(2, qtum.MethodGetBlockCount, getBlockCountResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHBlockNumber{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := eth.BlockNumberResponse("0xac31a4")

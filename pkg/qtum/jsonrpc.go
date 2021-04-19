@@ -18,6 +18,8 @@ const (
 	MethodSendToContract        = "sendtocontract"
 	MethodGetTransactionReceipt = "gettransactionreceipt"
 	MethodGetTransaction        = "gettransaction"
+	MethodGetPeerInfo           = "getpeerinfo"
+	MethodGetNetworkInfo        = "getnetworkinfo"
 	MethodGetRawTransaction     = "getrawtransaction"
 	MethodCreateContract        = "createcontract"
 	MethodSendToAddress         = "sendtoaddress"
@@ -35,6 +37,7 @@ const (
 	MethodGetAccountInfo        = "getaccountinfo"
 	MethodGenerateToAddress     = "generatetoaddress"
 	MethodListUnspent           = "listunspent"
+	MethodGetStorage            = "getstorage"
 	MethodCreateRawTx           = "createrawtransaction"
 	MethodSignRawTx             = "signrawtransactionwithwallet"
 	MethodSendRawTx             = "sendrawtransaction"
@@ -111,6 +114,16 @@ var (
 	errorCodeMap   = map[int]error{}
 	errorToCodeMap = map[error]int{}
 	// taken from https://github.com/qtumproject/qtum/blob/master/src/rpc/protocol.h
+	// Standard JSON-RPC 2.0 errors
+	ErrInvalidRequest = errors.New("invalid request") // -32600
+	// RPC_METHOD_NOT_FOUND is internally mapped to HTTP_NOT_FOUND (404).
+	// It should not be used for application-layer errors.
+	ErrMethodNotFound = errors.New("method not found")   // -32601
+	ErrInvalidParams  = errors.New("invalid parameters") // -32602
+	// RPC_INTERNAL_ERROR should only be used for genuine errors in bitcoind
+	// (for example datadir corruption).
+	ErrInternalError = errors.New("internal error") // -32603
+	ErrParseError    = errors.New("parse error")    // -32700
 	// general application defined errors
 	ErrMiscError = errors.New("misc error") // -1
 	ErrTypeError = errors.New("type error") // -3
@@ -195,6 +208,14 @@ func init() {
 	errorCodeMap[-29] = ErrMethodDeprecated
 	errorCodeMap[-30] = ErrInvalidIpOrSubnet
 	errorCodeMap[-31] = ErrP2PDisabled
+
+	errorCodeMap[-33] = ErrMempoolDisabled
+
+	errorCodeMap[-32600] = ErrInvalidRequest
+	errorCodeMap[-32601] = ErrMethodNotFound
+	errorCodeMap[-32602] = ErrInvalidParams
+	errorCodeMap[-32603] = ErrInternalError
+	errorCodeMap[-32700] = ErrParseError
 
 	for k, v := range errorCodeMap {
 		errorToCodeMap[v] = k
