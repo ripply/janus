@@ -37,4 +37,4 @@ services:
         - qtum/janus-openzeppelin
     depends_on:
       - janus
-    command: truffle test --network docker
+    command: truffle test --network docker test/proxy/transparent/TransparentUpgradeableProxy.test.js
