@@ -38,8 +38,8 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	listUnspentResponse := qtum.ListUnspentResponse{{Amount: decimal.NewFromInt(100)}, {Amount: decimal.NewFromInt(100000)}}
-	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodListUnspent, listUnspentResponse)
+	getAddressBalanceResponse := qtum.GetAddressBalanceResponse{Balance: decimal.NewFromInt(10010000000000)}
+	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodGetAddressBalance, getAddressBalanceResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
