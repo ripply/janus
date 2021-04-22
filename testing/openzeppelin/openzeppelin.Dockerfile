@@ -1,6 +1,7 @@
 FROM node:latest
 
 RUN npm install -g truffle --loglevel verbose
+RUN npm install -g mocha-spec-json-output-reporter
 RUN mkdir -p openzeppelin-contracts
 WORKDIR /openzeppelin-contracts
 COPY ./openzeppelin-contracts/package.json /openzeppelin-contracts

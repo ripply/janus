@@ -6,6 +6,7 @@ openzeppelin-docker-compose:
 	cd openzeppelin && ./run-openzeppelin-tests.sh
 
 build-openzeppelin:
+	cd openzeppelin && docker build -t qtum/janus-openzeppelin-test -f ./openzeppelin-test.Dockerfile .
 	cd openzeppelin && docker build -t qtum/janus-openzeppelin -f ./openzeppelin.Dockerfile .
 
 init:
