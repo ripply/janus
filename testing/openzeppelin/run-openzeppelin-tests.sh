@@ -1,55 +1,94 @@
-#!/bin/sh
-doGithubWorkflowProcessing () {
-  if [ "" != "$GITHUB_ACTION" ] ; then
-    # running in a github action, output results for next workflow action
-    PASSING=`docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) passing.*/::set-output name=PASSING=::\1/p'`
-    FAILING=`docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) failing.*/::set-output name=FAILING=::\1/p'`
-    PENDING=`docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) pending.*/::set-output name=PENDING=::\1/p'`
+#!/bin/bash
+EXPECTED_OUTPUT=openzeppelin-contracts-expected-output.json
+RESULUT_OUTPUT=openzeppelin-contracts-result-output.json
+PRUNED_OUTPUT=openzeppelin-contracts-pruned-output.json
 
-    if [ "" != "$PASSING" ] ; then
+doGithubWorkflowProcessing() {
+  echo "doGithubWorkflowProcessing"
+  if [ "" != "$GITHUB_ACTION" ] ; then
+    echo "Running within github actions... processing output file"
+    # running in a github action, output results for next workflow action
+    docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) passing.*/::set-output name=PASSING=::\1/p'
+    docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) failing.*/::set-output name=FAILING=::\1/p'
+    docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) pending.*/::set-output name=PENDING=::\1/p'
+
+    if [ ! -f $EXPECTED_OUTPUT ] ; then
+      echo "Expected output not found -" $EXPECTED_OUTPUT
+      doGithubWorkflowProcessingResult=1
+      return
+    fi
+
+    #if [ "" != "$PASSING" ] ; then
       # truffle will exit with a non-zero exit code if any tests fail
       # when running from a github workflow, we need to determine what constitutes "failure" ourselves here
       # "failure" being the workflow fails and an email is triggered about the failing job
       # right now there are many failing tests (100<x<200)
 
+    #fi
+    if [ -e $RESULUT_OUTPUT ] ; then
+      echo Deleting existing output results
+      rm $RESULUT_OUTPUT
     fi
-    docker cp ci_openzeppelin_1:/openzeppelin-contracts/output.json ./openzeppelin-contracts-output.json
-    if [ -e ./openzeppelin-contracts-output.json ] ; then
-      if [ -e ./openzeppelin ] ; then
-            ./openzeppelin \
-        --expected ./openzeppelin-contracts/expected.json \
-        --input ./openzeppelin-contracts/output.json \
-        --output ./openzeppelin-contracts/updated.json
-      fi
+    echo Copying output results from docker container to local filesystem
+    docker cp ci_openzeppelin_1:/openzeppelin-contracts/output.json $RESULUT_OUTPUT
+    if [ -e $RESULUT_OUTPUT ] ; then
+      echo Successfully copied output results from docker container
+      #if [ -e ./openzeppelin ] ; then
+      #      ./openzeppelin \
+      #  --expected ./openzeppelin-contracts/expected.json \
+      #  --input ./openzeppelin-contracts/output.json \
+      #  --output ./openzeppelin-contracts/updated.json
+      #fi
+      # docker run --rm -v `pwd`:/go/src/github.com/qtumproject/janus qtum/tests.janus
+      # qtum/janus-openzeppelin-test
+      #touch openzeppelin-contracts-pruned-output.json
+      docker run --rm -v `pwd`:/output qtum/janus-openzeppelin-test \
+        --expected /output/$EXPECTED_OUTPUT \
+        --input /output/$RESULUT_OUTPUT \
+        --output /output/$PRUNED_OUTPUT
     else
-      echo "Can't find truffle result json"
-      return -1
+      echo "Failed to find output results in docker container"
+      doGithubWorkflowProcessingResult=-1
+      return
     fi
     
-    return $?
+    doGithubWorkflowProcessingResult=$?
+  else
+    echo "Not running within github actions"
   fi
 }
 cleanupDocker () {
   docker-compose -f docker-compose-openzeppelin.yml -p ci kill
   docker-compose -f docker-compose-openzeppelin.yml -p ci rm -f
+  echo cleanup!
 }
 trap 'cleanupDocker ; echo "Tests Failed For Unexpected Reasons"' HUP INT QUIT PIPE TERM
 docker-compose -p ci -f docker-compose-openzeppelin.yml build && docker-compose -p ci -f docker-compose-openzeppelin.yml up -d
+echo fake running docker compose
 if [ $? -ne 0 ] ; then
   echo "Docker Compose Failed"
   exit 1
 fi
 docker logs ci_openzeppelin_1 -f&
 EXIT_CODE=`docker wait ci_openzeppelin_1`
+EXIT_CODE=0
 if [ -z ${EXIT_CODE+z} ] || [ -z ${EXIT_CODE} ] || ([ "0" != "$EXIT_CODE" ] && [ "" != "$EXIT_CODE" ]) ; then
   # docker logs qtum_seeded_testchain
   # docker logs ci_janus_1
   # docker logs ci_openzeppelin_1
+  echo "Tests failed, processing..."
   doGithubWorkflowProcessing
   echo "Tests Failed - Exit Code: $EXIT_CODE (truffle exit code indicates how many tests failed)"
 else
-  EXIT_CODE=doGithubWorkflowProcessing
-  echo "Tests Passed"
+  echo "Tests pass, processing..."
+  doGithubWorkflowProcessingResult=$EXIT_CODE
+  doGithubWorkflowProcessing
+  EXIT_CODE=$doGithubWorkflowProcessingResult
+  if [ -z ${EXIT_CODE+z} ] || [ -z ${EXIT_CODE} ] || ([ "0" != "$EXIT_CODE" ] && [ "" != "$EXIT_CODE" ]) ; then
+    echo "Tests finished successfully but processing failed with exit code" $EXIT_CODE
+  else
+    echo "Tests Passed"
+  fi
 fi
 cleanupDocker
 exit $EXIT_CODE
