@@ -28,6 +28,9 @@ jobs:
       - name: Pull openzeppelin
         run: cd testing && make init
 
+      - name: Build test harness
+        run: cd testing && make build-openzeppelin
+
       # Runs a single command using the runners shell
       - name: Run openzeppelin truffle tests
         run: make openzeppelin-docker-compose
