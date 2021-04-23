@@ -82,21 +82,25 @@ var (
 
 func action(pc *kingpin.ParseContext) error {
 	if expected == nil {
-		return errors.New("expected parameter required")
+		return errors.New("--expected parameter required")
 	}
 
 	if input == nil {
-		return errors.New("input parameter required")
+		return errors.New("--input parameter required")
+	}
+
+	if output == nil {
+		return errors.New("--output parameter required")
 	}
 
 	expectedBytes, err := ioutil.ReadAll(*expected)
 	if err != nil {
-		return errors.Wrap(err, "Failed to read expected file contents")
+		return errors.Wrap(err, "Failed to read --expected file contents")
 	}
 
 	inputBytes, err := ioutil.ReadAll(*input)
 	if err != nil {
-		return errors.Wrap(err, "Failed to read input file contents")
+		return errors.Wrap(err, "Failed to read --input file contents")
 	}
 
 	var unmarshalledExpected MochaSpecJsonOutput
@@ -104,12 +108,12 @@ func action(pc *kingpin.ParseContext) error {
 
 	err = json.Unmarshal(expectedBytes, &unmarshalledExpected)
 	if err != nil {
-		return errors.Wrap(err, "Failed to parse expected file contents")
+		return errors.Wrap(err, "Failed to parse --expected file contents")
 	}
 
 	err = json.Unmarshal(inputBytes, &unmarshalledInput)
 	if err != nil {
-		return errors.Wrap(err, "Failed to parse input file contents")
+		return errors.Wrap(err, "Failed to parse --input file contents")
 	}
 
 	sort.Sort(unmarshalledExpected.Failures)
@@ -136,7 +140,7 @@ func action(pc *kingpin.ParseContext) error {
 	if output != nil {
 		err = ioutil.WriteFile(*output, prunedInput, 0777)
 		if err != nil {
-			return errors.Wrap(err, "Failed to write pruned input to output")
+			return errors.Wrap(err, "Failed to write pruned --input to --output")
 		}
 		fmt.Printf("Wrote expected output to %s\n", *output)
 	}

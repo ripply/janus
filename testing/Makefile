@@ -13,9 +13,10 @@ init:
 	git submodule init
 	git submodule update
 	cd openzeppelin/openzeppelin-contracts && yarn install
+	cd openzeppelin/openzeppelin-contracts && yarn add mocha-spec-json-output-reporter
 
 openzeppelin:
-	cd openzeppelin/openzeppelin-contracts && truffle test --network testing
+	cd openzeppelin/openzeppelin-contracts && truffle test --network testing test/proxy/transparent/TransparentUpgradeableProxy.test.js
 
 openzeppelin-docker: build
 	docker run --rm qtum/janus-openzeppelin
