@@ -134,7 +134,9 @@ func action(pc *kingpin.ParseContext) error {
 
 	if len(errs) != 0 {
 		fmt.Println("Update the the input file with this contents for this to pass if these tests are expected")
+		fmt.Println("=======================================")
 		fmt.Println(string(prunedInput))
+		fmt.Println("=======================================")
 	}
 
 	if output != nil {

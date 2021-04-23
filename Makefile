@@ -112,12 +112,11 @@ qtum_container_flags = \
 	--rm -d \
 	--name ${qtum_container_name} \
 	-v ${shell pwd}/dapp \
-	-p 3889:3889
+	-p 3899:3899
 
 # TODO: research flags
 qtumd_flags = \
-	-regtest \
-	-rpcbind=0.0.0.0:3889 \
+	-rpcbind=0.0.0.0:3899 \
 	-rpcallowip=0.0.0.0/0 \
 	-logevents \
 	-txindex \

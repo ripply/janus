@@ -16,7 +16,7 @@ init:
 	cd openzeppelin/openzeppelin-contracts && yarn add mocha-spec-json-output-reporter
 
 openzeppelin:
-	cd openzeppelin/openzeppelin-contracts && truffle test --network testing test/proxy/transparent/TransparentUpgradeableProxy.test.js
+	cd openzeppelin/openzeppelin-contracts && truffle test --network testing
 
 openzeppelin-docker: build
 	docker run --rm qtum/janus-openzeppelin
