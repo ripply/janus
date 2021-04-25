@@ -1,18 +1,13 @@
 #!/bin/bash
-EXPECTED_OUTPUT=openzeppelin-contracts-expected-output.json
-RESULUT_OUTPUT=openzeppelin-contracts-result-output.json
-PRUNED_OUTPUT=openzeppelin-contracts-pruned-output.json
+EXPECTED_OUTPUT=truffle-expected-output.json
+RESULT_OUTPUT=truffle-result-output.json
+PRUNED_OUTPUT=truffle-pruned-output.json
 
-doGithubWorkflowProcessing() {
+doGithubWorkflowProcessing () {
   if [ "" != "$GITHUB_ACTION" ] ; then
     echo "Running within github actions... processing output file"
     # running in a github action, output results for next workflow action
-    echo Parsing passing...
-    docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) passing.*/::set-output name=PASSING=::\1/p'
-    echo Parsing pending...
-    docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) pending.*/::set-output name=PENDING=::\1/p'
-    echo Parsing failing...
-    docker logs ci_openzeppelin_1 | sed -n 's/.* \([0-9]\{1,\}\) failing.*/::set-output name=FAILING=::\1/p'
+    make -f ../Makefile github-action-openzeppelin || exit 1
 
     if [ ! -f $EXPECTED_OUTPUT ] ; then
       echo "Expected output not found -" $EXPECTED_OUTPUT
@@ -20,12 +15,9 @@ doGithubWorkflowProcessing() {
       return
     fi
 
-    if [ -e $RESULUT_OUTPUT ] ; then
+    if [ -e $RESULT_OUTPUT ] ; then
       echo Successfully copied output results from docker container
-      docker run --rm -v `pwd`:/output qtum/janus-openzeppelin-test \
-        --expected /output/$EXPECTED_OUTPUT \
-        --input /output/$RESULUT_OUTPUT \
-        --output /output/$PRUNED_OUTPUT
+      make -f ../Makefile truffle-parser-docker
     else
       echo "Failed to find output results in docker container"
       doGithubWorkflowProcessingResult=-1
@@ -34,7 +26,7 @@ doGithubWorkflowProcessing() {
     
     doGithubWorkflowProcessingResult=$?
   else
-    echo "Not running within github actions"
+    echo "Not running within github actions, skipping processing of output results"
   fi
 }
 cleanupDocker () {
@@ -53,17 +45,19 @@ EXIT_CODE=`docker wait ci_openzeppelin_1`
 echo "Processing openzeppelin test results with exit code of:" $EXIT_CODE
 doGithubWorkflowProcessingResult=$EXIT_CODE
 
-if [ -e $RESULUT_OUTPUT ] ; then
+if [ -e $RESULT_OUTPUT ] ; then
   echo "Deleting existing output results"
-  rm $RESULUT_OUTPUT
+  rm $RESULT_OUTPUT
 fi
 
 echo "Copying output results from docker container to local filesystem"
-docker cp ci_openzeppelin_1:/openzeppelin-contracts/output.json $RESULUT_OUTPUT
+CONTAINER=ci_openzeppelin_1 INPUT=/openzeppelin-contracts/output.json make -f ../Makefile truffle-parser-extract-result-docker || exit 1
+echo "Successfully copied output results from docker container to local filesystem"
 
 doGithubWorkflowProcessing
 EXIT_CODE=$doGithubWorkflowProcessingResult
 if [ -z ${EXIT_CODE+z} ] || [ -z ${EXIT_CODE} ] || ([ "0" != "$EXIT_CODE" ] && [ "" != "$EXIT_CODE" ]) ; then
+  # TODO: is it even worth outputting the logs? they will overflow the actual results
   # these logs are so large we can't print them out into github actions
   # docker logs qtum_seeded_testchain
   # docker logs ci_janus_1

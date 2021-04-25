@@ -123,9 +123,10 @@ func action(pc *kingpin.ParseContext) error {
 
 	errs := compareReports(unmarshalledExpected, unmarshalledInput)
 
-	for i := range unmarshalledInput.Failures {
-		unmarshalledInput.Failures[i].Error = nil
-	}
+	prune(unmarshalledExpected.Failures)
+	prune(unmarshalledExpected.Passes)
+	prune(unmarshalledInput.Failures)
+	prune(unmarshalledInput.Passes)
 
 	prunedInput, err := json.MarshalIndent(unmarshalledInput, "", " ")
 	if err != nil {
@@ -227,6 +228,14 @@ func get(failure MochaSpecFailure, from []MochaSpecFailure) *MochaSpecFailure {
 	}
 
 	return nil
+}
+
+func prune(specs MochaSpecFailures) {
+	for i := range specs {
+		specs[i].Result = ""
+		specs[i].Error = nil
+		specs[i].Duration = 0
+	}
 }
 
 func Run() {
