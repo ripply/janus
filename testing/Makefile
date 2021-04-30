@@ -5,6 +5,9 @@ build: build-openzeppelin
 openzeppelin-docker-compose:
 	cd openzeppelin && ./run-openzeppelin-tests.sh
 
+openzeppelin-ganache-docker-compose:
+	cd openzeppelin && DOCKER_COMPOSE=docker-compose-openzeppelin-ganache.yml ./run-openzeppelin-tests.sh
+
 build-openzeppelin: build-truffle-parser-docker build-openzeppelin-docker
 
 build-truffle-parser-docker:

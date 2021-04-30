@@ -1,7 +1,9 @@
 #!/bin/bash
+DOCKER_COMPOSE_FILE="${DOCKER_COMPOSE:-docker-compose-openzeppelin.yml}"
 EXPECTED_OUTPUT=truffle-expected-output.json
 RESULT_OUTPUT=truffle-result-output.json
 PRUNED_OUTPUT=truffle-pruned-output.json
+echo docker compose file: ${DOCKER_COMPOSE_FILE}
 
 doGithubWorkflowProcessing () {
   if [ "" != "$GITHUB_ACTION" ] ; then
@@ -31,11 +33,11 @@ doGithubWorkflowProcessing () {
 }
 cleanupDocker () {
   echo Shutting down docker-compose containers
-  docker-compose -f docker-compose-openzeppelin.yml -p ci kill
-  docker-compose -f docker-compose-openzeppelin.yml -p ci rm -f
+  docker-compose -f ${DOCKER_COMPOSE_FILE} -p ci kill
+  docker-compose -f ${DOCKER_COMPOSE_FILE} -p ci rm -f
 }
 trap 'cleanupDocker ; echo "Tests Failed For Unexpected Reasons"' HUP INT QUIT PIPE TERM
-docker-compose -p ci -f docker-compose-openzeppelin.yml build && docker-compose -p ci -f docker-compose-openzeppelin.yml up -d
+docker-compose -p ci -f ${DOCKER_COMPOSE_FILE} build && docker-compose -p ci -f ${DOCKER_COMPOSE_FILE} up -d
 if [ $? -ne 0 ] ; then
   echo "Docker Compose Failed"
   exit 1

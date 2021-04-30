@@ -1,12 +1,12 @@
-name: Openzeppelin - Janus
+name: Openzeppelin - ganache
 
 # Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+  # push:
+    # branches: [master]
+  # pull_request:
+    # branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -30,5 +30,5 @@ jobs:
         run: cd testing && make build-openzeppelin
 
       # Runs a single command using the runners shell
-      - name: Run openzeppelin truffle tests against Janus
-        run: make openzeppelin-docker-compose
+      - name: Run openzeppelin truffle tests against ganache
+        run: make openzeppelin-ganache-docker-compose
