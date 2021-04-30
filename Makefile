@@ -57,11 +57,11 @@ local-dev-logs: check-env
 unit-tests: check-env
 	go test -v ./...
 
-docker-build-unit-tests: check-env
+docker-build-unit-tests:
 	docker build -t qtum/tests.janus -f ./docker/unittests.Dockerfile .
 
-docker-unit-tests: check-env
-	docker run -it --rm -v `pwd`:/go/src/github.com/qtumproject/janus qtum/tests.janus
+docker-unit-tests:
+	docker run --rm -v `pwd`:/go/src/github.com/qtumproject/janus qtum/tests.janus
 
 docker-tests: docker-build-unit-tests docker-unit-tests openzeppelin-docker-compose
 
@@ -158,3 +158,6 @@ openzeppelin-docker:
 # Run openzeppelin tests in docker-compose
 openzeppelin-docker-compose:
 	cd testing && make openzeppelin-docker-compose
+
+openzeppelin-ganache-docker-compose:
+	cd testing && make openzeppelin-ganache-docker-compose

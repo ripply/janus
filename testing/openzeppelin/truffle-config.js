@@ -3,6 +3,12 @@ module.exports = {
   migrations: "./openzeppelin-contracts/migrations",
   contracts_directory: "./openzeppelin-contracts/contracts",
   contracts_build_directory: "./openzeppelin-contracts/build/output",
+  mocha: {
+    reporter: "mocha-spec-json-output-reporter",
+    reporterOptions: {
+      fileName: "output.json",
+    },
+  },
   networks: {
     development: {
       host: "127.0.0.1",

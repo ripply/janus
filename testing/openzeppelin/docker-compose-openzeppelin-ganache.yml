@@ -1,0 +1,32 @@
+version: "3.3"
+services:
+  janus:
+    image: qtum/ganache-cli
+    ports:
+      - "23889:23889"
+    build:
+      dockerfile: ./ganache.Dockerfile
+      context: ..
+      cache_from:
+        - qtum/ganache-cli
+    entrypoint:
+      - ganache-cli
+      - --deterministic
+      - --mnemonic
+      - 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'
+      - --networkId
+      - '5777'
+      - --hostname
+      - '0.0.0.0'
+      - --port
+      - '23889'
+  openzeppelin:
+    image: qtum/janus-openzeppelin
+    build:
+      context: .
+      dockerfile: ./openzeppelin.Dockerfile
+      cache_from:
+        - qtum/janus-openzeppelin
+    depends_on:
+      - janus
+    command: truffle test --network docker

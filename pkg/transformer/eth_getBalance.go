@@ -51,6 +51,7 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest) (interface{}, e
 				// invalid address should return 0x0
 				return "0x0", nil
 			}
+			p.GetDebugLogger().Log("method", p.Method(), "address", req.Address, "msg", "error getting address balance", "error", err)
 			return nil, err
 		}
 

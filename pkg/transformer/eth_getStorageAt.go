@@ -46,11 +46,14 @@ func (p *ProxyETHGetStorageAt) request(ethreq *qtum.GetStorageRequest, index str
 	return p.ToResponse(qtumresp, index), nil
 }
 
-func (p *ProxyETHGetStorageAt) ToResponse(qtumresp *qtum.GetStorageResponse, index string) *eth.GetStorageResponse {
+func (p *ProxyETHGetStorageAt) ToResponse(qtumresp *qtum.GetStorageResponse, slot string) *eth.GetStorageResponse {
 	// the value for unknown anything
 	storageData := eth.GetStorageResponse("0x0000000000000000000000000000000000000000000000000000000000000000")
+	if len(slot) != 64 {
+		slot = leftPadStringWithZerosTo64Bytes(slot)
+	}
 	for _, outerValue := range *qtumresp {
-		qtumStorageData, ok := outerValue[index]
+		qtumStorageData, ok := outerValue[slot]
 		if ok {
 			storageData = eth.GetStorageResponse(utils.AddHexPrefix(qtumStorageData))
 			return &storageData
@@ -58,4 +61,9 @@ func (p *ProxyETHGetStorageAt) ToResponse(qtumresp *qtum.GetStorageResponse, ind
 	}
 
 	return &storageData
+}
+
+// left pad a string with leading zeros to fit 64 bytes
+func leftPadStringWithZerosTo64Bytes(hex string) string {
+	return fmt.Sprintf("%064v", hex)
 }

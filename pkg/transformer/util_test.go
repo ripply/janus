@@ -45,7 +45,7 @@ func TestQtumAmountToEthValue(t *testing.T) {
 	}
 }
 
-func TestAddressesConvertion(t *testing.T) {
+func TestAddressesConversion(t *testing.T) {
 	t.Parallel()
 
 	inputs := []struct {
@@ -62,7 +62,7 @@ func TestAddressesConvertion(t *testing.T) {
 		// Test cases for addresses defined here:
 		// 	- https://github.com/hayeah/openzeppelin-solidity/blob/qtum/QTUM-NOTES.md#create-test-accounts
 		//
-		// NOTE: Ethereum addresses are without `0x` prefix, as it expects by convertion functions
+		// NOTE: Ethereum addresses are without `0x` prefix, as it expects by conversion functions
 		{
 			qtumChain:   qtum.ChainTest,
 			ethAddress:  "7926223070547d2d15b2ef5e7383e541c338ffe9",

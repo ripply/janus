@@ -17,3 +17,7 @@ build
 
 # VS Code extension RestClient
 api.rest
+
+# Truffle test result files
+truffle-pruned-output.json
+truffle-result-output.json
