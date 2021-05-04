@@ -38,6 +38,10 @@ func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (interface{}, error) {
 		return nil, err
 	}
 
+	if err = p.parseException(qtumresp); err != nil {
+		return nil, err
+	}
+
 	// qtum res -> eth res
 	return p.ToResponse(qtumresp), nil
 }
@@ -97,6 +101,23 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
     }
   }
 }
+
+Beginning with v1.9.15, geth's response for this case looks like:
+{
+  jsonrpc: '2.0',
+  id: 7,
+  error: {
+     code: 3,
+     message: 'execution reverted: REVERTED WITH REQUIRE',
+     data: '0x08c379a00000....'
+  }
+}
+
+// https://github.com/ChainSafe/web3.js/blob/1.x/packages/web3-core-method/src/index.js#L624
+// Ganache / Geth <= 1.9.13 return the reason data as a successful eth_call response
+// Geth >= 1.9.15 attaches the reason data to an error object.
+// Geth 1.9.14 is missing revert reason (https://github.com/ethereum/web3.js/issues/3520)
+
 */
 func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} {
 
@@ -112,5 +133,12 @@ func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} 
 	data := utils.AddHexPrefix(qresp.ExecutionResult.Output)
 	qtumresp := eth.CallResponse(data)
 	return &qtumresp
+
+}
+
+func (p *ProxyETHCall) parseException(qresp *qtum.CallContractResponse) error {
+	if qresp.ExecutionResult.Excepted == "None" || qresp.ExecutionResult.Excepted == "" {
+		return nil
+	}
 
 }
