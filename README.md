@@ -5,6 +5,8 @@ Janus is and old school ETH web3 HTTP provider that translates Ethereum JSON RPC
 
 - [Requirements](#requirements)
 - [Installation](#installation)
+  - [SSL](#ssl)
+  - [Self-signed SSL](#self-signed-ssl)
 - [How to use Janus as a Web3 provider](#how-to-use-janus-as-a-web3-provider)
 - [Support ETH methods](#support-eth-methods)
 - [Try to interact with contract](#try-to-interact-with-contract)
@@ -48,6 +50,16 @@ Which will run the most current local version of Janus on port 23888, but withou
 Note that Janus will use the hex address for the test base58 Qtum addresses that belong the the local qtum node, for example:
   - qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW (hex 0x7926223070547d2d15b2ef5e7383e541c338ffe9 )
   - qLn9vqbr2Gx3TsVR9QyTVB5mrMoh4x43Uf (hex 0x2352be3db3177f0a07efbe6da5857615b8c9901d )
+
+### SSL
+SSL keys and certificates go inside the https folder (mounted at `/https` in the container) and use `--https-key` and `--https-cert` parameters. If the specified files do not exist, it will fall back to http.
+
+### Self-signed SSL
+To generate self-signed certificates with docker for local development the following script will generate SSL certificates and drop them into the https folder
+
+```
+$ make docker-configure-https
+```
 
 ## How to use Janus as a Web3 provider
 

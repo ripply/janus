@@ -25,6 +25,8 @@ var (
 	qtumNetwork = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("regtest").String()
 	bind        = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
 	port        = app.Flag("port", "port to serve proxy").Default("23889").Int()
+	httpsKey    = app.Flag("https-key", "https keyfile").Default("").String()
+	httpsCert   = app.Flag("https-cert", "https certificate").Default("").String()
 
 	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
 	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
@@ -102,6 +104,9 @@ func action(pc *kingpin.ParseContext) error {
 		return errors.Wrap(err, "transformer#New")
 	}
 
+	httpsKeyFile := getEmptyStringIfFileDoesntExist(*httpsKey, logger)
+	httpsCertFile := getEmptyStringIfFileDoesntExist(*httpsCert, logger)
+
 	s, err := server.New(
 		qtumClient,
 		t,
@@ -109,12 +114,22 @@ func action(pc *kingpin.ParseContext) error {
 		server.SetLogger(logger),
 		server.SetDebug(*devMode),
 		server.SetSingleThreaded(*singleThreaded),
+		server.SetHttps(httpsKeyFile, httpsCertFile),
 	)
 	if err != nil {
 		return errors.Wrap(err, "server#New")
 	}
 
 	return s.Start()
+}
+
+func getEmptyStringIfFileDoesntExist(file string, l log.Logger) string {
+	_, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		l.Log("file does not exist", file)
+		return ""
+	}
+	return file
 }
 
 func Run() {
