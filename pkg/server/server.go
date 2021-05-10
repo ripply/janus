@@ -24,6 +24,8 @@ type Server struct {
 	transformer   *transformer.Transformer
 	qtumRPCClient *qtum.Qtum
 	logger        log.Logger
+	httpsKey      string
+	httpsCert     string
 	debug         bool
 	mutex         *sync.Mutex
 	echo          *echo.Echo
@@ -105,8 +107,14 @@ func (s *Server) Start() error {
 		})
 	}
 
-	level.Warn(s.logger).Log("listen", s.address, "qtum_rpc", s.qtumRPCClient.URL, "msg", "proxy started")
-	return e.Start(s.address)
+	https := (s.httpsKey != "" && s.httpsCert != "")
+	level.Warn(s.logger).Log("listen", s.address, "qtum_rpc", s.qtumRPCClient.URL, "msg", "proxy started", "https", https)
+
+	if https {
+		return e.StartTLS(s.address, s.httpsCert, s.httpsKey)
+	} else {
+		return e.Start(s.address)
+	}
 }
 
 type Option func(*Server) error
@@ -132,6 +140,14 @@ func SetSingleThreaded(singleThreaded bool) Option {
 		} else {
 			p.mutex = nil
 		}
+		return nil
+	}
+}
+
+func SetHttps(key string, cert string) Option {
+	return func(p *Server) error {
+		p.httpsKey = key
+		p.httpsCert = cert
 		return nil
 	}
 }
