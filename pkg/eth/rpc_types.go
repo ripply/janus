@@ -635,6 +635,60 @@ func newErrInvalidParameterType(idx int, gotType interface{}, wantedType interfa
 	return errors.Errorf("invalid %d parameter of %T type, but %T type is expected", idx, gotType, wantedType)
 }
 
+// ========== eth_subscribe ============= //
+
+type (
+	EthLogSubscriptionParameter struct {
+		Address ETHAddress    `json:"address"`
+		Topics  []interface{} `json:"topics"`
+	}
+
+	EthSubscriptionRequest struct {
+		Method string
+		Params *EthLogSubscriptionParameter
+	}
+
+	EthSubscriptionResponse string
+)
+
+func (r *EthSubscriptionRequest) UnmarshalJSON(data []byte) error {
+	var params []interface{}
+	if err := json.Unmarshal(data, &params); err != nil {
+		return errors.Wrap(err, "couldn't unmarhsal data")
+	}
+
+	method, ok := params[0].(string)
+	if !ok {
+		return newErrInvalidParameterType(1, params[0], "")
+	}
+	r.Method = method
+
+	if len(params) >= 2 {
+		param, err := json.Marshal(params[1])
+		if err != nil {
+			return err
+		}
+		var subscriptionParameter EthLogSubscriptionParameter
+		err = json.Unmarshal(param, &subscriptionParameter)
+		if err != nil {
+			return err
+		}
+		r.Params = &subscriptionParameter
+	}
+
+	return nil
+}
+
+func (r EthSubscriptionRequest) MarshalJSON() ([]byte, error) {
+	output := []interface{}{}
+	output = append(output, r.Method)
+	if r.Params != nil {
+		output = append(output, r.Params)
+	}
+
+	return json.Marshal(output)
+}
+
 // ========== eth_newFilter ============= //
 
 type NewFilterRequest struct {
@@ -707,6 +761,12 @@ func (r *GetStorageRequest) UnmarshalJSON(data []byte) error {
 
 // ======= eth_chainId ============= //
 type ChainIdResponse string
+
+// ======= eth_subscription ======== //
+type EthSubscription struct {
+	SubscriptionID string      `json:"subscription"`
+	Result         interface{} `json:"result"`
+}
 
 // ======= qtum_getUTXOs ============= //
 

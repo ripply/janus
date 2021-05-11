@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -17,7 +18,7 @@ func (p *ProxyETHSendTransaction) Method() string {
 	return "eth_sendTransaction"
 }
 
-func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	var req eth.SendTransactionRequest
 	err := unmarshalRequest(rawreq.Params, &req)
 	if err != nil {

@@ -1639,3 +1639,39 @@ type (
 		Score   int64  `json:"score"`
 	}
 )
+
+// ========= waitforlogs ========== //
+type (
+	WaitForLogsRequest struct {
+		FromBlock            interface{}       `json:"fromBlock"`
+		ToBlock              interface{}       `json:"toBlock`
+		Filter               WaitForLogsFilter `json:"filter"`
+		MinimumConfirmations int64             `json:"miniconf"`
+	}
+
+	WaitForLogsFilter struct {
+		Addresses *[]string      `json:"addresses,omitempty"`
+		Topics    *[]interface{} `json:"topics,omitempty"`
+	}
+
+	WaitForLogsResponse struct {
+		Entries   []TransactionReceipt `json:"entries"`
+		Count     int64                `json:"count"`
+		NextBlock int64                `json:"nextBlock"`
+	}
+)
+
+func (r *WaitForLogsRequest) MarshalJSON() ([]byte, error) {
+	/*
+		1. fromBlock (int | "latest", optional, default=null) The block number to start looking for logs. ()
+		2. toBlock   (int | "latest", optional, default=null) The block number to stop looking for logs. If null, will wait indefinitely into the future.
+		3. filter    ({ addresses?: Hex160String[], topics?: Hex256String[] }, optional default={}) Filter conditions for logs. Addresses and topics are specified as array of hexadecimal strings
+		4. minconf   (uint, optional, default=6) Minimal number of confirmations before a log is returned
+	*/
+	return json.Marshal([]interface{}{
+		r.FromBlock,
+		r.ToBlock,
+		r.Filter,
+		r.MinimumConfirmations,
+	})
+}

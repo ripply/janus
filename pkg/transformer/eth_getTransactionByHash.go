@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -19,7 +20,7 @@ func (p *ProxyETHGetTransactionByHash) Method() string {
 	return "eth_getTransactionByHash"
 }
 
-func (p *ProxyETHGetTransactionByHash) Request(req *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHGetTransactionByHash) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	var txHash eth.GetTransactionByHashRequest
 	if err := json.Unmarshal(req.Params, &txHash); err != nil {
 		return nil, errors.Wrap(err, "couldn't unmarshal request")

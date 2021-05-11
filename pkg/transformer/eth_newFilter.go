@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/dcb9/go-ethereum/common/hexutil"
+	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
@@ -18,7 +19,7 @@ func (p *ProxyETHNewFilter) Method() string {
 	return "eth_newFilter"
 }
 
-func (p *ProxyETHNewFilter) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHNewFilter) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	var req eth.NewFilterRequest
 	if err := json.Unmarshal(rawreq.Params, &req); err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func (p *ProxyETHNewFilter) request(ethreq *eth.NewFilterRequest) (*eth.NewFilte
 	filter.Data.Store("toBlock", to.Uint64())
 
 	if len(ethreq.Topics) > 0 {
-		topics, err := translateTopics(ethreq.Topics)
+		topics, err := eth.TranslateTopics(ethreq.Topics)
 		if err != nil {
 			return nil, err
 		}

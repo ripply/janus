@@ -48,7 +48,7 @@ func TestGetBlockByNumberUnknownBlockRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetBlockByNumber{qtumClient}
-	got, err := proxyEth.Request(request)
+	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

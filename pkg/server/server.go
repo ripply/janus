@@ -66,7 +66,7 @@ func (s *Server) Start() error {
 		}
 
 		if s.debug {
-			level.Debug(cc.logger).Log("msg", "ETH RPC")
+			cc.GetDebugLogger().Log("msg", "ETH RPC")
 
 			reqBody, err := qtum.ReformatJSON(req)
 			resBody, err := qtum.ReformatJSON(res)
@@ -98,6 +98,7 @@ func (s *Server) Start() error {
 	e.HideBanner = true
 	if s.mutex == nil {
 		e.POST("/*", httpHandler)
+		e.GET("/ws", websocketHandler)
 	} else {
 		level.Info(s.logger).Log("msg", "Processing RPC requests single threaded")
 		e.POST("/*", func(c echo.Context) error {
@@ -105,6 +106,7 @@ func (s *Server) Start() error {
 			defer s.mutex.Unlock()
 			return httpHandler(c)
 		})
+		e.GET("/ws", websocketHandler)
 	}
 
 	https := (s.httpsKey != "" && s.httpsCert != "")
@@ -170,7 +172,7 @@ func batchRequestsMiddleware(h echo.HandlerFunc) echo.HandlerFunc {
 			}
 		}
 		isBatchRequests := func(msg json.RawMessage) bool {
-			return msg[0] == '['
+			return len(msg) != 0 && msg[0] == '['
 		}
 		c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqBody)) // Reset
 

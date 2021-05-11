@@ -77,7 +77,7 @@ func TestGetLogs(t *testing.T) {
 	//preparing proxy & executing
 	proxyEth := ProxyETHGetLogs{qtumClient}
 
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		},
 	}
 
-	translatedTopics, err := translateTopics(request.Topics)
+	translatedTopics, err := eth.TranslateTopics(request.Topics)
 	if err != nil {
 		t.Fatal(err)
 	}

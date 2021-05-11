@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/transformer"
@@ -17,8 +18,12 @@ type myCtx struct {
 	transformer *transformer.Transformer
 }
 
+func (c *myCtx) GetJSONRPCResult(result interface{}) (*eth.JSONRPCResult, error) {
+	return eth.NewJSONRPCResult(c.rpcReq.ID, result)
+}
+
 func (c *myCtx) JSONRPCResult(result interface{}) error {
-	response, err := eth.NewJSONRPCResult(c.rpcReq.ID, result)
+	response, err := c.GetJSONRPCResult(result)
 	if err != nil {
 		return err
 	}
@@ -26,20 +31,47 @@ func (c *myCtx) JSONRPCResult(result interface{}) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (c *myCtx) JSONRPCError(err *eth.JSONRPCError) error {
+func (c *myCtx) GetJSONRPCError(err *eth.JSONRPCError) *eth.JSONRPCResult {
 	var id json.RawMessage
 	if c.rpcReq != nil && c.rpcReq.ID != nil {
 		id = c.rpcReq.ID
 	}
-	resp := &eth.JSONRPCResult{
+	return &eth.JSONRPCResult{
 		ID:      id,
 		Error:   err,
 		JSONRPC: eth.RPCVersion,
 	}
+}
+
+func (c *myCtx) JSONRPCError(err *eth.JSONRPCError) error {
+	resp := c.GetJSONRPCError(err)
 
 	if !c.Response().Committed {
 		return c.JSON(http.StatusInternalServerError, resp)
 	}
 
 	return nil
+}
+
+func (c *myCtx) SetLogger(l log.Logger) {
+	c.logger = log.WithPrefix(l, "component", "context")
+}
+
+func (c *myCtx) GetLogger() log.Logger {
+	return c.logger
+}
+
+func (c *myCtx) GetDebugLogger() log.Logger {
+	if !c.IsDebugEnabled() {
+		return log.NewNopLogger()
+	}
+	return log.With(level.Debug(c.logger))
+}
+
+func (c *myCtx) GetErrorLogger() log.Logger {
+	return log.With(level.Error(c.logger))
+}
+
+func (c *myCtx) IsDebugEnabled() bool {
+	return c.transformer.IsDebugEnabled()
 }

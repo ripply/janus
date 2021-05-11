@@ -24,7 +24,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
-	got, err := proxyEth.Request(request)
+	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

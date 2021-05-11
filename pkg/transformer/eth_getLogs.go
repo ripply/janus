@@ -3,6 +3,7 @@ package transformer
 import (
 	"encoding/json"
 
+	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -17,7 +18,7 @@ func (p *ProxyETHGetLogs) Method() string {
 	return "eth_getLogs"
 }
 
-func (p *ProxyETHGetLogs) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHGetLogs) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	var req eth.GetLogsRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err
@@ -86,7 +87,7 @@ func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLog
 	}
 
 	//transform EthReq topics to QtumReq topics:
-	topics, err := translateTopics(ethreq.Topics)
+	topics, err := eth.TranslateTopics(ethreq.Topics)
 	if err != nil {
 		return nil, err
 	}

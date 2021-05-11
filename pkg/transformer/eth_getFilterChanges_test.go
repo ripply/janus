@@ -49,7 +49,7 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetFilterChanges{qtumClient, filterSimulator}
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetFilterChanges{qtumClient, filterSimulator}
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +128,7 @@ func TestGetFilterChangesRequest_NoSuchFilter(t *testing.T) {
 	//preparing proxy & executing request
 	filterSimulator := eth.NewFilterSimulator()
 	proxyEth := ProxyETHGetFilterChanges{qtumClient, filterSimulator}
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	expectedErr := "Invalid filter id"
 
 	if got != nil {

@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
@@ -15,7 +16,7 @@ func (p *ProxyETHEstimateGas) Method() string {
 	return "eth_estimateGas"
 }
 
-func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	var ethreq eth.CallRequest
 	if err := unmarshalRequest(rawreq.Params, &ethreq); err != nil {
 		return nil, err

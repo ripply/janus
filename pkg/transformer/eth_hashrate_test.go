@@ -35,7 +35,7 @@ func TestHashrateRequest(t *testing.T) {
 	}
 
 	proxyEth := ProxyETHHashrate{qtumClient}
-	got, err := proxyEth.Request(request)
+	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

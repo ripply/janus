@@ -45,7 +45,7 @@ func TestGetAccountInfoRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetCode{qtumClient}
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func TestGetCodeInvalidAddressRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetCode{qtumClient}
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
@@ -16,7 +17,7 @@ func (p *ProxyETHNewBlockFilter) Method() string {
 	return "eth_newBlockFilter"
 }
 
-func (p *ProxyETHNewBlockFilter) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHNewBlockFilter) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	return p.request()
 }
 

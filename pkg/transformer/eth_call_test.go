@@ -73,7 +73,7 @@ func TestEthCallRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +170,7 @@ func TestRetry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

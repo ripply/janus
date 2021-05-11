@@ -14,7 +14,7 @@ func TestProtocolVersionReturnsHardcodedValue(t *testing.T) {
 	}
 
 	proxyEth := ETHProtocolVersion{}
-	got, err := proxyEth.Request(request)
+	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

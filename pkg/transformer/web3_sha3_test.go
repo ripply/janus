@@ -19,7 +19,7 @@ func TestWeb3Sha3Request(t *testing.T) {
 		}
 
 		web3Sha3 := Web3Sha3{}
-		got, err := web3Sha3.Request(request)
+		got, err := web3Sha3.Request(request, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -48,7 +48,7 @@ func testWeb3Sha3Errors(t *testing.T, input []json.RawMessage, want string) {
 	}
 
 	web3Sha3 := Web3Sha3{}
-	got, err := web3Sha3.Request(request)
+	got, err := web3Sha3.Request(request, nil)
 	if err == nil {
 		t.Errorf(
 			"Expected error\ninput: %s\nwant: %s\ngot: %s",

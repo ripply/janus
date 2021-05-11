@@ -2,8 +2,10 @@ package transformer
 
 import (
 	"github.com/go-kit/kit/log"
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/notifier"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
@@ -58,12 +60,12 @@ func (t *Transformer) Register(p ETHProxy) error {
 }
 
 // Transform takes a Transformer and transforms the request from ETH request and returns the proxy request
-func (t *Transformer) Transform(req *eth.JSONRPCRequest) (interface{}, error) {
+func (t *Transformer) Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	proxy, err := t.getProxy(req.Method)
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't get proxy")
 	}
-	resp, err := proxy.Request(req)
+	resp, err := proxy.Request(req, c)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "couldn't proxy %s request", req.Method)
 	}
@@ -78,9 +80,14 @@ func (t *Transformer) getProxy(method string) (ETHProxy, error) {
 	return proxy, nil
 }
 
+func (t *Transformer) IsDebugEnabled() bool {
+	return t.debugMode
+}
+
 // DefaultProxies are the default proxy methods made available
 func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 	filter := eth.NewFilterSimulator()
+	agent := notifier.NewAgent(qtumRPCClient)
 	getFilterChanges := &ProxyETHGetFilterChanges{Qtum: qtumRPCClient, filter: filter}
 	ethCall := &ProxyETHCall{Qtum: qtumRPCClient}
 
@@ -122,6 +129,8 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHTxCount{Qtum: qtumRPCClient},
 		&ProxyETHSignTransaction{Qtum: qtumRPCClient},
 		&ProxyETHSendRawTransaction{Qtum: qtumRPCClient},
+
+		&ETHSubscribe{Qtum: qtumRPCClient, Agent: agent},
 
 		&ProxyQTUMGetUTXOs{Qtum: qtumRPCClient},
 

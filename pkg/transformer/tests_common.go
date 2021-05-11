@@ -491,7 +491,7 @@ func testETHProxyRequest(t *testing.T, initializer ETHProxyInitializer, requestP
 
 	//preparing proxy & executing request
 	proxyEth := initializer(qtumClient)
-	got, err := proxyEth.Request(request)
+	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatalf("Failed to process request on %T.Request(%s): %s", proxyEth, requestParams, err)
 	}

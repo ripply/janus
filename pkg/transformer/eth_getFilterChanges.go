@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/big"
 
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 
 	"github.com/qtumproject/janus/pkg/eth"
@@ -21,7 +22,7 @@ func (p *ProxyETHGetFilterChanges) Method() string {
 	return "eth_getFilterChanges"
 }
 
-func (p *ProxyETHGetFilterChanges) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHGetFilterChanges) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 
 	filter, err := processFilter(p, rawreq)
 	if err != nil {

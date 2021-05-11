@@ -36,7 +36,7 @@ func testNetListeningRequest(t *testing.T, active bool) {
 	}
 
 	proxyEth := ProxyNetListening{qtumClient}
-	got, err := proxyEth.Request(request)
+	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

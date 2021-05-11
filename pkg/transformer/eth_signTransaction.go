@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -20,7 +21,7 @@ func (p *ProxyETHSignTransaction) Method() string {
 	return "eth_signTransaction"
 }
 
-func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	var req eth.SendTransactionRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err

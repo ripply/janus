@@ -63,7 +63,7 @@ func TestEstimateGasRequest(t *testing.T) {
 	//preparing proxy & executing request
 	proxyEth := ProxyETHCall{qtumClient}
 	proxyEthEstimateGas := ProxyETHEstimateGas{&proxyEth}
-	got, err := proxyEthEstimateGas.Request(requestRPC)
+	got, err := proxyEthEstimateGas.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

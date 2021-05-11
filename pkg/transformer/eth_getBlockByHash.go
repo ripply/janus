@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -22,7 +23,7 @@ func (p *ProxyETHGetBlockByHash) Method() string {
 	return "eth_getBlockByHash"
 }
 
-func (p *ProxyETHGetBlockByHash) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHGetBlockByHash) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	req := new(eth.GetBlockByHashRequest)
 	if err := unmarshalRequest(rawreq.Params, req); err != nil {
 		return nil, err

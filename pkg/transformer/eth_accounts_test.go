@@ -36,7 +36,7 @@ func TestAccountRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHAccounts{qtumClient}
-	got, err := proxyEth.Request(request)
+	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

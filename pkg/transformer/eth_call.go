@@ -3,6 +3,7 @@ package transformer
 import (
 	"math/big"
 
+	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -17,7 +18,7 @@ func (p *ProxyETHCall) Method() string {
 	return "eth_call"
 }
 
-func (p *ProxyETHCall) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHCall) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	var req eth.CallRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err

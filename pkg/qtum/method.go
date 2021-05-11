@@ -1,6 +1,7 @@
 package qtum
 
 import (
+	"context"
 	"encoding/json"
 	"math/big"
 
@@ -414,6 +415,23 @@ func (m *Method) GetNetworkInfo() (resp *NetworkInfoResponse, err error) {
 	}
 	if m.IsDebugEnabled() {
 		m.GetDebugLogger().Log("function", "GetPeerInfo", "msg", "Successfully got peer info")
+	}
+	return
+}
+
+func (m *Method) WaitForLogs(req *WaitForLogsRequest) (resp *WaitForLogsResponse, err error) {
+	return m.WaitForLogsWithContext(nil, req)
+}
+
+func (m *Method) WaitForLogsWithContext(ctx context.Context, req *WaitForLogsRequest) (resp *WaitForLogsResponse, err error) {
+	if err := m.RequestWithContext(ctx, MethodWaitForLogs, req, &resp); err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("function", "WaitForLogs", "error", err)
+		}
+		return nil, err
+	}
+	if m.IsDebugEnabled() {
+		m.GetDebugLogger().Log("function", "WaitForLogs", "request", marshalToString(req), "msg", "Successfully got waitforlogs response")
 	}
 	return
 }
