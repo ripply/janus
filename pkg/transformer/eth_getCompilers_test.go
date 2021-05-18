@@ -9,7 +9,7 @@ import (
 func TestGetCompilersReturnsEmptyArray(t *testing.T) {
 	//preparing the request
 	requestParams := []json.RawMessage{} //eth_getCompilers has no params
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}

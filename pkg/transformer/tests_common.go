@@ -20,12 +20,17 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-//copy of qtum.doer interface
-type doer interface {
+//copy of qtum.Doer interface
+type Doer interface {
 	Do(*http.Request) (*http.Response, error)
+	AddRawResponse(requestType string, rawResponse []byte)
+	AddResponse(requestType string, responseResult interface{}) error
+	AddResponseWithRequestID(requestID int, requestType string, responseResult interface{}) error
+	AddError(requestType string, responseError *eth.JSONRPCError) error
+	AddErrorWithRequestID(requestID int, requestType string, responseError *eth.JSONRPCError) error
 }
 
-func newDoerMappedMock() *doerMappedMock {
+func NewDoerMappedMock() *doerMappedMock {
 	return &doerMappedMock{
 		Responses: make(map[string][]byte),
 	}
@@ -63,7 +68,7 @@ func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-func prepareEthRPCRequest(id int, params []json.RawMessage) (*eth.JSONRPCRequest, error) {
+func PrepareEthRPCRequest(id int, params []json.RawMessage) (*eth.JSONRPCRequest, error) {
 	requestID, err := json.Marshal(1)
 	if err != nil {
 		return nil, err
@@ -185,7 +190,7 @@ func parseRequestFromBody(request *http.Request) (*eth.JSONRPCRequest, error) {
 	return &requestJSON, err
 }
 
-func createMockedClient(doerInstance doer) (qtumClient *qtum.Qtum, err error) {
+func CreateMockedClient(doerInstance Doer) (qtumClient *qtum.Qtum, err error) {
 	logger := kitLog.NewLogfmtLogger(os.Stdout)
 	if !isDebugEnvironmentVariableSet() {
 		logger = level.NewFilter(logger, level.AllowWarn())
@@ -209,7 +214,7 @@ func isDebugEnvironmentVariableSet() bool {
 	return strings.ToLower(os.Getenv("DEBUG")) == "true"
 }
 
-func mustMarshalIndent(v interface{}, prefix, indent string) []byte {
+func MustMarshalIndent(v interface{}, prefix, indent string) []byte {
 	res, err := json.MarshalIndent(v, prefix, indent)
 	if err != nil {
 		panic(err)
@@ -334,7 +339,7 @@ var (
 	}
 )
 
-func setupGetBlockByHashResponses(t *testing.T, mockedClientDoer *doerMappedMock) {
+func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer *doerMappedMock) {
 	//preparing answer to "getblockhash"
 	getBlockHashResponse := qtum.GetBlockHashResponse(getTransactionByHashBlockHexHash)
 	err := mockedClientDoer.AddResponse(qtum.MethodGetBlockHash, getBlockHashResponse)
@@ -478,16 +483,16 @@ func setupGetBlockByHashResponses(t *testing.T, mockedClientDoer *doerMappedMock
 	}
 }
 
-func testETHProxyRequest(t *testing.T, initializer ETHProxyInitializer, requestParams []json.RawMessage, want interface{}) {
-	request, err := prepareEthRPCRequest(1, requestParams)
+func TestETHProxyRequest(t *testing.T, initializer ETHProxyInitializer, requestParams []json.RawMessage, want interface{}) {
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 
-	setupGetBlockByHashResponses(t, mockedClientDoer)
+	SetupGetBlockByHashResponses(t, mockedClientDoer)
 
 	//preparing proxy & executing request
 	proxyEth := initializer(qtumClient)
@@ -497,8 +502,8 @@ func testETHProxyRequest(t *testing.T, initializer ETHProxyInitializer, requestP
 	}
 
 	if !reflect.DeepEqual(got, want) {
-		wantString := string(mustMarshalIndent(want, "", "  "))
-		gotString := string(mustMarshalIndent(got, "", "  "))
+		wantString := string(MustMarshalIndent(want, "", "  "))
+		gotString := string(MustMarshalIndent(got, "", "  "))
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,

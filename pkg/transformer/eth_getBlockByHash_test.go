@@ -19,7 +19,7 @@ func TestGetBlockByHashRequestNonceLength(t *testing.T) {
 }
 
 func TestGetBlockByHashRequest(t *testing.T) {
-	testETHProxyRequest(
+	TestETHProxyRequest(
 		t,
 		initializeProxyETHGetBlockByHash,
 		[]json.RawMessage{[]byte(`"` + getTransactionByHashBlockHexHash + `"`), []byte(`false`)},
@@ -28,7 +28,7 @@ func TestGetBlockByHashRequest(t *testing.T) {
 }
 
 func TestGetBlockByHashTransactionsRequest(t *testing.T) {
-	testETHProxyRequest(
+	TestETHProxyRequest(
 		t,
 		initializeProxyETHGetBlockByHash,
 		[]json.RawMessage{[]byte(`"` + getTransactionByHashBlockHexHash + `"`), []byte(`true`)},

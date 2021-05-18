@@ -8,7 +8,7 @@ import (
 func TestGetUncleByBlockHashAndIndexReturnsNil(t *testing.T) {
 	// request body doesn't matter, there is no QTUM object to proxy calls to
 	requestParams := []json.RawMessage{}
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}

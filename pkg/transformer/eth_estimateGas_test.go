@@ -19,14 +19,14 @@ func TestEstimateGasRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := PrepareEthRPCRequest(1, requestParamsArray)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,8 +73,8 @@ func TestEstimateGasRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

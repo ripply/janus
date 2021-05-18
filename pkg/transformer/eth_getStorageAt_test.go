@@ -13,13 +13,13 @@ func TestGetStorageAtRequestWithNoLeadingZeros(t *testing.T) {
 	index := "abcde"
 	blockNumber := "0x1234"
 	requestParams := []json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`"0x` + index + `"`), []byte(`"` + blockNumber + `"`)}
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 
 	value := "0x012341231441234123412343211234abcde12342332100000223030004005000"
 
@@ -44,8 +44,8 @@ func TestGetStorageAtRequestWithNoLeadingZeros(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -54,13 +54,13 @@ func TestGetStorageAtRequestWithLeadingZeros(t *testing.T) {
 	index := leftPadStringWithZerosTo64Bytes("abcde")
 	blockNumber := "0x1234"
 	requestParams := []json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`"0x` + index + `"`), []byte(`"` + blockNumber + `"`)}
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 
 	value := "0x012341231441234123412343211234abcde12342332100000223030004005000"
 
@@ -85,8 +85,8 @@ func TestGetStorageAtRequestWithLeadingZeros(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -95,13 +95,13 @@ func TestGetStorageAtUnknownFieldRequest(t *testing.T) {
 	index := "abcde"
 	blockNumber := "0x1234"
 	requestParams := []json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`"0x1234"`), []byte(`"` + blockNumber + `"`)}
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 
 	unknownValue := "0x0000000000000000000000000000000000000000000000000000000000000000"
 	value := "0x012341231441234123412343211234abcde12342332100000223030004005000"
@@ -127,8 +127,8 @@ func TestGetStorageAtUnknownFieldRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

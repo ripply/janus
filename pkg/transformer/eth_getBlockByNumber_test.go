@@ -13,7 +13,7 @@ func initializeProxyETHGetBlockByNumber(qtumClient *qtum.Qtum) ETHProxy {
 }
 
 func TestGetBlockByNumberRequest(t *testing.T) {
-	testETHProxyRequest(
+	TestETHProxyRequest(
 		t,
 		initializeProxyETHGetBlockByNumber,
 		[]json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`false`)},
@@ -22,7 +22,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 }
 
 func TestGetBlockByNumberWithTransactionsRequest(t *testing.T) {
-	testETHProxyRequest(
+	TestETHProxyRequest(
 		t,
 		initializeProxyETHGetBlockByNumber,
 		[]json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`true`)},
@@ -32,13 +32,13 @@ func TestGetBlockByNumberWithTransactionsRequest(t *testing.T) {
 
 func TestGetBlockByNumberUnknownBlockRequest(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`true`)}
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 
 	unknownBlockResponse := qtum.GetErrorResponse(qtum.ErrInvalidParameter)
 	err = mockedClientDoer.AddError(qtum.MethodGetBlockHash, unknownBlockResponse)
@@ -58,7 +58,7 @@ func TestGetBlockByNumberUnknownBlockRequest(t *testing.T) {
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
 			string("nil"),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

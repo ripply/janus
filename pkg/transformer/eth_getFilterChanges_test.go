@@ -13,13 +13,13 @@ import (
 func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 	//prepare request
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
-	requestRPC, err := prepareEthRPCRequest(1, requestParams)
+	requestRPC, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 	//prepare client
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,8 +59,8 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -68,13 +68,13 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 	//prepare request
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
-	requestRPC, err := prepareEthRPCRequest(1, requestParams)
+	requestRPC, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 	//prepare client
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,8 +105,8 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -114,13 +114,13 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 func TestGetFilterChangesRequest_NoSuchFilter(t *testing.T) {
 	//prepare request
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
-	requestRPC, err := prepareEthRPCRequest(1, requestParams)
+	requestRPC, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 	//prepare client
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,16 +135,16 @@ func TestGetFilterChangesRequest_NoSuchFilter(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(mustMarshalIndent(expectedErr, "", "  ")),
-			string(mustMarshalIndent(err.Error(), "", "  ")),
+			string(MustMarshalIndent(expectedErr, "", "  ")),
+			string(MustMarshalIndent(err.Error(), "", "  ")),
 		)
 	}
 	if err.Error() != expectedErr {
 		t.Errorf(
 			"error\ninput: %s\nwant error: %s\ngot: %s",
 			requestRPC,
-			string(mustMarshalIndent(expectedErr, "", "  ")),
-			string(mustMarshalIndent(err.Error(), "", "  ")),
+			string(MustMarshalIndent(expectedErr, "", "  ")),
+			string(MustMarshalIndent(err.Error(), "", "  ")),
 		)
 	}
 }

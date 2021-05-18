@@ -31,13 +31,13 @@ func TestGetLogs(t *testing.T) {
 	}
 
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := PrepareEthRPCRequest(1, requestParamsArray)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	clientDoerMock := newDoerMappedMock()
-	qtumClient, err := createMockedClient(clientDoerMock)
+	clientDoerMock := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(clientDoerMock)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,8 +101,8 @@ func TestGetLogs(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -133,8 +133,8 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		t.Fatalf("Expected nil for topic 2, got: %v", translatedTopics[1])
 	}
 
-	clientDoerMock := newDoerMappedMock()
-	qtumClient, err := createMockedClient(clientDoerMock)
+	clientDoerMock := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(clientDoerMock)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,8 +159,8 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			qtumRawRequest,
-			string(mustMarshalIndent(expectedRawRequest, "", "  ")),
-			string(mustMarshalIndent(string(qtumRawRequest), "", "  ")),
+			string(MustMarshalIndent(expectedRawRequest, "", "  ")),
+			string(MustMarshalIndent(string(qtumRawRequest), "", "  ")),
 		)
 	}
 }

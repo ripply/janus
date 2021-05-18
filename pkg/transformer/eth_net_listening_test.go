@@ -18,13 +18,13 @@ func TestNetListeningActive(t *testing.T) {
 func testNetListeningRequest(t *testing.T, active bool) {
 	//preparing the request
 	requestParams := []json.RawMessage{} //net_listening has no params
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}

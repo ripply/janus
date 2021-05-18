@@ -12,13 +12,13 @@ import (
 
 func TestAccountRequest(t *testing.T) {
 	requestParams := []json.RawMessage{}
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,15 +46,15 @@ func TestAccountRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
 
 func TestAccountMethod(t *testing.T) {
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,14 +66,14 @@ func TestAccountMethod(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
 			"error\n\nwant: %s\ngot: %s",
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
 func TestAccountToResponse(t *testing.T) {
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,8 +99,8 @@ func TestAccountToResponse(t *testing.T) {
 	if !reflect.DeepEqual(got, &want) {
 		t.Errorf(
 			"error\n\nwant: %s\ngot: %s",
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

@@ -13,14 +13,14 @@ Test is not quite finished:
 func TestGetTransactionByHashRequest(t *testing.T) {
 	//preparing request
 	requestParams := []json.RawMessage{[]byte(`"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"`)}
-	request, err := prepareEthRPCRequest(1, requestParams)
+	request, err := PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
-	mockedClientDoer := newDoerMappedMock()
-	qtumClient, err := createMockedClient(mockedClientDoer)
+	mockedClientDoer := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(mockedClientDoer)
 
-	setupGetBlockByHashResponses(t, mockedClientDoer)
+	SetupGetBlockByHashResponses(t, mockedClientDoer)
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
@@ -34,8 +34,8 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

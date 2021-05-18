@@ -21,10 +21,10 @@ func TestEthCallRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := PrepareEthRPCRequest(1, requestParamsArray)
 
-	clientDoerMock := newDoerMappedMock()
-	qtumClient, err := createMockedClient(clientDoerMock)
+	clientDoerMock := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(clientDoerMock)
 
 	//preparing response
 	callContractResponse := qtum.CallContractResponse{
@@ -83,8 +83,8 @@ func TestEthCallRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -100,10 +100,10 @@ func TestRetry(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := PrepareEthRPCRequest(1, requestParamsArray)
 
-	clientDoerMock := newDoerMappedMock()
-	qtumClient, err := createMockedClient(clientDoerMock)
+	clientDoerMock := NewDoerMappedMock()
+	qtumClient, err := CreateMockedClient(clientDoerMock)
 
 	//preparing response
 	callContractResponse := qtum.CallContractResponse{
@@ -181,8 +181,8 @@ func TestRetry(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(MustMarshalIndent(want, "", "  ")),
+			string(MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

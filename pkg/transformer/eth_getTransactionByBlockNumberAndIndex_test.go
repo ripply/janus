@@ -12,7 +12,7 @@ func initializeProxyETHGetTransactionByBlockNumberAndIndex(qtumClient *qtum.Qtum
 }
 
 func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
-	testETHProxyRequest(
+	TestETHProxyRequest(
 		t,
 		initializeProxyETHGetTransactionByBlockNumberAndIndex,
 		[]json.RawMessage{[]byte(`"` + getTransactionByHashBlockNumber + `"`), []byte(`"0x0"`)},
