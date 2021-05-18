@@ -710,12 +710,19 @@ type ChainIdResponse string
 
 // ======= qtum_getUTXOs ============= //
 
-// NOTE: there is no response struct definition inside of this package, 'cause
-// it's the same as original Qtum response, which is declared at qtum package
-type GetUTXOsRequest struct {
-	Address      string
-	MinSumAmount decimal.Decimal
-}
+type (
+	GetUTXOsRequest struct {
+		Address      string
+		MinSumAmount decimal.Decimal
+	}
+
+	QtumUTXO struct {
+		TXID string `json:"txid"`
+		Vout uint   `json:"vout"`
+	}
+
+	GetUTXOsResponse []QtumUTXO
+)
 
 func (req *GetUTXOsRequest) UnmarshalJSON(params []byte) error {
 	paramsBytesNum := len(params)

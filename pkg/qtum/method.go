@@ -326,6 +326,20 @@ func (m *Method) GetAccountInfo(req *GetAccountInfoRequest) (resp *GetAccountInf
 	return
 }
 
+func (m *Method) GetAddressUTXOs(req *GetAddressUTXOsRequest) (*GetAddressUTXOsResponse, error) {
+	resp := new(GetAddressUTXOsResponse)
+	if err := m.Request(MethodGetAddressUTXOs, req, resp); err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("function", "GetAddressUTXOs", "error", err)
+		}
+		return nil, err
+	}
+	if m.IsDebugEnabled() {
+		m.GetDebugLogger().Log("function", "GetAddressUTXOs", "request", marshalToString(req), "msg", "Successfully got address UTXOs")
+	}
+	return resp, nil
+}
+
 func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse, err error) {
 	if err := m.Request(MethodListUnspent, req, &resp); err != nil {
 		if m.IsDebugEnabled() {

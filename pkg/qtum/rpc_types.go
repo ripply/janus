@@ -1284,6 +1284,69 @@ func (r *SendRawTransactionResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ========== GetAddressUTXOs ============= //
+
+type (
+	/*
+		Arguments:
+		1. Input params              (json object, required) Json object
+			{
+			"addresses": [        (json array, required) The qtum addresses
+				"address",          (string) The qtum address
+				...
+			],
+			"chainInfo": bool,    (boolean, optional) Include chain info with results
+			}
+
+		Result:
+		{                       (json object)
+		"address" : "str",    (string) The address base58check encoded
+		"txid" : "hex",       (string) The output txid
+		"height" : n,         (numeric) The block height
+		"outputIndex" : n,    (numeric) The output index
+		"script" : "hex",     (string) The script hex encoded
+		"satoshis" : n        (numeric) The number of satoshis of the output
+		}
+	*/
+
+	GetAddressUTXOsRequest struct {
+		Addresses []string `json:"addresses"`
+	}
+
+	UTXO struct {
+		Address     string          `json:"address"`
+		TXID        string          `json:"txid"`
+		OutputIndex uint            `json:"outputIndex"`
+		Script      string          `json:"string"`
+		Satoshis    decimal.Decimal `json:"satoshis"`
+		Height      *big.Int        `json:"height"`
+		IsStake     bool            `json:"isStake"`
+	}
+
+	GetAddressUTXOsResponse []UTXO
+)
+
+func (resp *GetAddressUTXOsResponse) UnmarshalJSON(data []byte) error {
+	// NOTE: do not use `GetTransactionReceiptResponse`, 'cause
+	// it may violate to infinite loop, while calling
+	// UnmarshalJSON interface
+	var utxos []UTXO
+	if err := json.Unmarshal(data, &utxos); err != nil {
+		return err
+	}
+	*resp = GetAddressUTXOsResponse(utxos)
+	return nil
+}
+
+func (r *GetAddressUTXOsRequest) MarshalJSON() ([]byte, error) {
+	params := []map[string]interface{}{}
+	addresses := map[string]interface{}{
+		"addresses": r.Addresses,
+	}
+	params = append(params, addresses)
+	return json.Marshal(params)
+}
+
 // ========== ListUnspent ============= //
 type (
 

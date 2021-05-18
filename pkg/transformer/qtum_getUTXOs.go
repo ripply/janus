@@ -32,24 +32,31 @@ func (p *ProxyQTUMGetUTXOs) Request(req *eth.JSONRPCRequest) (interface{}, error
 	return p.request(params)
 }
 
-func (p *ProxyQTUMGetUTXOs) request(params eth.GetUTXOsRequest) (*qtum.ListUnspentResponse, error) {
+func (p *ProxyQTUMGetUTXOs) request(params eth.GetUTXOsRequest) (*eth.GetUTXOsResponse, error) {
 	address, err := convertETHAddress(utils.RemoveHexPrefix(params.Address), p.Chain())
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't convert Ethereum address to Qtum address")
 	}
 
-	req := qtum.NewListUnspentRequest(qtum.ListUnspentQueryOptions{}, address)
-	resp, err := p.Qtum.ListUnspent(req)
+	req := qtum.GetAddressUTXOsRequest{
+		Addresses: []string{address},
+	}
+
+	resp, err := p.Qtum.GetAddressUTXOs(&req)
 	if err != nil {
 		return nil, err
 	}
 
+	//Convert minSumAmount to Satoshis
+	minimumSum := params.MinSumAmount.Mul(decimal.NewFromFloat(float64(1e8)))
+
+	var utxos []eth.QtumUTXO
 	var minUTXOsSum decimal.Decimal
 	for _, utxo := range *resp {
-		minUTXOsSum = minUTXOsSum.Add(utxo.Amount)
-
-		if minUTXOsSum.GreaterThanOrEqual(params.MinSumAmount) {
-			return resp, nil
+		minUTXOsSum = minUTXOsSum.Add(utxo.Satoshis)
+		utxos = append(utxos, eth.QtumUTXO{TXID: utxo.TXID, Vout: utxo.OutputIndex})
+		if minUTXOsSum.GreaterThanOrEqual(minimumSum) {
+			return (*eth.GetUTXOsResponse)(&utxos), nil
 		}
 	}
 
