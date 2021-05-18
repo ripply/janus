@@ -42,7 +42,7 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 	return ethTx, nil
 }
 
-// TODO: think of returning flag if it's a rewrad transaction for miner
+// TODO: think of returning flag if it's a reward transaction for miner
 func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashResponse, error) {
 	qtumTx, err := p.GetTransaction(hash)
 	if err != nil {
@@ -51,6 +51,9 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 		}
 		ethTx, err := getRewardTransactionByHash(p, hash)
 		if err != nil {
+			if errors.Cause(err) == qtum.ErrInvalidAddress {
+				return nil, nil
+			}
 			return nil, errors.WithMessage(err, "couldn't get reward transaction by hash")
 		}
 		return ethTx, nil
@@ -154,7 +157,7 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashResponse, error) {
 	rawQtumTx, err := p.GetRawTransaction(hash, false)
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't get raw transaction")
+		return nil, errors.WithMessage(err, "couldn't get raw reward transaction")
 	}
 
 	ethTx := &eth.GetTransactionByHashResponse{

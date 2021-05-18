@@ -1,6 +1,8 @@
 package transformer
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
@@ -33,6 +35,11 @@ func (p *ProxyETHGetBlockByHash) Request(rawreq *eth.JSONRPCRequest) (interface{
 func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.GetBlockByHashResponse, error) {
 	blockHeader, err := p.GetBlockHeader(req.BlockHash)
 	if err != nil {
+		if err == qtum.ErrInvalidAddress {
+			// unknown block hash should return {result: null}
+			p.GetDebugLogger().Log("msg", "Unknown block hash", "blockHash", req.BlockHash)
+			return nil, nil
+		}
 		p.GetDebugLogger().Log("msg", "couldn't get block header", "blockHash", req.BlockHash)
 		return nil, errors.WithMessage(err, "couldn't get block header")
 	}
@@ -40,6 +47,9 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't get block")
 	}
+	nonce := hexutil.EncodeUint64(uint64(block.Nonce))
+	// left pad nonce with 0 to length 16, eg: 0x0000000000000042
+	nonce = utils.AddHexPrefix(fmt.Sprintf("%016v", utils.RemoveHexPrefix(nonce)))
 	resp := &eth.GetBlockByHashResponse{
 		// TODO: researching
 		// * If ETH block has pending status, then the following values must be null
@@ -73,9 +83,10 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 		// TODO: researching
 		// ? What value to put
 		// - Temporary set this value to be always zero
-		ExtraData: "0x0",
+		// - the graph requires this to be of length 64
+		ExtraData: "0x0000000000000000000000000000000000000000000000000000000000000000",
 
-		Nonce:            hexutil.EncodeUint64(uint64(block.Nonce)),
+		Nonce:            nonce,
 		Size:             hexutil.EncodeUint64(uint64(block.Size)),
 		Difficulty:       hexutil.EncodeUint64(uint64(blockHeader.Difficulty)),
 		StateRoot:        utils.AddHexPrefix(blockHeader.HashStateRoot),
@@ -113,6 +124,10 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 			tx, err := getTransactionByHash(p.Qtum, txHash)
 			if err != nil {
 				return nil, errors.WithMessage(err, "couldn't get transaction by hash")
+			}
+			if tx == nil {
+				p.GetDebugLogger().Log("msg", "Failed to get transaction by hash included in a block", "hash", txHash)
+				return nil, errors.WithMessage(err, "couldn't get transaction by hash included in a block")
 			}
 			resp.Transactions = append(resp.Transactions, *tx)
 			// TODO: fill gas used
