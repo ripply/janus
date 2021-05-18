@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/labstack/echo"
+	"github.com/qtumproject/janus/pkg/conversion"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -47,7 +48,7 @@ func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResp
 	logs := make([]eth.Log, 0)
 	for _, receipt := range receipts {
 		r := qtum.TransactionReceipt(receipt)
-		logs = append(logs, extractETHLogsFromTransactionReceipt(&r)...)
+		logs = append(logs, conversion.ExtractETHLogsFromTransactionReceipt(&r)...)
 	}
 
 	resp := eth.GetLogsResponse(logs)

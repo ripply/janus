@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/conversion"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
@@ -92,14 +93,18 @@ func (s *subscriptionInformation) run() {
 
 	failures := 0
 	for {
-		s.qtum.GetDebugLogger().Log("msg", "calling waitforlogs")
 		req.FromBlock = nextBlock
 		resp, err := s.qtum.WaitForLogsWithContext(s.ctx, req)
 		if err == nil {
-			s.notifier.Send(&eth.EthSubscription{
-				SubscriptionID: s.Subscription.id,
-				Result:         resp,
-			})
+			for _, qtumLog := range resp.Entries {
+				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(&qtumLog)
+				for _, ethLog := range ethLogs {
+					s.notifier.Send(&eth.EthSubscription{
+						SubscriptionID: s.Subscription.id,
+						Result:         ethLog,
+					})
+				}
+			}
 			failures = 0
 		} else {
 			// error occurred

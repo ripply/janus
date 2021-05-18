@@ -4,6 +4,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/conversion"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -66,7 +67,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 	ethReceipt.Status = status
 
 	r := qtum.TransactionReceipt(*qtumReceipt)
-	ethReceipt.Logs = extractETHLogsFromTransactionReceipt(&r)
+	ethReceipt.Logs = conversion.ExtractETHLogsFromTransactionReceipt(&r)
 
 	qtumTx, err := p.Qtum.GetTransaction(qtumReceipt.TransactionHash)
 	if err != nil {

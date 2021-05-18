@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 
+	"github.com/qtumproject/janus/pkg/conversion"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -111,7 +112,7 @@ func (p *ProxyETHGetFilterChanges) doSearchLogs(req *qtum.SearchLogsRequest) (et
 	}
 
 	receiptToResult := func(receipt *qtum.TransactionReceipt) []interface{} {
-		logs := extractETHLogsFromTransactionReceipt(receipt)
+		logs := conversion.ExtractETHLogsFromTransactionReceipt(receipt)
 		res := make([]interface{}, len(logs))
 		for i := range res {
 			res[i] = logs[i]
