@@ -330,6 +330,8 @@ func (a *Agent) run() {
 
 	return
 
+	// TODO: Other subscription types
+
 	for {
 		// infinite loop while we have subscriptions
 		subscriptionCount := a.subscriptionCount(true)

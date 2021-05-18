@@ -689,6 +689,14 @@ func (r EthSubscriptionRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(output)
 }
 
+// ========== eth_unsubscribe =========== //
+
+type (
+	EthUnsubscribeRequest []string
+
+	EthUnsubscribeResponse bool
+)
+
 // ========== eth_newFilter ============= //
 
 type NewFilterRequest struct {

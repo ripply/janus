@@ -29,10 +29,13 @@ func NewSubscription(notifier *Notifier, callback UnsubscribeCallback) (*Subscri
 		return nil, err
 	}
 	return &Subscription{
-		id:          id,
-		once:        sync.Once{},
-		unsubscribe: callback,
-		notifier:    notifier,
+		id:   id,
+		once: sync.Once{},
+		unsubscribe: func(id string) {
+			callback(id)
+			notifier.Unsubscribe(id)
+		},
+		notifier: notifier,
 	}, nil
 }
 
@@ -92,6 +95,22 @@ func (n *Notifier) Subscribe(unsubscribeCallback UnsubscribeCallback) (*Subscrip
 	}
 
 	return sub, nil
+}
+
+func (n *Notifier) Unsubscribe(id string) bool {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
+	subscription, ok := n.subscriptions[id]
+	if ok {
+		subscription.Unsubscribe()
+		delete(n.subscriptions, id)
+		n.logger.Log("subscriptionId", id, "msg", "Subscription id unsubscribed")
+	} else {
+		n.logger.Log("subscriptionId", id, "msg", "Unknown subscription id to unsubscribe from")
+	}
+
+	return ok
 }
 
 func (n *Notifier) ResponseSent() {
