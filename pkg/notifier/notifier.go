@@ -56,7 +56,7 @@ func (s *Subscription) Unsubscribe() {
 
 type Notifier struct {
 	runMutex              sync.Mutex
-	mutex                 sync.Mutex
+	mutex                 sync.RWMutex
 	ctx                   context.Context
 	close                 func()
 	send                  func(interface{}) error
@@ -68,20 +68,22 @@ type Notifier struct {
 }
 
 func NewNotifier(ctx context.Context, close func(), send func(interface{}) error, logger log.Logger) *Notifier {
-	pending := make(chan interface{})
-	flushed := make(chan interface{})
-	return &Notifier{
+	pending := make(chan interface{}, 10)
+	flushed := make(chan interface{}, 10)
+	notifier := &Notifier{
 		runMutex:              sync.Mutex{},
-		mutex:                 sync.Mutex{},
+		mutex:                 sync.RWMutex{},
 		ctx:                   ctx,
 		close:                 close,
 		send:                  send,
 		logger:                log.WithPrefix(logger, "component", "notifier"),
-		queue:                 make(chan interface{}),
+		queue:                 make(chan interface{}, 50),
 		subscriptionIdPending: &pending,
 		subscriptionsFlushed:  &flushed,
 		subscriptions:         make(map[string]*Subscription),
 	}
+	go notifier.run()
+	return notifier
 }
 
 func (n *Notifier) Context() context.Context {
@@ -123,7 +125,7 @@ func (n *Notifier) ResponseSent() {
 }
 
 func (n *Notifier) ResponseRequired() {
-	pending := make(chan interface{})
+	pending := make(chan interface{}, 10)
 	n.subscriptionIdPending = &pending
 }
 
@@ -138,7 +140,7 @@ func (n *Notifier) closeSubscriptionsFlushed() {
 	}
 }
 
-func (n *Notifier) Run() {
+func (n *Notifier) run() {
 	n.runMutex.Lock()
 	defer n.runMutex.Unlock()
 
@@ -164,8 +166,15 @@ func (n *Notifier) Run() {
 		case <-n.ctx.Done():
 			return
 		case event := <-n.queue:
-			log.With(level.Debug(n.logger)).Log("msg", event)
-			<-*n.subscriptionIdPending
+			b, _ := json.Marshal(event)
+			log.With(level.Debug(n.logger)).Log("notifier event", string(b))
+			n.mutex.RLock()
+			subscriptionIdPending := *n.subscriptionIdPending
+			n.mutex.RUnlock()
+			if subscriptionIdPending != nil {
+				<-subscriptionIdPending
+			}
+			log.With(level.Debug(n.logger)).Log("msg", "subscription pending complete")
 			if event == UnsubSignal {
 				n.mutex.Lock()
 				n.closeSubscriptionsFlushed()

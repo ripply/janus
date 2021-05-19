@@ -16,7 +16,7 @@ func TestGetTransactionByBlockNumberAndIndex(t *testing.T) {
 	testETHProxyRequest(
 		t,
 		initializeProxyETHGetTransactionByBlockNumberAndIndex,
-		[]json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumber + `"`), []byte(`"0x0"`)},
+		[]json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumberHex + `"`), []byte(`"0x0"`)},
 		internal.GetTransactionByHashResponseData,
 	)
 }

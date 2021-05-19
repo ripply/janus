@@ -17,7 +17,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 	testETHProxyRequest(
 		t,
 		initializeProxyETHGetBlockByNumber,
-		[]json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumber + `"`), []byte(`false`)},
+		[]json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumberHex + `"`), []byte(`false`)},
 		&internal.GetTransactionByHashResponse,
 	)
 }
@@ -26,13 +26,13 @@ func TestGetBlockByNumberWithTransactionsRequest(t *testing.T) {
 	testETHProxyRequest(
 		t,
 		initializeProxyETHGetBlockByNumber,
-		[]json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumber + `"`), []byte(`true`)},
+		[]json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumberHex + `"`), []byte(`true`)},
 		&internal.GetTransactionByHashResponseWithTransactions,
 	)
 }
 
 func TestGetBlockByNumberUnknownBlockRequest(t *testing.T) {
-	requestParams := []json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumber + `"`), []byte(`true`)}
+	requestParams := []json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumberHex + `"`), []byte(`true`)}
 	request, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)

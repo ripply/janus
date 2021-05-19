@@ -11,6 +11,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/dcb9/go-ethereum/common/hexutil"
 	kitLog "github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/qtumproject/janus/pkg/eth"
@@ -222,12 +223,13 @@ func MustMarshalIndent(v interface{}, prefix, indent string) []byte {
 }
 
 var (
-	GetTransactionByHashBlockNumber  = "0xf8f"
-	GetTransactionByHashBlockHash    = "bba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5"
-	GetTransactionByHashBlockHexHash = utils.AddHexPrefix(GetTransactionByHashBlockHash)
-	GetTransactionByHashResponseData = eth.GetTransactionByHashResponse{
+	GetTransactionByHashBlockNumberHex     = "0xf8f"
+	GetTransactionByHashBlockNumberInteger = uint64(3983)
+	GetTransactionByHashBlockHash          = "bba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5"
+	GetTransactionByHashBlockHexHash       = utils.AddHexPrefix(GetTransactionByHashBlockHash)
+	GetTransactionByHashResponseData       = eth.GetTransactionByHashResponse{
 		BlockHash:        GetTransactionByHashBlockHexHash,
-		BlockNumber:      GetTransactionByHashBlockNumber,
+		BlockNumber:      GetTransactionByHashBlockNumberHex,
 		TransactionIndex: "0x2",
 		Hash:             "0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
 		Nonce:            "0x0",
@@ -240,7 +242,7 @@ var (
 	}
 
 	GetTransactionByHashResponse = eth.GetBlockByHashResponse{
-		Number:           GetTransactionByHashBlockNumber,
+		Number:           GetTransactionByHashBlockNumberHex,
 		Hash:             GetTransactionByHashBlockHexHash,
 		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
 		Miner:            "0x0000000000000000000000000000000000000000",
@@ -263,7 +265,7 @@ var (
 	}
 
 	GetTransactionByHashResponseWithTransactions = eth.GetBlockByHashResponse{
-		Number:           GetTransactionByHashBlockNumber,
+		Number:           GetTransactionByHashBlockNumberHex,
 		Hash:             GetTransactionByHashBlockHexHash,
 		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
 		Miner:            "0x0000000000000000000000000000000000000000",
@@ -288,7 +290,7 @@ var (
 	}
 
 	GetTransactionByBlockResponse = eth.GetBlockByNumberResponse{
-		Number:           GetTransactionByHashBlockNumber,
+		Number:           GetTransactionByHashBlockNumberHex,
 		Hash:             GetTransactionByHashBlockHexHash,
 		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
 		Miner:            "0x0000000000000000000000000000000000000000",
@@ -311,7 +313,7 @@ var (
 	}
 
 	GetTransactionByBlockResponseWithTransactions = eth.GetBlockByNumberResponse{
-		Number:           GetTransactionByHashBlockNumber,
+		Number:           GetTransactionByHashBlockNumberHex,
 		Hash:             GetTransactionByHashBlockHexHash,
 		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
 		Miner:            "0x0000000000000000000000000000000000000000",
@@ -335,6 +337,21 @@ var (
 		Uncles:     []string{},
 	}
 )
+
+func QtumTransactionReceipt(logs []qtum.Log) qtum.TransactionReceipt {
+	return qtum.TransactionReceipt{
+		BlockHash:         GetTransactionByHashBlockHexHash,
+		BlockNumber:       GetTransactionByHashBlockNumberInteger,
+		TransactionHash:   GetTransactionByHashResponseData.Hash,
+		TransactionIndex:  hexutil.MustDecodeUint64(GetTransactionByHashResponseData.TransactionIndex),
+		From:              GetTransactionByHashResponseData.From,
+		To:                GetTransactionByHashResponseData.To,
+		CumulativeGasUsed: hexutil.MustDecodeUint64(GetTransactionByHashResponseData.Gas),
+		GasUsed:           hexutil.MustDecodeUint64(GetTransactionByHashResponseData.Gas),
+		ContractAddress:   GetTransactionByHashResponseData.To,
+		Log:               logs,
+	}
+}
 
 func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer Doer) {
 	//preparing answer to "getblockhash"

@@ -221,7 +221,6 @@ func websocketHandler(c echo.Context) error {
 		defer func() {
 			cc.GetDebugLogger().Log("msg", "Websocket connection closed")
 		}()
-		go notifier.Run()
 
 		for {
 			cc.GetDebugLogger().Log("msg", "reading websocket request")

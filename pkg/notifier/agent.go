@@ -8,17 +8,17 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/qtumproject/janus/pkg/conversion"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
-func NewAgent(qtum *qtum.Qtum) *Agent {
+func NewAgent(ctx context.Context, qtum *qtum.Qtum) *Agent {
 	agent := &Agent{
 		qtum:          qtum,
+		ctx:           ctx,
 		mutex:         sync.RWMutex{},
 		running:       false,
-		stop:          make(chan interface{}),
+		stop:          make(chan interface{}, 1000),
 		newHeads:      newSubscriptionRegistry(),
 		logs:          newSubscriptionRegistry(),
 		newPendingTxs: newSubscriptionRegistry(),
@@ -43,115 +43,9 @@ func newSubscriptionRegistry() *subscriptionRegistry {
 	}
 }
 
-type subscriptionInformation struct {
-	*Subscription
-	params     *eth.EthSubscriptionRequest
-	mutex      sync.RWMutex
-	ctx        context.Context
-	cancelFunc context.CancelFunc
-	running    bool
-	qtum       *qtum.Qtum
-}
-
-func (s *subscriptionInformation) run() {
-	if s.params == nil {
-		return
-	}
-
-	if strings.ToLower(s.params.Method) != "logs" {
-		return
-	}
-
-	s.mutex.Lock()
-	if s.running {
-		s.mutex.Unlock()
-		return
-	}
-	s.running = true
-	s.mutex.Unlock()
-
-	defer func() {
-		s.mutex.Lock()
-		defer s.mutex.Unlock()
-
-		s.running = false
-	}()
-
-	nextBlock := 0
-	qtumTopics, err := eth.TranslateTopics(s.params.Params.Topics)
-	if err != nil {
-		s.qtum.GetDebugLogger().Log("msg", "Error translating logs topics", "error", err)
-		return
-	}
-	req := &qtum.WaitForLogsRequest{
-		FromBlock: nextBlock,
-		ToBlock:   "latest",
-		Filter: qtum.WaitForLogsFilter{
-			Topics: &qtumTopics,
-		},
-	}
-
-	failures := 0
-	for {
-		req.FromBlock = nextBlock
-		resp, err := s.qtum.WaitForLogsWithContext(s.ctx, req)
-		if err == nil {
-			for _, qtumLog := range resp.Entries {
-				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(&qtumLog)
-				for _, ethLog := range ethLogs {
-					s.notifier.Send(&eth.EthSubscription{
-						SubscriptionID: s.Subscription.id,
-						Result:         ethLog,
-					})
-				}
-			}
-			failures = 0
-		} else {
-			// error occurred
-			s.qtum.GetDebugLogger().Log("subscriptionId", s.id, "err", err)
-			failures = failures + 1
-		}
-
-		done := s.ctx.Done()
-
-		select {
-		case <-done:
-			// err is wrapped so we can't detect (err == context.Cancelled)
-			s.qtum.GetDebugLogger().Log("subscriptionId", s.id, "msg", "context closed, dropping subscription")
-			return
-		default:
-		}
-
-		backoffTime := getBackoff(failures, 0, 15*time.Second)
-
-		if backoffTime > 0 {
-			s.qtum.GetDebugLogger().Log("subscriptionId", s.id, "msg", fmt.Sprintf("backing off for %d miliseconds", backoffTime/time.Millisecond))
-		}
-
-		select {
-		case <-done:
-			return
-		case <-time.After(backoffTime):
-			// ok, try again
-		}
-	}
-}
-
-func getBackoff(count int, min time.Duration, max time.Duration) time.Duration {
-	maxFailures := 10
-	if count == 0 {
-		return min
-	}
-
-	if count > maxFailures {
-		return max
-	}
-
-	return ((max - min) / time.Duration(maxFailures)) * time.Duration(count)
-}
-
 type Agent struct {
 	qtum          *qtum.Qtum
+	ctx           context.Context
 	mutex         sync.RWMutex
 	running       bool
 	stop          chan interface{}
@@ -323,6 +217,8 @@ func (a *Agent) run() {
 		select {
 		case <-a.stop:
 			// drain
+		case <-a.ctx.Done():
+			return
 		default:
 			draining = false
 		}
@@ -350,6 +246,8 @@ func (a *Agent) run() {
 		select {
 		case <-time.After(10 * time.Second):
 			// continue
+		case <-a.ctx.Done():
+			return
 		case <-a.stop:
 			return
 		}

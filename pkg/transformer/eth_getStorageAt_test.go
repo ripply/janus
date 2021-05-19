@@ -13,7 +13,7 @@ import (
 func TestGetStorageAtRequestWithNoLeadingZeros(t *testing.T) {
 	index := "abcde"
 	blockNumber := "0x1234"
-	requestParams := []json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumber + `"`), []byte(`"0x` + index + `"`), []byte(`"` + blockNumber + `"`)}
+	requestParams := []json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumberHex + `"`), []byte(`"0x` + index + `"`), []byte(`"` + blockNumber + `"`)}
 	request, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +54,7 @@ func TestGetStorageAtRequestWithNoLeadingZeros(t *testing.T) {
 func TestGetStorageAtRequestWithLeadingZeros(t *testing.T) {
 	index := leftPadStringWithZerosTo64Bytes("abcde")
 	blockNumber := "0x1234"
-	requestParams := []json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumber + `"`), []byte(`"0x` + index + `"`), []byte(`"` + blockNumber + `"`)}
+	requestParams := []json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumberHex + `"`), []byte(`"0x` + index + `"`), []byte(`"` + blockNumber + `"`)}
 	request, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
@@ -95,7 +95,7 @@ func TestGetStorageAtRequestWithLeadingZeros(t *testing.T) {
 func TestGetStorageAtUnknownFieldRequest(t *testing.T) {
 	index := "abcde"
 	blockNumber := "0x1234"
-	requestParams := []json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumber + `"`), []byte(`"0x1234"`), []byte(`"` + blockNumber + `"`)}
+	requestParams := []json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockNumberHex + `"`), []byte(`"0x1234"`), []byte(`"` + blockNumber + `"`)}
 	request, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)

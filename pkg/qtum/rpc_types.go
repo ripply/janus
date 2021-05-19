@@ -1656,8 +1656,8 @@ type (
 
 	WaitForLogsResponse struct {
 		Entries   []TransactionReceipt `json:"entries"`
-		Count     int64                `json:"count"`
-		NextBlock int64                `json:"nextBlock"`
+		Count     uint64               `json:"count"`
+		NextBlock uint64               `json:"nextBlock"`
 	}
 )
 
