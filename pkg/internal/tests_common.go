@@ -1,4 +1,4 @@
-package transformer
+package internal
 
 import (
 	"bytes"
@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -222,15 +221,13 @@ func MustMarshalIndent(v interface{}, prefix, indent string) []byte {
 	return res
 }
 
-type ETHProxyInitializer = func(*qtum.Qtum) ETHProxy
-
 var (
-	getTransactionByHashBlockNumber  = "0xf8f"
-	getTransactionByHashBlockHash    = "bba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5"
-	getTransactionByHashBlockHexHash = utils.AddHexPrefix(getTransactionByHashBlockHash)
-	getTransactionByHashResponseData = eth.GetTransactionByHashResponse{
-		BlockHash:        getTransactionByHashBlockHexHash,
-		BlockNumber:      getTransactionByHashBlockNumber,
+	GetTransactionByHashBlockNumber  = "0xf8f"
+	GetTransactionByHashBlockHash    = "bba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5"
+	GetTransactionByHashBlockHexHash = utils.AddHexPrefix(GetTransactionByHashBlockHash)
+	GetTransactionByHashResponseData = eth.GetTransactionByHashResponse{
+		BlockHash:        GetTransactionByHashBlockHexHash,
+		BlockNumber:      GetTransactionByHashBlockNumber,
 		TransactionIndex: "0x2",
 		Hash:             "0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
 		Nonce:            "0x0",
@@ -242,9 +239,9 @@ var (
 		GasPrice:         "0x0",
 	}
 
-	getTransactionByHashResponse = eth.GetBlockByHashResponse{
-		Number:           getTransactionByHashBlockNumber,
-		Hash:             getTransactionByHashBlockHexHash,
+	GetTransactionByHashResponse = eth.GetBlockByHashResponse{
+		Number:           GetTransactionByHashBlockNumber,
+		Hash:             GetTransactionByHashBlockHexHash,
 		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
 		Miner:            "0x0000000000000000000000000000000000000000",
 		Size:             "0x26c",
@@ -254,20 +251,20 @@ var (
 		StateRoot:        "0x3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
 		Difficulty:       "0x4",
 		TotalDifficulty:  "0x4",
-		LogsBloom:        EmptyLogsBloom,
+		LogsBloom:        eth.EmptyLogsBloom,
 		ExtraData:        "0x0000000000000000000000000000000000000000000000000000000000000000",
 		GasLimit:         utils.AddHexPrefix(qtum.DefaultBlockGasLimit),
 		GasUsed:          "0x0",
 		Timestamp:        "0x5b95ebd0",
 		Transactions: []interface{}{"0x3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
 			"0x8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"},
-		Sha3Uncles: DefaultSha3Uncles,
+		Sha3Uncles: eth.DefaultSha3Uncles,
 		Uncles:     []string{},
 	}
 
-	getTransactionByHashResponseWithTransactions = eth.GetBlockByHashResponse{
-		Number:           getTransactionByHashBlockNumber,
-		Hash:             getTransactionByHashBlockHexHash,
+	GetTransactionByHashResponseWithTransactions = eth.GetBlockByHashResponse{
+		Number:           GetTransactionByHashBlockNumber,
+		Hash:             GetTransactionByHashBlockHexHash,
 		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
 		Miner:            "0x0000000000000000000000000000000000000000",
 		Size:             "0x26c",
@@ -277,22 +274,22 @@ var (
 		StateRoot:        "0x3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
 		Difficulty:       "0x4",
 		TotalDifficulty:  "0x4",
-		LogsBloom:        EmptyLogsBloom,
+		LogsBloom:        eth.EmptyLogsBloom,
 		ExtraData:        "0x0000000000000000000000000000000000000000000000000000000000000000",
 		GasLimit:         utils.AddHexPrefix(qtum.DefaultBlockGasLimit),
 		GasUsed:          "0x0",
 		Timestamp:        "0x5b95ebd0",
 		Transactions: []interface{}{
-			getTransactionByHashResponseData,
-			getTransactionByHashResponseData,
+			GetTransactionByHashResponseData,
+			GetTransactionByHashResponseData,
 		},
-		Sha3Uncles: DefaultSha3Uncles,
+		Sha3Uncles: eth.DefaultSha3Uncles,
 		Uncles:     []string{},
 	}
 
-	getTransactionByBlockResponse = eth.GetBlockByNumberResponse{
-		Number:           getTransactionByHashBlockNumber,
-		Hash:             getTransactionByHashBlockHexHash,
+	GetTransactionByBlockResponse = eth.GetBlockByNumberResponse{
+		Number:           GetTransactionByHashBlockNumber,
+		Hash:             GetTransactionByHashBlockHexHash,
 		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
 		Miner:            "0x0000000000000000000000000000000000000000",
 		Size:             "0x26c",
@@ -302,20 +299,20 @@ var (
 		StateRoot:        "0x3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
 		Difficulty:       "0x4",
 		TotalDifficulty:  "0x4",
-		LogsBloom:        EmptyLogsBloom,
+		LogsBloom:        eth.EmptyLogsBloom,
 		ExtraData:        "0x0000000000000000000000000000000000000000000000000000000000000000",
 		GasLimit:         utils.AddHexPrefix(qtum.DefaultBlockGasLimit),
 		GasUsed:          "0x0",
 		Timestamp:        "0x5b95ebd0",
 		Transactions: []interface{}{"0x3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
 			"0x8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"},
-		Sha3Uncles: DefaultSha3Uncles,
+		Sha3Uncles: eth.DefaultSha3Uncles,
 		Uncles:     []string{},
 	}
 
-	getTransactionByBlockResponseWithTransactions = eth.GetBlockByNumberResponse{
-		Number:           getTransactionByHashBlockNumber,
-		Hash:             getTransactionByHashBlockHexHash,
+	GetTransactionByBlockResponseWithTransactions = eth.GetBlockByNumberResponse{
+		Number:           GetTransactionByHashBlockNumber,
+		Hash:             GetTransactionByHashBlockHexHash,
 		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
 		Miner:            "0x0000000000000000000000000000000000000000",
 		Size:             "0x26c",
@@ -325,30 +322,30 @@ var (
 		StateRoot:        "0x3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
 		Difficulty:       "0x4",
 		TotalDifficulty:  "0x4",
-		LogsBloom:        EmptyLogsBloom,
+		LogsBloom:        eth.EmptyLogsBloom,
 		ExtraData:        "0x0000000000000000000000000000000000000000000000000000000000000000",
 		GasLimit:         utils.AddHexPrefix(qtum.DefaultBlockGasLimit),
 		GasUsed:          "0x0",
 		Timestamp:        "0x5b95ebd0",
 		Transactions: []interface{}{
-			getTransactionByHashResponseData,
-			getTransactionByHashResponseData,
+			GetTransactionByHashResponseData,
+			GetTransactionByHashResponseData,
 		},
-		Sha3Uncles: DefaultSha3Uncles,
+		Sha3Uncles: eth.DefaultSha3Uncles,
 		Uncles:     []string{},
 	}
 )
 
-func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer *doerMappedMock) {
+func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer Doer) {
 	//preparing answer to "getblockhash"
-	getBlockHashResponse := qtum.GetBlockHashResponse(getTransactionByHashBlockHexHash)
+	getBlockHashResponse := qtum.GetBlockHashResponse(GetTransactionByHashBlockHexHash)
 	err := mockedClientDoer.AddResponse(qtum.MethodGetBlockHash, getBlockHashResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	getBlockHeaderResponse := qtum.GetBlockHeaderResponse{
-		Hash:              getTransactionByHashBlockHash,
+		Hash:              GetTransactionByHashBlockHash,
 		Confirmations:     1,
 		Height:            3983,
 		Version:           536870912,
@@ -373,7 +370,7 @@ func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer *doerMappedMock
 	}
 
 	getBlockResponse := qtum.GetBlockResponse{
-		Hash:              getTransactionByHashBlockHash,
+		Hash:              GetTransactionByHashBlockHash,
 		Confirmations:     1,
 		Strippedsize:      584,
 		Size:              620,
@@ -408,7 +405,7 @@ func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer *doerMappedMock
 		Amount:            decimal.NewFromFloat(0.20689141),
 		Fee:               decimal.NewFromFloat(-0.2012),
 		Confirmations:     2,
-		BlockHash:         getTransactionByHashBlockHash,
+		BlockHash:         GetTransactionByHashBlockHash,
 		BlockIndex:        2,
 		BlockTime:         1533092896,
 		ID:                "11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
@@ -480,38 +477,5 @@ func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer *doerMappedMock
 	err = mockedClientDoer.AddResponse(qtum.MethodGetRawTransaction, &getRawTransactionResponse)
 	if err != nil {
 		t.Fatal(err)
-	}
-}
-
-func TestETHProxyRequest(t *testing.T, initializer ETHProxyInitializer, requestParams []json.RawMessage, want interface{}) {
-	request, err := PrepareEthRPCRequest(1, requestParams)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
-
-	SetupGetBlockByHashResponses(t, mockedClientDoer)
-
-	//preparing proxy & executing request
-	proxyEth := initializer(qtumClient)
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatalf("Failed to process request on %T.Request(%s): %s", proxyEth, requestParams, err)
-	}
-
-	if !reflect.DeepEqual(got, want) {
-		wantString := string(MustMarshalIndent(want, "", "  "))
-		gotString := string(MustMarshalIndent(got, "", "  "))
-		t.Errorf(
-			"error\ninput: %s\nwant: %s\ngot: %s",
-			request,
-			wantString,
-			gotString,
-		)
-		if wantString == gotString {
-			t.Errorf("Want and Got are equal strings but !DeepEqual, probably differ in types (%T ?= %T)", want, got)
-		}
 	}
 }

@@ -8,18 +8,19 @@ import (
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/internal"
 )
 
 func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 	//prepare request
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
-	requestRPC, err := PrepareEthRPCRequest(1, requestParams)
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 	//prepare client
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,8 +60,8 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -68,13 +69,13 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 	//prepare request
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
-	requestRPC, err := PrepareEthRPCRequest(1, requestParams)
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 	//prepare client
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,8 +106,8 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -114,13 +115,13 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 func TestGetFilterChangesRequest_NoSuchFilter(t *testing.T) {
 	//prepare request
 	requestParams := []json.RawMessage{[]byte(`"0x1"`)}
-	requestRPC, err := PrepareEthRPCRequest(1, requestParams)
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 	//prepare client
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,16 +136,16 @@ func TestGetFilterChangesRequest_NoSuchFilter(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(MustMarshalIndent(expectedErr, "", "  ")),
-			string(MustMarshalIndent(err.Error(), "", "  ")),
+			string(internal.MustMarshalIndent(expectedErr, "", "  ")),
+			string(internal.MustMarshalIndent(err.Error(), "", "  ")),
 		)
 	}
 	if err.Error() != expectedErr {
 		t.Errorf(
 			"error\ninput: %s\nwant error: %s\ngot: %s",
 			requestRPC,
-			string(MustMarshalIndent(expectedErr, "", "  ")),
-			string(MustMarshalIndent(err.Error(), "", "  ")),
+			string(internal.MustMarshalIndent(expectedErr, "", "  ")),
+			string(internal.MustMarshalIndent(err.Error(), "", "  ")),
 		)
 	}
 }

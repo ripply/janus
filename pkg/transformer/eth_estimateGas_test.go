@@ -7,6 +7,7 @@ import (
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/internal"
 )
 
 func TestEstimateGasRequest(t *testing.T) {
@@ -19,14 +20,14 @@ func TestEstimateGasRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := PrepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParamsArray)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,8 +74,8 @@ func TestEstimateGasRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

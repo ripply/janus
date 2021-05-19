@@ -8,17 +8,18 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/internal"
 )
 
 func TestAccountRequest(t *testing.T) {
 	requestParams := []json.RawMessage{}
-	request, err := PrepareEthRPCRequest(1, requestParams)
+	request, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,15 +47,15 @@ func TestAccountRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
 
 func TestAccountMethod(t *testing.T) {
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,14 +67,14 @@ func TestAccountMethod(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
 			"error\n\nwant: %s\ngot: %s",
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
 func TestAccountToResponse(t *testing.T) {
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,8 +100,8 @@ func TestAccountToResponse(t *testing.T) {
 	if !reflect.DeepEqual(got, &want) {
 		t.Errorf(
 			"error\n\nwant: %s\ngot: %s",
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

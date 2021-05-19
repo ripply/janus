@@ -8,6 +8,7 @@ import (
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/internal"
 )
 
 func TestEthCallRequest(t *testing.T) {
@@ -21,10 +22,10 @@ func TestEthCallRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := PrepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParamsArray)
 
-	clientDoerMock := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(clientDoerMock)
+	clientDoerMock := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(clientDoerMock)
 
 	//preparing response
 	callContractResponse := qtum.CallContractResponse{
@@ -83,8 +84,8 @@ func TestEthCallRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -100,10 +101,10 @@ func TestRetry(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := PrepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParamsArray)
 
-	clientDoerMock := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(clientDoerMock)
+	clientDoerMock := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(clientDoerMock)
 
 	//preparing response
 	callContractResponse := qtum.CallContractResponse{
@@ -181,8 +182,8 @@ func TestRetry(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }

@@ -7,18 +7,19 @@ import (
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/internal"
 )
 
 func TestMiningRequest(t *testing.T) {
 	//preparing the request
 	requestParams := []json.RawMessage{} //eth_hashrate has no params
-	request, err := PrepareEthRPCRequest(1, requestParams)
+	request, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mockedClientDoer := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(mockedClientDoer)
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 	if err != nil {
 		t.Fatal(err)
 	}

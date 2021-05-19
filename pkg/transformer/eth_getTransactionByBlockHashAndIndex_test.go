@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/qtumproject/janus/pkg/internal"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
@@ -12,10 +13,10 @@ func initializeProxyETHGetTransactionByBlockHashAndIndex(qtumClient *qtum.Qtum) 
 }
 
 func TestGetTransactionByBlockHashAndIndex(t *testing.T) {
-	TestETHProxyRequest(
+	testETHProxyRequest(
 		t,
 		initializeProxyETHGetTransactionByBlockHashAndIndex,
-		[]json.RawMessage{[]byte(`"` + getTransactionByHashBlockHash + `"`), []byte(`"0x0"`)},
-		getTransactionByHashResponseData,
+		[]json.RawMessage{[]byte(`"` + internal.GetTransactionByHashBlockHash + `"`), []byte(`"0x0"`)},
+		internal.GetTransactionByHashResponseData,
 	)
 }

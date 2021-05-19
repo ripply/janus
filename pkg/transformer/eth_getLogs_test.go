@@ -7,6 +7,7 @@ import (
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/internal"
 )
 
 func TestGetLogs(t *testing.T) {
@@ -31,13 +32,13 @@ func TestGetLogs(t *testing.T) {
 	}
 
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := PrepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParamsArray)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	clientDoerMock := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(clientDoerMock)
+	clientDoerMock := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(clientDoerMock)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,8 +102,8 @@ func TestGetLogs(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(MustMarshalIndent(want, "", "  ")),
-			string(MustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -133,8 +134,8 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		t.Fatalf("Expected nil for topic 2, got: %v", translatedTopics[1])
 	}
 
-	clientDoerMock := NewDoerMappedMock()
-	qtumClient, err := CreateMockedClient(clientDoerMock)
+	clientDoerMock := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(clientDoerMock)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,8 +160,8 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			qtumRawRequest,
-			string(MustMarshalIndent(expectedRawRequest, "", "  ")),
-			string(MustMarshalIndent(string(qtumRawRequest), "", "  ")),
+			string(internal.MustMarshalIndent(expectedRawRequest, "", "  ")),
+			string(internal.MustMarshalIndent(string(qtumRawRequest), "", "  ")),
 		)
 	}
 }
