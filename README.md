@@ -1,5 +1,5 @@
 # Qtum adapter to Ethereum JSON RPC
-Janus is and old school ETH web3 HTTP provider that translates Ethereum JSON RPC calls into their equivalent Qtum RPC call/s. The current version self hosts the keys and does not support web sockets.
+Janus is and old school ETH web3 HTTP provider that translates Ethereum JSON RPC calls into their equivalent Qtum RPC call/s. The current version self hosts the keys and supports web sockets.
 
 # Table of Contents
 
@@ -9,7 +9,9 @@ Janus is and old school ETH web3 HTTP provider that translates Ethereum JSON RPC
   - [Self-signed SSL](#self-signed-ssl)
 - [How to use Janus as a Web3 provider](#how-to-use-janus-as-a-web3-provider)
 - [How to add Janus to Metamask](#how-to-add-janus-to-metamask)
-- [Support ETH methods](#support-eth-methods)
+- [Supported ETH methods](#support-eth-methods)
+- [Websocket ETH methods](#websocket-eth-methods-endpoint-at-ws)
+- [Janus methods](#janus-methods)
 - [Try to interact with contract](#try-to-interact-with-contract)
   - [Assumption parameters](#assumption-parameters)
   - [Deploy the contract](#deploy-the-contract)
@@ -45,6 +47,8 @@ This will build the docker image for the local version of Janus as well as spin 
 `make quick-start` will also fund the tests accounts with QTUM in order for you to start testing and developing locally. Additionally, if you need or want to make changes and or additions to Janus, but don't want to go through the hassle of rebuilding the container, you can run the following command at the project root level:
 ```
 $ make run-janus
+# For https
+$ make docker-configure-https && make run-janus-https
 ```
 Which will run the most current local version of Janus on port 23888, but without rebuilding the image or the local docker container.
 
@@ -126,7 +130,12 @@ Getting Janus to work with Metamask requires two things
 -   eth_getFilterLogs    
 -   eth_getLogs
 
- ## Janus methods[](#janus-methods-1)
+## Websocket ETH methods (endpoint at /ws)
+-   (All the above methods)
+-   eth_subscribe (only 'logs' for now)
+-   eth_unsubscribe
+
+## Janus methods
 
 -   qtum_getUTXOs
 
@@ -191,21 +200,21 @@ $ curl --header 'Content-Type: application/json' --data \
      'localhost:23889'
 
 {
-	"jsonrpc":"2.0",
-	"result": {
-		"blockHash":"0x1e64595e724ea5161c0597d327072074940f519a6fb285ae60e73a4c996b47a4",
-		"blockNumber":"0xc9b5",
-		"transactionIndex":"0x5",
-		"hash":"0xa85cacc6143004139fc68808744ea6125ae984454e0ffa6072ac2f2debb0c2e6",
-		"nonce":"0x0",
-		"value":"0x0",
-		"input":"0x00",
-		"from":"0x7926223070547d2d15b2ef5e7383e541c338ffe9",
-		"to":"",
-		"gas":"0x363639316237",
-		"gasPrice":"0x3634"
-		},
-	"id":"10"
+  "jsonrpc":"2.0",
+  "result": {
+    "blockHash":"0x1e64595e724ea5161c0597d327072074940f519a6fb285ae60e73a4c996b47a4",
+    "blockNumber":"0xc9b5",
+    "transactionIndex":"0x5",
+    "hash":"0xa85cacc6143004139fc68808744ea6125ae984454e0ffa6072ac2f2debb0c2e6",
+    "nonce":"0x0",
+    "value":"0x0",
+    "input":"0x00",
+    "from":"0x7926223070547d2d15b2ef5e7383e541c338ffe9",
+    "to":"",
+    "gas":"0x363639316237",
+    "gasPrice":"0x3634"
+  },
+  "id":"10"
 }
 ```
 
@@ -275,3 +284,4 @@ $ curl --header 'Content-Type: application/json' --data \
   - 1 satoshi = 0.00000001 QTUM = 10000000000 wei
 - QTUM's minimum gas price is 40 satoshi
   - When specifying a gas price in wei lower than that, the minimum gas price will be used (40 satoshi)
+- Only 'logs' eth_subscribe type is supported at the moment

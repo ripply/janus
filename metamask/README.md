@@ -43,5 +43,8 @@ window.ethereum.request({ method: 'eth_requestAccounts' })
 ```
 
 # Known issues
-- Metamask requires https for `rpcUrls` and Janus does not yet have ssl support
+- Metamask requires https for `rpcUrls` so that must be enabled
+  - Either directly through Janus with `--https-key ./path --https-cert ./path2` see [SSL](../README.md#ssl)
+  - Through the Makefile `make docker-configure-https && make run-janus-https`
+  - Or do it yourself with a proxy (eg, nginx)
 - Client side transaction signing is not implemented yet
