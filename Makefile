@@ -65,7 +65,7 @@ local-dev-logs: check-env
 
 .PHONY: unit-tests
 unit-tests: check-env
-	go test -v ./...
+	go test -v ./... -timeout 30s
 
 docker-build-unit-tests:
 	docker build -t qtum/tests.janus -f ./docker/unittests.Dockerfile .

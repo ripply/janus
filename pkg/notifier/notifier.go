@@ -33,7 +33,8 @@ func NewSubscription(notifier *Notifier, callback UnsubscribeCallback) (*Subscri
 		once: sync.Once{},
 		unsubscribe: func(id string) {
 			callback(id)
-			notifier.Unsubscribe(id)
+			// call in goroutine as this can be called from Unsubscribe and end in a deadlock
+			go notifier.Unsubscribe(id)
 		},
 		notifier: notifier,
 	}, nil
@@ -96,7 +97,16 @@ func (n *Notifier) Subscribe(unsubscribeCallback UnsubscribeCallback) (*Subscrip
 		return nil, err
 	}
 
+	n.mutex.Lock()
+	n.subscriptions[sub.id] = sub
+	n.mutex.Unlock()
+
 	return sub, nil
+}
+
+// internal function to expose subscription directly to test
+func (n *Notifier) test_getSubscription(id string) *Subscription {
+	return n.subscriptions[id]
 }
 
 func (n *Notifier) Unsubscribe(id string) bool {
@@ -125,6 +135,8 @@ func (n *Notifier) ResponseSent() {
 }
 
 func (n *Notifier) ResponseRequired() {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
 	pending := make(chan interface{}, 10)
 	n.subscriptionIdPending = &pending
 }
@@ -169,12 +181,16 @@ func (n *Notifier) run() {
 			b, _ := json.Marshal(event)
 			log.With(level.Debug(n.logger)).Log("notifier event", string(b))
 			n.mutex.RLock()
-			subscriptionIdPending := *n.subscriptionIdPending
+			subscriptionIdPending := n.subscriptionIdPending
 			n.mutex.RUnlock()
 			if subscriptionIdPending != nil {
-				<-subscriptionIdPending
+				select {
+				case <-*subscriptionIdPending:
+					log.With(level.Debug(n.logger)).Log("msg", "subscription pending complete")
+				case <-n.ctx.Done():
+					return
+				}
 			}
-			log.With(level.Debug(n.logger)).Log("msg", "subscription pending complete")
 			if event == UnsubSignal {
 				n.mutex.Lock()
 				n.closeSubscriptionsFlushed()

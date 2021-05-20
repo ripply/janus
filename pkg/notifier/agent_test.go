@@ -89,6 +89,14 @@ func TestAgentAddSubscription(t *testing.T) {
 		t.Fatal("Received subscription result before sending subscription id to client")
 	}
 
+	internalSubscription := notifier.test_getSubscription(id)
+	if internalSubscription == nil {
+		for subscriptionId := range notifier.subscriptions {
+			t.Errorf("Have %s\n", subscriptionId)
+		}
+		t.Fatalf("Couldn't get internal subscription object %s\n", id)
+	}
+
 	notifier.ResponseSent()
 
 	select {
@@ -115,5 +123,27 @@ func TestAgentAddSubscription(t *testing.T) {
 		}
 	case <-time.After(350 * time.Millisecond):
 		t.Fatalf("Timed out waiting for subscription")
+	}
+
+	internalSubscription = notifier.test_getSubscription(id)
+	if internalSubscription == nil {
+		for subscriptionId := range notifier.subscriptions {
+			t.Errorf("Have %s\n", subscriptionId)
+		}
+		t.Fatalf("Couldn't get internal subscription object %s\n", id)
+	}
+
+	if !notifier.Unsubscribe(id) {
+		t.Fatalf("Failed to unsubscribe to subscription %s", id)
+	}
+
+	internalSubscriptionAfterUnsubscribe := notifier.test_getSubscription(id)
+
+	if internalSubscriptionAfterUnsubscribe != nil {
+		t.Fatal("Internal subscription object should be nil")
+	}
+
+	if notifier.Unsubscribe(id) {
+		t.Fatalf("Double unsubscribe to subscription %s worked, it shouldn't", id)
 	}
 }

@@ -139,7 +139,7 @@ func removeSubscription(id string, registry *subscriptionRegistry) {
 	registry.mutex.RUnlock()
 	if exists {
 		registry.mutex.Lock()
-		_, exists = registry.subscriptions[id]
+		sub, exists = registry.subscriptions[id]
 		if exists {
 			delete(registry.subscriptions, id)
 			registry.subscriptionCount = registry.subscriptionCount - 1
