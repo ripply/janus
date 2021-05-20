@@ -5,6 +5,7 @@ import (
 	stdLog "log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
@@ -197,6 +198,10 @@ func httpHandler(c echo.Context) error {
 }
 */
 
+const (
+	writeWait = 10 * time.Second
+)
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:    4096,
 	WriteBufferSize:   4096,
@@ -231,23 +236,28 @@ func websocketHandler(c echo.Context) error {
 			ws.Close()
 		})
 	}
-	defer close()
-	defer func() {
-		cc.GetDebugLogger().Log("msg", "Websocket connection closed")
-	}()
 
-	cc.GetDebugLogger().Log("msg", "Websocket connection opened")
-
+	ctx := c.Request().Context()
 	var writeMutex sync.Mutex
+	stopPingPong := pingPong(ctx, ws, &writeMutex)
 	send := func(value []byte) error {
 		writeMutex.Lock()
+		ws.SetWriteDeadline(time.Now().Add(writeWait))
 		err := ws.WriteMessage(websocket.TextMessage, value)
 		writeMutex.Unlock()
 		return err
 	}
 
+	defer func() {
+		stopPingPong()
+		close()
+		cc.GetDebugLogger().Log("msg", "Websocket connection closed")
+	}()
+
+	cc.GetDebugLogger().Log("msg", "Websocket connection opened")
+
 	notifier := notifier.NewNotifier(
-		c.Request().Context(),
+		ctx,
 		close,
 		send,
 		cc.GetLogger(),
