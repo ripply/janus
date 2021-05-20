@@ -66,11 +66,10 @@ func (s *Server) Start() error {
 		}
 
 		if s.debug {
-			cc.GetDebugLogger().Log("msg", "ETH RPC")
-
 			reqBody, err := qtum.ReformatJSON(req)
 			resBody, err := qtum.ReformatJSON(res)
 			if err == nil {
+				cc.GetDebugLogger().Log("msg", "ETH RPC")
 				fmt.Printf("=> ETH request\n%s\n", reqBody)
 				fmt.Printf("<= ETH response\n%s\n", resBody)
 			}
@@ -113,6 +112,7 @@ func (s *Server) Start() error {
 	level.Warn(s.logger).Log("listen", s.address, "qtum_rpc", s.qtumRPCClient.URL, "msg", "proxy started", "https", https)
 
 	if https {
+		level.Info(s.logger).Log("msg", "SSL enabled")
 		return e.StartTLS(s.address, s.httpsCert, s.httpsKey)
 	} else {
 		return e.Start(s.address)

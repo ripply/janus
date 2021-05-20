@@ -3,12 +3,15 @@ package server
 import (
 	"encoding/json"
 	stdLog "log"
+	"net/http"
+	"sync"
 
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/notifier"
-	"golang.org/x/net/websocket"
+
+	"github.com/gorilla/websocket"
 )
 
 func httpHandler(c echo.Context) error {
@@ -194,6 +197,15 @@ func httpHandler(c echo.Context) error {
 }
 */
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:    4096,
+	WriteBufferSize:   4096,
+	EnableCompression: false,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 func websocketHandler(c echo.Context) error {
 	myctx := c.Get("myctx")
 	cc, ok := myctx.(*myCtx)
@@ -201,86 +213,103 @@ func websocketHandler(c echo.Context) error {
 		return errors.New("Could not find myctx")
 	}
 
-	cc.GetDebugLogger().Log("msg", "Got websocket request... opening")
-	req := c.Request()
-	req.Header.Set("Origin", "http://localhost:23888")
+	h := http.Header{}
+	for _, sub := range websocket.Subprotocols(c.Request()) {
+		// pick first websocket protocol client asks for if they ask
+		h.Set("Sec-Websocket-Protocol", sub)
+		break
+	}
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), h)
+	if err != nil {
+		return err
+	} else {
+		cc.GetDebugLogger().Log("msg", "Got websocket request")
+	}
+	closeOnce := sync.Once{}
+	close := func() {
+		closeOnce.Do(func() {
+			ws.Close()
+		})
+	}
+	defer close()
+	defer func() {
+		cc.GetDebugLogger().Log("msg", "Websocket connection closed")
+	}()
 
-	websocket.Handler(func(ws *websocket.Conn) {
-		cc.GetDebugLogger().Log("msg", "opened websocket")
-		notifier := notifier.NewNotifier(
-			c.Request().Context(),
-			func() {
-				ws.Close()
-			}, func(value interface{}) error {
-				return websocket.Message.Send(ws, value)
-			},
-			cc.GetLogger(),
-		)
-		c.Set("notifier", notifier)
-		defer ws.Close()
-		defer func() {
-			cc.GetDebugLogger().Log("msg", "Websocket connection closed")
-		}()
+	cc.GetDebugLogger().Log("msg", "Websocket connection opened")
 
-		for {
-			cc.GetDebugLogger().Log("msg", "reading websocket request")
-			// Read
-			var payload string
-			err := websocket.Message.Receive(ws, &payload)
-			if err != nil {
-				c.Logger().Error(err)
-				return
-			}
+	var writeMutex sync.Mutex
+	send := func(value []byte) error {
+		writeMutex.Lock()
+		err := ws.WriteMessage(websocket.TextMessage, value)
+		writeMutex.Unlock()
+		return err
+	}
 
-			var rpcReq eth.JSONRPCRequest
-			json.Unmarshal([]byte(payload), &rpcReq)
+	notifier := notifier.NewNotifier(
+		c.Request().Context(),
+		close,
+		send,
+		cc.GetLogger(),
+	)
+	c.Set("notifier", notifier)
 
-			cc.rpcReq = &rpcReq
+	for {
+		cc.GetDebugLogger().Log("msg", "reading websocket request")
+		// Read
+		_, req, err := ws.ReadMessage()
+		if err != nil {
+			cc.GetLogger().Log("msg", "Failed to read websocket message", "err", err)
+			return nil
+		}
 
-			result, err := cc.transformer.Transform(&rpcReq, c)
+		var rpcReq eth.JSONRPCRequest
+		json.Unmarshal(req, &rpcReq)
 
-			response := result
+		cc.rpcReq = &rpcReq
 
-			if err != nil {
-				err1 := errors.Cause(err)
-				if err != err1 {
-					cc.GetErrorLogger().Log("err", err.Error())
-					response = cc.GetJSONRPCError(&eth.JSONRPCError{
-						Code:    100,
-						Message: err1.Error(),
-					})
-				}
-			}
+		result, err := cc.transformer.Transform(&rpcReq, c)
 
-			// Allow transformer to return an explicit JSON error
-			if jerr, isJSONErr := response.(*eth.JSONRPCError); isJSONErr {
-				response = cc.GetJSONRPCError(jerr)
-			} else {
-				response, err = cc.GetJSONRPCResult(response)
-				if err != nil {
-					cc.GetErrorLogger().Log("err", err.Error())
-					return
-				}
-			}
+		response := result
 
-			responseBytes, err := json.Marshal(response)
-			if err != nil {
+		if err != nil {
+			err1 := errors.Cause(err)
+			if err != err1 {
 				cc.GetErrorLogger().Log("err", err.Error())
-				return
-			}
-
-			cc.GetDebugLogger().Log("response", string(responseBytes))
-
-			err = websocket.Message.Send(ws, string(responseBytes))
-			if err == nil {
-				notifier.ResponseSent()
-			} else {
-				cc.GetErrorLogger().Log("err", err.Error())
-				return
+				response = cc.GetJSONRPCError(&eth.JSONRPCError{
+					Code:    100,
+					Message: err1.Error(),
+				})
 			}
 		}
-	}).ServeHTTP(c.Response(), c.Request())
-	return nil
+
+		// Allow transformer to return an explicit JSON error
+		if jerr, isJSONErr := response.(*eth.JSONRPCError); isJSONErr {
+			response = cc.GetJSONRPCError(jerr)
+		} else {
+			response, err = cc.GetJSONRPCResult(response)
+			if err != nil {
+				cc.GetErrorLogger().Log("err", err.Error())
+				return nil
+			}
+		}
+
+		responseBytes, err := json.Marshal(response)
+		if err != nil {
+			cc.GetErrorLogger().Log("err", err.Error())
+			return nil
+		}
+
+		cc.GetDebugLogger().Log("response", string(responseBytes))
+
+		err = send(responseBytes)
+		if err == nil {
+			notifier.ResponseSent()
+		} else {
+			cc.GetErrorLogger().Log("err", err.Error())
+			return nil
+		}
+	}
 }
 
 func errorHandler(err error, c echo.Context) {

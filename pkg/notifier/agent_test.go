@@ -48,9 +48,9 @@ func TestAgentAddSubscription(t *testing.T) {
 
 	sentValuesChannel := make(chan interface{}, 10)
 	sentValuesMutex := sync.Mutex{}
-	sentValues := []interface{}{}
+	sentValues := [][]byte{}
 
-	send := func(v interface{}) error {
+	send := func(v []byte) error {
 		sentValuesMutex.Lock()
 		defer sentValuesMutex.Unlock()
 		sentValues = append(sentValues, v)
@@ -101,7 +101,7 @@ func TestAgentAddSubscription(t *testing.T) {
 
 	select {
 	case <-sentValuesChannel:
-		gotBytes := sentValues[0].([]byte)
+		gotBytes := sentValues[0]
 		got := string(gotBytes)
 		var receivedEthSubscription eth.EthSubscription
 		err = json.Unmarshal(gotBytes, &receivedEthSubscription)

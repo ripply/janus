@@ -104,6 +104,19 @@ run-janus:
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
 		--dev
 
+run-janus-https:
+	@ printf "\nRunning Janus...\n\n"
+
+	go run `pwd`/cli/janus/main.go \
+		--qtum-rpc=http://${test_user}:${test_user_passwd}@0.0.0.0:3889 \
+		--qtum-network=regtest \
+		--bind=0.0.0.0 \
+		--port=23888 \
+		--accounts=`pwd`/docker/standalone/myaccounts.txt \
+		--dev \
+		--https-key https/key.pem \
+		--https-cert https/cert.pem
+
 test_user = qtum
 test_user_passwd = testpasswd
 

@@ -60,7 +60,7 @@ type Notifier struct {
 	mutex                 sync.RWMutex
 	ctx                   context.Context
 	close                 func()
-	send                  func(interface{}) error
+	send                  func([]byte) error
 	logger                log.Logger
 	queue                 chan interface{}
 	subscriptionIdPending *chan interface{}
@@ -68,7 +68,7 @@ type Notifier struct {
 	subscriptions         map[string]*Subscription
 }
 
-func NewNotifier(ctx context.Context, close func(), send func(interface{}) error, logger log.Logger) *Notifier {
+func NewNotifier(ctx context.Context, close func(), send func([]byte) error, logger log.Logger) *Notifier {
 	pending := make(chan interface{}, 10)
 	flushed := make(chan interface{}, 10)
 	notifier := &Notifier{
@@ -126,6 +126,12 @@ func (n *Notifier) Unsubscribe(id string) bool {
 }
 
 func (n *Notifier) ResponseSent() {
+	n.mutex.RLock()
+	subscriptionIdPending := n.subscriptionIdPending
+	n.mutex.RUnlock()
+	if subscriptionIdPending == nil {
+		return
+	}
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
 	if n.subscriptionIdPending != nil {
