@@ -2,6 +2,8 @@ package notifier
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
@@ -70,27 +72,48 @@ func (s *subscriptionInformation) run() {
 
 	rolling := newRollingLimit(limitToXApiCalls)
 
+	// duplicate logs are only to be sent on a reorg
+	// the previous log that was sent on the old chain is sent with a `removed: true`
+	// then the new log is sent
+	// that functionality isn't supported in this implementation yet
+	// however, in order to not send duplicate logs we can do that with a simple hash map
+	// each hash is a 128bit MD5 hash, the hashing algorithim doesn't really matter here
+	// as this is only for preventing duplicate logs being sent over a websocket
+	// there are 8000 bits in a kilobyte, thats enough for 62.5 hashes
+	// 1MB = 1024KB = 1024KB/1KB = 1024 * 62.5 = 64,000 hashes
+	// when proving this as a service, that can add up if tens of thousands are using the service
+	// we want to put an upper limit on ram usage for an ip/connection
+	// we could also put an absolute upper limit on ram usage for this feature
+	// TODO: Deal with RAM usage here when Janus gets large enough
+	// some kind of FIFO hashmap?
+	sentHashes := make(map[string]bool)
+
 	failures := 0
 	for {
 		req.FromBlock = nextBlock
 		timeBeforeCall := time.Now()
-		rolling.Push(timeBeforeCall)
+		rolling.Push(&timeBeforeCall)
 		resp, err := s.qtum.WaitForLogsWithContext(s.ctx, req)
 		timeAfterCall := time.Now()
 		if err == nil {
 			for _, qtumLog := range resp.Entries {
 				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(&qtumLog)
 				for _, ethLog := range ethLogs {
-					s.qtum.GetDebugLogger().Log("subscriptionId", s.id, "msg", "notifying of logs")
-					s.notifier.Send(&eth.EthSubscription{
+					subscription := &eth.EthSubscription{
 						SubscriptionID: s.Subscription.id,
 						Result:         ethLog,
-					})
+					}
+					hash := computeHash(subscription)
+					if _, ok := sentHashes[hash]; !ok {
+						sentHashes[hash] = true
+						s.qtum.GetDebugLogger().Log("subscriptionId", s.id, "msg", "notifying of logs")
+						s.notifier.Send(subscription)
+					}
 				}
 			}
 			oldest := rolling.Oldest()
 			a := time.Now()
-			if oldest != nil && a.Sub(*oldest) < inYSeconds {
+			if oldest != nil && a.Sub(*oldest.(*time.Time)) < inYSeconds {
 				// too many request returning successfully too quickly, slow them down
 				failures = failures + 1
 			} else {
@@ -133,6 +156,16 @@ func (s *subscriptionInformation) run() {
 	}
 }
 
+// Compute hash for the json serialization of the passed in argument
+func computeHash(value interface{}) string {
+	b, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	md5Hash := md5.Sum(b)
+	return string(md5Hash[:])
+}
+
 func getBackoff(count int, min time.Duration, max time.Duration) time.Duration {
 	maxFailures := 10
 	if count == 0 {
@@ -150,14 +183,14 @@ func getBackoff(count int, min time.Duration, max time.Duration) time.Duration {
 type rollingLimit struct {
 	index int
 	limit int
-	times []*time.Time
+	times []interface{}
 }
 
 func newRollingLimit(limit int) *rollingLimit {
 	roll := &rollingLimit{
 		index: 0,
 		limit: limit,
-		times: []*time.Time{},
+		times: []interface{}{},
 	}
 
 	for i := 0; i < limit; i++ {
@@ -180,10 +213,10 @@ func (r *rollingLimit) bump() int {
 	return r.index
 }
 
-func (r *rollingLimit) Oldest() *time.Time {
+func (r *rollingLimit) Oldest() interface{} {
 	return r.times[r.oldest()]
 }
 
-func (r *rollingLimit) Push(t time.Time) {
-	r.times[r.bump()] = &t
+func (r *rollingLimit) Push(t interface{}) {
+	r.times[r.bump()] = t
 }
