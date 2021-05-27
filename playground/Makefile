@@ -33,8 +33,8 @@ clean-qtum-data:
 .PHONY: deploy-contracts
 deploy-contracts:
 	truffle migrate --reset
-	cd pet-shop-tutorial && truffle migrate --reset
-	cp pet-shop-tutorial/build/contracts/*.json pet-shop-tutorial/src
+	cd dist && truffle migrate --reset
+	cp dist/build/contracts/*.json dist/js
 
 .PHONY: serve-pet-shop
 serve-pet-shop:
