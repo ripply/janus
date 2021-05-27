@@ -11,11 +11,11 @@ type ETHProxy interface {
 	Method() string
 }
 
-type transformer struct {
+type mockTransformer struct {
 	proxies map[string]ETHProxy
 }
 
-func (t *transformer) Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (t *mockTransformer) Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	proxy, ok := t.proxies[req.Method]
 	if !ok {
 		return nil, errors.New("couldn't get proxy")
@@ -27,8 +27,8 @@ func (t *transformer) Transform(req *eth.JSONRPCRequest, c echo.Context) (interf
 	return resp, nil
 }
 
-func newTransformer(proxies []ETHProxy) *transformer {
-	t := &transformer{
+func newTransformer(proxies []ETHProxy) *mockTransformer {
+	t := &mockTransformer{
 		proxies: make(map[string]ETHProxy),
 	}
 
@@ -39,7 +39,7 @@ func newTransformer(proxies []ETHProxy) *transformer {
 	return t
 }
 
-func NewMockTransformer(proxies []ETHProxy) *transformer {
+func NewMockTransformer(proxies []ETHProxy) *mockTransformer {
 	return newTransformer(proxies)
 }
 
