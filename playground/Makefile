@@ -8,14 +8,7 @@ image:
 
 .PHONY: run
 run:
-	cp -n ./docker/env.list-example ./docker/env.list || true
-	docker run --rm -d \
-	  --name $(container_name) \
-	  --env-file ./docker/env.list \
-	  -v `pwd`/docker:/dapp \
-	  -p 3889:3889 \
-	  -p 23889:23889 \
-	  $(img_tag)
+	cd .. && make run-janus-https
 
 .PHONY: stop
 stop:
@@ -41,6 +34,7 @@ clean-qtum-data:
 deploy-contracts:
 	truffle migrate --reset
 	cd pet-shop-tutorial && truffle migrate --reset
+	cp pet-shop-tutorial/build/contracts/*.json pet-shop-tutorial/src
 
 .PHONY: serve-pet-shop
 serve-pet-shop:
