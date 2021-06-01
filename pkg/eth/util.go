@@ -2,7 +2,6 @@ package eth
 
 import (
 	"github.com/pkg/errors"
-	"github.com/qtumproject/janus/pkg/utils"
 )
 
 // translateTopics takes in an ethReq's topics field and translates it to a it's equivalent QtumReq
@@ -24,7 +23,8 @@ func TranslateTopics(ethTopics []interface{}) ([]interface{}, error) {
 			}
 			topics = append(topics, topic)
 		case string:
-			topics = append(topics, utils.RemoveHexPrefix(topic.(string)))
+			// topics = append(topics, utils.RemoveHexPrefix(topic.(string)))
+			topics = append(topics, topic.(string))
 		case nil:
 			topics = append(topics, nil)
 		}
