@@ -108,7 +108,9 @@ window.App = {
               // self.$emit("qtumConnected", true);
             }
             // let provider = new providers.Web3Provider(window.ethereum);
-            let provider = new QtumWeb3Provider(window.ethereum);
+            let qtumRpcProvider = new QtumProvider(QTUMTestNet.rpcUrls[0]);
+            let qtumWallet = new QtumWallet("99dda7e1a59655c9e02de8592be3b914df7df320e72ce04ccf0427f9a366ec6e", qtumRpcProvider);
+            let provider = new QtumWeb3Provider(window.ethereum, qtumWallet);
             App.web3Provider = provider.getSigner()
             // const signer = provider.getSigner();
             console.log("provider", provider)

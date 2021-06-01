@@ -32,7 +32,7 @@ clean-qtum-data:
 
 .PHONY: deploy-contracts
 deploy-contracts:
-	truffle migrate --reset
+	#truffle migrate --reset
 	cd dist && truffle migrate --reset
 	cp dist/build/contracts/*.json dist/js
 

@@ -2,6 +2,7 @@
 import { BytesLike } from "ethers/lib/utils";
 import { Transaction } from "@ethersproject/transactions";
 import { TransactionRequest } from "@ethersproject/abstract-provider";
+import { Signer } from "@ethersproject/abstract-signer";
 export interface ListUTXOs {
     address: string;
     txid: string;
@@ -66,6 +67,11 @@ export interface SerializedTransaction {
 export declare function calcTxBytes(vins: Array<TxVinWithoutNullScriptSig | TxVinWithNullScriptSig>, vouts: Array<TxVout>): number;
 export declare function txToBuffer(tx: any): Buffer;
 export declare function signp2pkh(tx: any, vindex: number, privKey: string): Buffer;
+export declare function signp2pkhWithSigner(tx: any, vindex: number, signerProvider: Signer): Buffer;
+export declare function signp2pkhWith(tx: any, vindex: number, signer: Function<String, Promise<{
+    signature: Uint8Array;
+    recid: number;
+}>>): Buffer;
 export declare function p2pkhScriptSig(sig: any, pubkey: any): Buffer;
 export declare function p2pkhScript(hash160PubKey: Buffer): Buffer;
 export declare function contractTxScript(contractAddress: string, gasLimit: number, gasPrice: number, encodedData: string): Buffer;
@@ -76,4 +82,4 @@ export declare function addp2pkhVouts(hash160Address: string, amounts: Array<any
 export declare function parseSignedTransaction(transaction: string): Transaction;
 export declare function computeAddress(key: BytesLike | string): string;
 export declare function checkTransactionType(tx: TransactionRequest): CheckTransactionType;
-export declare function serializeTransaction(utxos: Array<any>, neededAmount: string, tx: TransactionRequest, transactionType: number, privateKey: string, publicKey: string): SerializedTransaction;
+export declare function serializeTransaction(utxos: Array<any>, neededAmount: string, tx: TransactionRequest, transactionType: number, privateKey: string, publicKey?: string, signer?: Signer): SerializedTransaction;
