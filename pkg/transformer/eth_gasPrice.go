@@ -29,5 +29,5 @@ func (p *ProxyETHGasPrice) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (
 }
 
 func (p *ProxyETHGasPrice) response(qtumresp *big.Int) string {
-	return hexutil.EncodeBig(qtumresp)
+	return hexutil.EncodeBig(convertFromSatoshisToWei(qtumresp))
 }

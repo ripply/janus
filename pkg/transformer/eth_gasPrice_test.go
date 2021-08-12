@@ -29,7 +29,7 @@ func TestGasPriceRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := string("0x28") //price is hardcoded inside the implement
+	want := string("0x9502f9000") //price is hardcoded inside the implementation then converted to wei from satoshis
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
