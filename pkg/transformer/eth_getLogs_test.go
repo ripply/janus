@@ -264,9 +264,9 @@ func TestMultipleLogsWithORdTopics(t *testing.T) {
 	//preparing proxy & executing
 	proxyEth := ProxyETHGetLogs{qtumClient}
 
-	got, err := proxyEth.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.GetLogsResponse{
@@ -400,9 +400,9 @@ func testGetLogsWithTopics(t *testing.T, topics []interface{}, want eth.GetLogsR
 	//preparing proxy & executing
 	proxyEth := ProxyETHGetLogs{qtumClient}
 
-	got, err := proxyEth.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	if !reflect.DeepEqual(got, &want) {
@@ -451,9 +451,9 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 	//preparing proxy & executing
 	proxyEth := ProxyETHGetLogs{qtumClient}
 
-	qtumRequest, err := proxyEth.ToRequest(&request)
-	if err != nil {
-		t.Fatal(err)
+	qtumRequest, jsonErr := proxyEth.ToRequest(&request)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	qtumRawRequest, err := json.Marshal(qtumRequest)

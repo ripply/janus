@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
@@ -50,9 +50,9 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetFilterChanges{qtumClient, filterSimulator}
-	got, err := proxyEth.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.GetFilterChangesResponse{}
@@ -96,9 +96,9 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetFilterChanges{qtumClient, filterSimulator}
-	got, err := proxyEth.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.GetFilterChangesResponse{}
@@ -129,23 +129,23 @@ func TestGetFilterChangesRequest_NoSuchFilter(t *testing.T) {
 	//preparing proxy & executing request
 	filterSimulator := eth.NewFilterSimulator()
 	proxyEth := ProxyETHGetFilterChanges{qtumClient, filterSimulator}
-	got, err := proxyEth.Request(requestRPC, nil)
-	expectedErr := "Invalid filter id"
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	expectedErr := eth.NewCallbackError("Invalid filter id")
 
 	if got != nil {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
 			string(internal.MustMarshalIndent(expectedErr, "", "  ")),
-			string(internal.MustMarshalIndent(err.Error(), "", "  ")),
+			string(internal.MustMarshalIndent(jsonErr.Error(), "", "  ")),
 		)
 	}
-	if err.Error() != expectedErr {
+	if !reflect.DeepEqual(jsonErr, expectedErr) {
 		t.Errorf(
 			"error\ninput: %s\nwant error: %s\ngot: %s",
 			requestRPC,
 			string(internal.MustMarshalIndent(expectedErr, "", "  ")),
-			string(internal.MustMarshalIndent(err.Error(), "", "  ")),
+			string(internal.MustMarshalIndent(jsonErr, "", "  ")),
 		)
 	}
 }

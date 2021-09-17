@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcutil"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestGetBalanceRequestAccount(t *testing.T) {
@@ -50,9 +50,9 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetBalance{qtumClient}
-	got, err := proxyEth.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := string("0xde0b6b3a7640000") //1 Qtum represented in Wei
@@ -101,9 +101,9 @@ func TestGetBalanceRequestContract(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetBalance{qtumClient}
-	got, err := proxyEth.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := string("0xbdaf8b")

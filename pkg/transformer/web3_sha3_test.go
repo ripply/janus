@@ -21,9 +21,9 @@ func TestWeb3Sha3Request(t *testing.T) {
 		}
 
 		web3Sha3 := Web3Sha3{}
-		got, err := web3Sha3.Request(request, nil)
-		if err != nil {
-			t.Fatal(err)
+		got, jsonErr := web3Sha3.Request(request, nil)
+		if jsonErr != nil {
+			t.Fatal(jsonErr)
 		}
 
 		if got != want {
@@ -50,20 +50,20 @@ func testWeb3Sha3Errors(t *testing.T, input []json.RawMessage, want string) {
 	}
 
 	web3Sha3 := Web3Sha3{}
-	got, err := web3Sha3.Request(request, nil)
-	if err == nil {
+	got, jsonErr := web3Sha3.Request(request, nil)
+	if jsonErr == nil {
 		t.Errorf(
 			"Expected error\ninput: %s\nwant: %s\ngot: %s",
 			input,
 			want,
 			got,
 		)
-	} else if err.Error() != want {
+	} else if jsonErr.Error() != nil && jsonErr.Error().Error() != want {
 		t.Errorf(
 			"Unexpected error\ninput: %s\nwant: %s\ngot: %s",
 			input,
 			want,
-			err.Error(),
+			jsonErr.Error(),
 		)
 	}
 }

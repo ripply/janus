@@ -7,7 +7,7 @@ import (
 )
 
 type ETHProxy interface {
-	Request(*eth.JSONRPCRequest, echo.Context) (interface{}, error)
+	Request(*eth.JSONRPCRequest, echo.Context) (interface{}, eth.JSONRPCError)
 	Method() string
 }
 
@@ -15,14 +15,14 @@ type mockTransformer struct {
 	proxies map[string]ETHProxy
 }
 
-func (t *mockTransformer) Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (t *mockTransformer) Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	proxy, ok := t.proxies[req.Method]
 	if !ok {
-		return nil, errors.New("couldn't get proxy")
+		return nil, eth.NewCallbackError("couldn't get proxy")
 	}
 	resp, err := proxy.Request(req, c)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "couldn't proxy %s request", req.Method)
+		return nil, eth.NewCallbackError(errors.WithMessagef(err.Error(), "couldn't proxy %s request", req.Method).Error())
 	}
 	return resp, nil
 }
@@ -55,7 +55,7 @@ func NewMockETHProxy(method string, response interface{}) ETHProxy {
 	}
 }
 
-func (e *mockETHProxy) Request(*eth.JSONRPCRequest, echo.Context) (interface{}, error) {
+func (e *mockETHProxy) Request(*eth.JSONRPCRequest, echo.Context) (interface{}, eth.JSONRPCError) {
 	return e.response, nil
 }
 

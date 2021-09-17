@@ -49,9 +49,9 @@ func testChainIdsImpl(t *testing.T, chain string, expected string) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHChainId{qtumClient}
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.ChainIdResponse(expected)
