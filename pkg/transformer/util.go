@@ -209,26 +209,26 @@ func formatQtumNonce(nonce int) string {
 // 	- string "earliest" for the genesis block
 // 	- string "pending" - for the pending state/transactions
 // Uses defaultVal to differntiate from a eth_getBlockByNumber req and eth_getLogs/eth_newFilter
-func getBlockNumberByRawParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bool) (*big.Int, error) {
+func getBlockNumberByRawParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bool) (*big.Int, eth.JSONRPCError) {
 	if !isBytesOfString(rawParam) {
-		return nil, errors.Errorf("invalid parameter format - string is expected")
+		return nil, eth.NewInvalidParamsError("invalid parameter format - string is expected")
 	}
 
 	param := string(rawParam[1 : len(rawParam)-1]) // trim \" runes
 	return getBlockNumberByParam(p, param, defaultVal)
 }
 
-func getBlockNumberByParam(p *qtum.Qtum, param string, defaultVal bool) (*big.Int, error) {
+func getBlockNumberByParam(p *qtum.Qtum, param string, defaultVal bool) (*big.Int, eth.JSONRPCError) {
 	if len(param) < 1 {
 		if defaultVal {
 			res, err := p.GetBlockChainInfo()
 			if err != nil {
-				return nil, err
+				return nil, eth.NewCallbackError(err.Error())
 			}
 			p.GetDebugLogger().Log("function", "getBlockNumberByParam", "msg", "returning default value ("+strconv.Itoa(int(res.Blocks))+")")
 			return big.NewInt(res.Blocks), nil
 		} else {
-			return nil, errors.Errorf("empty parameter value")
+			return nil, eth.NewInvalidParamsError("empty parameter value")
 		}
 
 	}
@@ -237,7 +237,7 @@ func getBlockNumberByParam(p *qtum.Qtum, param string, defaultVal bool) (*big.In
 	case "latest":
 		res, err := p.GetBlockChainInfo()
 		if err != nil {
-			return nil, err
+			return nil, eth.NewCallbackError(err.Error())
 		}
 		p.GetDebugLogger().Log("latest", res.Blocks, "msg", "Got latest block")
 		return big.NewInt(res.Blocks), nil
@@ -250,13 +250,13 @@ func getBlockNumberByParam(p *qtum.Qtum, param string, defaultVal bool) (*big.In
 	case "pending":
 		// TODO: discuss
 		// 	! Researching
-		return nil, errors.New("TODO: tag is in implementation")
+		return nil, eth.NewInvalidRequestError("TODO: tag is in implementation")
 
 	default: // hex number
 		n, err := utils.DecodeBig(param)
 		if err != nil {
 			p.GetDebugLogger().Log("function", "getBlockNumberByParam", "msg", "Failed to decode hex parameter", "value", param)
-			return nil, errors.Wrap(err, "couldn't decode hex number to big int")
+			return nil, eth.NewInvalidParamsError("couldn't decode hex number to big int")
 		}
 		return n, nil
 	}
@@ -324,20 +324,21 @@ func convertQtumAddress(address string) (ethAddress string, _ error) {
 	return hex.EncodeToString(ethAddrBytes), nil
 }
 
-func processFilter(p *ProxyETHGetFilterChanges, rawreq *eth.JSONRPCRequest) (*eth.Filter, error) {
+func processFilter(p *ProxyETHGetFilterChanges, rawreq *eth.JSONRPCRequest) (*eth.Filter, eth.JSONRPCError) {
 	var req eth.GetFilterChangesRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	filterID, err := hexutil.DecodeUint64(string(req))
 	if err != nil {
-		return nil, err
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	_filter, ok := p.filter.Filter(filterID)
 	if !ok {
-		return nil, errors.New("Invalid filter id")
+		return nil, eth.NewCallbackError("Invalid filter id")
 	}
 	filter := _filter.(*eth.Filter)
 

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -21,10 +20,11 @@ func (p *ProxyETHSignTransaction) Method() string {
 	return "eth_signTransaction"
 }
 
-func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.SendTransactionRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	if req.IsCreateContract() {
@@ -40,7 +40,7 @@ func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Con
 		p.GetDebugLogger().Log("method", p.Method(), "msg", "transaction is an unknown request")
 	}
 
-	return nil, errors.New("Unknown operation")
+	return nil, eth.NewInvalidParamsError("Unknown operation")
 }
 
 func (p *ProxyETHSignTransaction) getRequiredUtxos(from string, neededAmount decimal.Decimal) ([]qtum.RawTxInputs, decimal.Decimal, error) {
@@ -83,10 +83,10 @@ func calculateNeededAmount(value, gasLimit, gasPrice decimal.Decimal) decimal.De
 	return value.Add(gasLimit.Mul(gasPrice))
 }
 
-func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransactionRequest) (string, error) {
+func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransactionRequest) (string, eth.JSONRPCError) {
 	gasLimit, gasPrice, err := EthGasToQtum(ethtx)
 	if err != nil {
-		return "", err
+		return "", eth.NewInvalidParamsError(err.Error())
 	}
 
 	amount := decimal.NewFromFloat(0.0)
@@ -94,24 +94,24 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		var err error
 		amount, err = EthValueToQtumAmount(ethtx.Value, ZeroSatoshi)
 		if err != nil {
-			return "", errors.Wrap(err, "EthValueToQtumAmount:")
+			return "", eth.NewInvalidParamsError(err.Error())
 		}
 	}
 
 	newGasPrice, err := decimal.NewFromString(gasPrice)
 	if err != nil {
-		return "", err
+		return "", eth.NewInvalidParamsError(err.Error())
 	}
 	neededAmount := calculateNeededAmount(amount, decimal.NewFromBigInt(gasLimit, 0), newGasPrice)
 
 	inputs, balance, err := p.getRequiredUtxos(ethtx.From, neededAmount)
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	change, err := calculateChange(balance, neededAmount)
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	contractInteractTx := &qtum.SendToContractRawRequest{
@@ -125,7 +125,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 	if from := ethtx.From; from != "" && utils.IsEthHexAddress(from) {
 		from, err = p.FromHexAddress(from)
 		if err != nil {
-			return "", err
+			return "", eth.NewInvalidParamsError(err.Error())
 		}
 		contractInteractTx.SenderAddress = from
 	}
@@ -134,26 +134,26 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 
 	acc := p.Qtum.Accounts.FindByHexAddress(strings.ToLower(fromAddr))
 	if acc == nil {
-		return "", errors.Errorf("No such account: %s", fromAddr)
+		return "", eth.NewInvalidParamsError(fmt.Sprintf("No such account: %s", fromAddr))
 	}
 
 	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.SendToContractRawRequest{"contract": contractInteractTx}, map[string]decimal.Decimal{contractInteractTx.SenderAddress: change}}}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	var resp *qtum.SignRawTxResponse
 	if err := p.Qtum.Request(qtum.MethodSignRawTx, []interface{}{rawTx}, &resp); err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 	if !resp.Complete {
-		return "", fmt.Errorf("something went wrong with signing the transaction; transaction incomplete")
+		return "", eth.NewCallbackError("something went wrong with signing the transaction; transaction incomplete")
 	}
 	return utils.AddHexPrefix(resp.Hex), nil
 }
 
-func (p *ProxyETHSignTransaction) requestSendToAddress(req *eth.SendTransactionRequest) (string, error) {
+func (p *ProxyETHSignTransaction) requestSendToAddress(req *eth.SendTransactionRequest) (string, eth.JSONRPCError) {
 	getQtumWalletAddress := func(addr string) (string, error) {
 		if utils.IsEthHexAddress(addr) {
 			return p.FromHexAddress(utils.RemoveHexPrefix(addr))
@@ -163,58 +163,58 @@ func (p *ProxyETHSignTransaction) requestSendToAddress(req *eth.SendTransactionR
 
 	to, err := getQtumWalletAddress(req.To)
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	from, err := getQtumWalletAddress(req.From)
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	amount, err := EthValueToQtumAmount(req.Value, ZeroSatoshi)
 	if err != nil {
-		return "", errors.Wrap(err, "EthValueToQtumAmount:")
+		return "", eth.NewInvalidParamsError(err.Error())
 	}
 
 	inputs, balance, err := p.getRequiredUtxos(req.From, amount)
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	change, err := calculateChange(balance, amount)
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	var addressValMap = map[string]decimal.Decimal{to: amount, from: change}
 	rawtxreq := []interface{}{inputs, addressValMap}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	var resp *qtum.SignRawTxResponse
 	signrawtxreq := []interface{}{rawTx}
 	if err := p.Qtum.Request(qtum.MethodSignRawTx, signrawtxreq, &resp); err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 	if !resp.Complete {
-		return "", fmt.Errorf("something went wrong with signing the transaction; transaction incomplete")
+		return "", eth.NewCallbackError("something went wrong with signing the transaction; transaction incomplete")
 	}
 	return utils.AddHexPrefix(resp.Hex), nil
 }
 
-func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransactionRequest) (string, error) {
+func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransactionRequest) (string, eth.JSONRPCError) {
 	gasLimit, gasPrice, err := EthGasToQtum(req)
 	if err != nil {
-		return "", err
+		return "", eth.NewInvalidParamsError(err.Error())
 	}
 
 	from := req.From
 	if utils.IsEthHexAddress(from) {
 		from, err = p.FromHexAddress(from)
 		if err != nil {
-			return "", err
+			return "", eth.NewInvalidParamsError(err.Error())
 		}
 	}
 
@@ -227,33 +227,33 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 
 	newGasPrice, err := decimal.NewFromString(gasPrice)
 	if err != nil {
-		return "", err
+		return "", eth.NewInvalidParamsError(err.Error())
 	}
 	neededAmount := calculateNeededAmount(decimal.NewFromFloat(0.0), decimal.NewFromBigInt(gasLimit, 0), newGasPrice)
 
 	inputs, balance, err := p.getRequiredUtxos(req.From, neededAmount)
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	change, err := calculateChange(balance, neededAmount)
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.CreateContractRawRequest{"contract": contractDeploymentTx}, map[string]decimal.Decimal{from: change}}}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	var resp *qtum.SignRawTxResponse
 	signrawtxreq := []interface{}{rawTx}
 	if err := p.Qtum.Request(qtum.MethodSignRawTx, signrawtxreq, &resp); err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 	if !resp.Complete {
-		return "", fmt.Errorf("something went wrong with signing the transaction; transaction incomplete")
+		return "", eth.NewCallbackError("something went wrong with signing the transaction; transaction incomplete")
 	}
 	return utils.AddHexPrefix(resp.Hex), nil
 }

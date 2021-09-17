@@ -15,14 +15,14 @@ func (p *ProxyETHMining) Method() string {
 	return "eth_mining"
 }
 
-func (p *ProxyETHMining) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHMining) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	return p.request()
 }
 
-func (p *ProxyETHMining) request() (*eth.MiningResponse, error) {
+func (p *ProxyETHMining) request() (*eth.MiningResponse, eth.JSONRPCError) {
 	qtumresp, err := p.Qtum.GetMining()
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	// qtum res -> eth res

@@ -20,13 +20,15 @@ func (p *ProxyETHGetTransactionByHash) Method() string {
 	return "eth_getTransactionByHash"
 }
 
-func (p *ProxyETHGetTransactionByHash) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetTransactionByHash) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var txHash eth.GetTransactionByHashRequest
 	if err := json.Unmarshal(req.Params, &txHash); err != nil {
-		return nil, errors.Wrap(err, "couldn't unmarshal request")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("couldn't unmarshal request")
 	}
 	if txHash == "" {
-		return nil, errors.New("transaction hash is empty")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("transaction hash is empty")
 	}
 
 	qtumReq := &qtum.GetTransactionRequest{
@@ -35,7 +37,7 @@ func (p *ProxyETHGetTransactionByHash) Request(req *eth.JSONRPCRequest, c echo.C
 	return p.request(qtumReq)
 }
 
-func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) (*eth.GetTransactionByHashResponse, error) {
+func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) (*eth.GetTransactionByHashResponse, eth.JSONRPCError) {
 	ethTx, err := getTransactionByHash(p.Qtum, req.TxID)
 	if err != nil {
 		return nil, err
@@ -44,11 +46,11 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 }
 
 // TODO: think of returning flag if it's a reward transaction for miner
-func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashResponse, error) {
+func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashResponse, eth.JSONRPCError) {
 	qtumTx, err := p.GetTransaction(hash)
 	if err != nil {
 		if errors.Cause(err) != qtum.ErrInvalidAddress {
-			return nil, err
+			return nil, eth.NewCallbackError(err.Error())
 		}
 		ethTx, err := getRewardTransactionByHash(p, hash)
 		if err != nil {
@@ -60,7 +62,7 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 				if errors.Cause(err) == qtum.ErrInvalidAddress {
 					return nil, nil
 				}
-				return nil, err
+				return nil, eth.NewCallbackError(err.Error())
 			} else {
 				qtumTx = &qtum.GetTransactionResponse{
 					BlockHash:  rawTx.BlockHash,
@@ -73,7 +75,7 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 	}
 	qtumDecodedRawTx, err := p.DecodeRawTransaction(qtumTx.Hex)
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't get raw transaction")
+		return nil, eth.NewCallbackError("couldn't get raw transaction")
 	}
 
 	ethTx := &eth.GetTransactionByHashResponse{
@@ -90,7 +92,7 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 	if !qtumTx.IsPending() { // otherwise, the following values must be nulls
 		blockNumber, err := getBlockNumberByHash(p, qtumTx.BlockHash)
 		if err != nil {
-			return nil, errors.WithMessage(err, "couldn't get block number by hash")
+			return nil, eth.NewCallbackError("couldn't get block number by hash")
 		}
 		ethTx.BlockNumber = hexutil.EncodeUint64(blockNumber)
 		ethTx.BlockHash = utils.AddHexPrefix(qtumTx.BlockHash)
@@ -99,13 +101,14 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 
 	ethAmount, err := formatQtumAmount(qtumDecodedRawTx.CalcAmount())
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't format amount")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("couldn't format amount")
 	}
 	ethTx.Value = ethAmount
 
 	qtumTxContractInfo, isContractTx, err := qtumDecodedRawTx.ExtractContractInfo()
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't extract contract info")
+		return nil, eth.NewCallbackError("couldn't extract contract info")
 	}
 	if isContractTx {
 		// TODO: research is this allowed? ethTx.Input = utils.AddHexPrefix(qtumTxContractInfo.UserInput)
@@ -177,6 +180,7 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 	return ethTx, nil
 }
 
+// TODO: Does this need to return eth.JSONRPCError
 // TODO: discuss
 // ? There are `witness` transactions, that is not acquireable nither via `gettransaction`, nor `getrawtransaction`
 func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashResponse, error) {

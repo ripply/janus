@@ -6,7 +6,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 )
 
@@ -16,11 +15,12 @@ func (p *Web3Sha3) Method() string {
 	return "web3_sha3"
 }
 
-func (p *Web3Sha3) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *Web3Sha3) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var err error
 	var req eth.Web3Sha3Request
 	if err = json.Unmarshal(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	message := req.Message
@@ -29,7 +29,7 @@ func (p *Web3Sha3) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interfac
 	if len(message) != 0 {
 		decoded, err = hexutil.Decode(string(message))
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed to decode")
+			return nil, eth.NewCallbackError("Failed to decode")
 		}
 	}
 

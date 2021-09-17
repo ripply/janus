@@ -39,20 +39,16 @@ func httpHandler(c echo.Context) error {
 	// level.Debug(cc.logger).Log("msg", "after call transformer#Transform")
 
 	if err != nil {
-		err1 := errors.Cause(err)
-		if err != err1 {
+		if err.Error() == nil {
 			cc.GetErrorLogger().Log("err", err.Error())
-			return cc.JSONRPCError(&eth.JSONRPCError{
-				Code:    100,
-				Message: err1.Error(),
-			})
+			return cc.JSONRPCError(err)
 		}
 
-		return err
+		return err.Error()
 	}
 
 	// Allow transformer to return an explicit JSON error
-	if jerr, isJSONErr := result.(*eth.JSONRPCError); isJSONErr {
+	if jerr, isJSONErr := result.(eth.JSONRPCError); isJSONErr {
 		return cc.JSONRPCError(jerr)
 	}
 
@@ -280,23 +276,19 @@ func websocketHandler(c echo.Context) error {
 
 		cc.rpcReq = &rpcReq
 
-		result, err := cc.transformer.Transform(&rpcReq, c)
+		result, jsonError := cc.transformer.Transform(&rpcReq, c)
 
 		response := result
 
-		if err != nil {
-			err1 := errors.Cause(err)
-			if err != err1 {
-				cc.GetErrorLogger().Log("err", err.Error())
-				response = cc.GetJSONRPCError(&eth.JSONRPCError{
-					Code:    100,
-					Message: err1.Error(),
-				})
+		if jsonError != nil {
+			if jsonError.Error() == nil {
+				cc.GetErrorLogger().Log("err", jsonError.Error())
+				response = jsonError
 			}
 		}
 
 		// Allow transformer to return an explicit JSON error
-		if jerr, isJSONErr := response.(*eth.JSONRPCError); isJSONErr {
+		if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
 			response = cc.GetJSONRPCError(jerr)
 		} else {
 			response, err = cc.GetJSONRPCResult(response)
@@ -340,10 +332,7 @@ func errorHandler(err error, c echo.Context) {
 	cc, ok := myctx.(*myCtx)
 	if ok {
 		cc.GetErrorLogger().Log("err", err.Error())
-		if err := cc.JSONRPCError(&eth.JSONRPCError{
-			Code:    100,
-			Message: err.Error(),
-		}); err != nil {
+		if err := cc.JSONRPCError(eth.NewJSONRPCError(100, err.Error(), nil)); err != nil {
 			cc.GetErrorLogger().Log("msg", "reply to client", "err", err.Error())
 		}
 		return

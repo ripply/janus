@@ -18,7 +18,7 @@ func (p *ProxyETHTxCount) Method() string {
 	return "eth_getTransactionCount"
 }
 
-func (p *ProxyETHTxCount) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHTxCount) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 
 	/* not sure we need this. Need to figure out how to best unmarshal this in the future. For now this will work.
 	var req eth.GetTransactionCountRequest
@@ -27,7 +27,7 @@ func (p *ProxyETHTxCount) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (i
 	}*/
 	qtumresp, err := p.Qtum.GetTransactionCount("", "")
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	// qtum res -> eth res

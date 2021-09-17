@@ -14,7 +14,7 @@ func (p *Web3ClientVersion) Method() string {
 	return "web3_clientVersion"
 }
 
-func (p *Web3ClientVersion) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *Web3ClientVersion) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	return "QTUM ETHTestRPC/ethereum-js", nil
 }
 

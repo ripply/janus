@@ -17,14 +17,14 @@ func (p *ProxyETHNewBlockFilter) Method() string {
 	return "eth_newBlockFilter"
 }
 
-func (p *ProxyETHNewBlockFilter) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHNewBlockFilter) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	return p.request()
 }
 
-func (p *ProxyETHNewBlockFilter) request() (eth.NewBlockFilterResponse, error) {
+func (p *ProxyETHNewBlockFilter) request() (eth.NewBlockFilterResponse, eth.JSONRPCError) {
 	blockCount, err := p.GetBlockCount()
 	if err != nil {
-		return "", err
+		return "", eth.NewCallbackError(err.Error())
 	}
 
 	filter := p.filter.New(eth.NewBlockFilterTy)

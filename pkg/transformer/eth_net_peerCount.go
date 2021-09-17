@@ -16,14 +16,14 @@ func (p *ProxyNetPeerCount) Method() string {
 	return "net_peerCount"
 }
 
-func (p *ProxyNetPeerCount) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyNetPeerCount) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	return p.request()
 }
 
-func (p *ProxyNetPeerCount) request() (*eth.NetPeerCountResponse, error) {
+func (p *ProxyNetPeerCount) request() (*eth.NetPeerCountResponse, eth.JSONRPCError) {
 	peerInfos, err := p.GetPeerInfo()
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	resp := eth.NetPeerCountResponse(hexutil.EncodeUint64(uint64(len(peerInfos))))

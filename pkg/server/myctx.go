@@ -33,7 +33,7 @@ func (c *myCtx) JSONRPCResult(result interface{}) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (c *myCtx) GetJSONRPCError(err *eth.JSONRPCError) *eth.JSONRPCResult {
+func (c *myCtx) GetJSONRPCError(err eth.JSONRPCError) *eth.JSONRPCResult {
 	var id json.RawMessage
 	if c.rpcReq != nil && c.rpcReq.ID != nil {
 		id = c.rpcReq.ID
@@ -45,11 +45,11 @@ func (c *myCtx) GetJSONRPCError(err *eth.JSONRPCError) *eth.JSONRPCResult {
 	}
 }
 
-func (c *myCtx) JSONRPCError(err *eth.JSONRPCError) error {
+func (c *myCtx) JSONRPCError(err eth.JSONRPCError) error {
 	resp := c.GetJSONRPCError(err)
 
 	if !c.Response().Committed {
-		err := c.JSON(http.StatusInternalServerError, resp)
+		err := c.JSON(http.StatusOK, resp)
 		c.logger.Log("Internal server error", err)
 		return err
 	}

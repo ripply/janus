@@ -43,10 +43,10 @@ func ConvertLogTopicsToStringArray(topics []interface{}) []string {
 	return requestedTopics
 }
 
-func SearchLogsAndFilterExtraTopics(q *qtum.Qtum, req *qtum.SearchLogsRequest) (qtum.SearchLogsResponse, error) {
+func SearchLogsAndFilterExtraTopics(q *qtum.Qtum, req *qtum.SearchLogsRequest) (qtum.SearchLogsResponse, eth.JSONRPCError) {
 	receipts, err := q.SearchLogs(req)
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	hasTopics := len(req.Topics) != 0

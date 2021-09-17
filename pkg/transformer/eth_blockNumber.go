@@ -16,14 +16,14 @@ func (p *ProxyETHBlockNumber) Method() string {
 	return "eth_blockNumber"
 }
 
-func (p *ProxyETHBlockNumber) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHBlockNumber) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	return p.request()
 }
 
-func (p *ProxyETHBlockNumber) request() (*eth.BlockNumberResponse, error) {
+func (p *ProxyETHBlockNumber) request() (*eth.BlockNumberResponse, eth.JSONRPCError) {
 	qtumresp, err := p.Qtum.GetBlockCount()
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	// qtum res -> eth res

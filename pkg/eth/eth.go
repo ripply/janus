@@ -2,7 +2,6 @@ package eth
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 var EmptyLogsBloom = "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
@@ -22,18 +21,8 @@ type JSONRPCRequest struct {
 type JSONRPCResult struct {
 	JSONRPC   string          `json:"jsonrpc"`
 	RawResult json.RawMessage `json:"result,omitempty"`
-	Error     *JSONRPCError   `json:"error,omitempty"`
+	Error     JSONRPCError    `json:"error,omitempty"`
 	ID        json.RawMessage `json:"id"`
-}
-
-// JSONRPCError contains the message and code for an ETH RPC error
-type JSONRPCError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-func (err *JSONRPCError) Error() string {
-	return fmt.Sprintf("eth [code: %d] %s", err.Code, err.Message)
 }
 
 func NewJSONRPCResult(id json.RawMessage, res interface{}) (*JSONRPCResult, error) {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -20,17 +19,18 @@ func (p *ProxyETHGetBlockByHash) Method() string {
 	return "eth_getBlockByHash"
 }
 
-func (p *ProxyETHGetBlockByHash) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetBlockByHash) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	req := new(eth.GetBlockByHashRequest)
 	if err := unmarshalRequest(rawreq.Params, req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 	req.BlockHash = utils.RemoveHexPrefix(req.BlockHash)
 
 	return p.request(req)
 }
 
-func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.GetBlockByHashResponse, error) {
+func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.GetBlockByHashResponse, eth.JSONRPCError) {
 	blockHeader, err := p.GetBlockHeader(req.BlockHash)
 	if err != nil {
 		if err == qtum.ErrInvalidAddress {
@@ -39,11 +39,12 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 			return nil, nil
 		}
 		p.GetDebugLogger().Log("msg", "couldn't get block header", "blockHash", req.BlockHash)
-		return nil, errors.WithMessage(err, "couldn't get block header")
+		return nil, eth.NewCallbackError("couldn't get block header")
 	}
 	block, err := p.GetBlock(req.BlockHash)
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't get block")
+		p.GetDebugLogger().Log("msg", "couldn't get block", "blockHash", req.BlockHash)
+		return nil, eth.NewCallbackError("couldn't get block")
 	}
 	nonce := hexutil.EncodeUint64(uint64(block.Nonce))
 	// left pad nonce with 0 to length 16, eg: 0x0000000000000042
@@ -121,7 +122,8 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 		for _, txHash := range block.Txs {
 			tx, err := getTransactionByHash(p.Qtum, txHash)
 			if err != nil {
-				return nil, errors.WithMessage(err, "couldn't get transaction by hash")
+				p.GetDebugLogger().Log("msg", "Couldn't get transaction by hash", "hash", txHash)
+				return nil, eth.NewCallbackError("couldn't get transaction by hash")
 			}
 			if tx == nil {
 				if block.Height == 0 {
@@ -131,7 +133,7 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 				} else {
 					p.GetDebugLogger().Log("msg", "Failed to get transaction by hash included in a block", "hash", txHash)
 					if !p.GetFlagBool(qtum.FLAG_IGNORE_UNKNOWN_TX) {
-						return nil, errors.WithMessage(err, "couldn't get transaction by hash included in a block")
+						return nil, eth.NewCallbackError("couldn't get transaction by hash included in a block")
 					}
 				}
 			} else {

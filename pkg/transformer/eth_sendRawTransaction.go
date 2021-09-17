@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -19,19 +18,21 @@ func (p *ProxyETHSendRawTransaction) Method() string {
 	return "eth_sendRawTransaction"
 }
 
-func (p *ProxyETHSendRawTransaction) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHSendRawTransaction) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var params eth.SendRawTransactionRequest
 	if err := unmarshalRequest(req.Params, &params); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 	if params[0] == "" {
-		return nil, errors.Errorf("invalid parameter: raw transaction hexed string is empty")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("invalid parameter: raw transaction hexed string is empty")
 	}
 
 	return p.request(params)
 }
 
-func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionRequest) (eth.SendRawTransactionResponse, error) {
+func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionRequest) (eth.SendRawTransactionResponse, eth.JSONRPCError) {
 	var (
 		qtumHexedRawTx = utils.RemoveHexPrefix(params[0])
 		req            = qtum.SendRawTransactionRequest([1]string{qtumHexedRawTx})
@@ -45,11 +46,11 @@ func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionReques
 			rawTx, err := p.Qtum.DecodeRawTransaction(qtumHexedRawTx)
 			if err != nil {
 				p.GetErrorLogger().Log("msg", "Error decoding raw transaction for duplicate raw transaction", "err", err)
-				return eth.SendRawTransactionResponse(""), err
+				return eth.SendRawTransactionResponse(""), eth.NewCallbackError(err.Error())
 			}
 			qtumresp = &qtum.SendRawTransactionResponse{Result: rawTx.Hash}
 		} else {
-			return eth.SendRawTransactionResponse(""), err
+			return eth.SendRawTransactionResponse(""), eth.NewCallbackError(err.Error())
 		}
 	} else {
 		if p.CanGenerate() {
