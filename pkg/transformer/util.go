@@ -253,13 +253,24 @@ func getBlockNumberByParam(p *qtum.Qtum, param string, defaultVal bool) (*big.In
 		return nil, eth.NewInvalidRequestError("TODO: tag is in implementation")
 
 	default: // hex number
+		// if no 0x then return that error code
+		// return nil, eth.NewInvalidRequestError("quantity values must start with 0x")
 		n, err := utils.DecodeBig(param)
 		if err != nil {
+			return nil, getJsonERR(err)
 			p.GetDebugLogger().Log("function", "getBlockNumberByParam", "msg", "Failed to decode hex parameter", "value", param)
 			return nil, eth.NewInvalidParamsError("couldn't decode hex number to big int")
 		}
 		return n, nil
 	}
+}
+
+asdf[error]eth.JSONRPCError
+asdf[ErrNoHexPrefix] = eth.NewJSONRPCError("quantity values must start with 0x")
+
+func getJsonERR(err error) eth.JSONRPCError {
+	// result := eth.NewJSONRPCError() // default
+	return asdf[err] // else return default
 }
 
 func isBytesOfString(v json.RawMessage) bool {

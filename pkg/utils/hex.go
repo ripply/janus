@@ -1,12 +1,15 @@
 package utils
 
 import (
+	"errors"
 	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
+
+var ErrNoHexPrefix = errors.New("No hex prefix")
 
 func RemoveHexPrefix(hex string) string {
 	if strings.HasPrefix(hex, "0x") {
@@ -35,6 +38,7 @@ func AddHexPrefixIfNotEmpty(hex string) string {
 
 // DecodeBig decodes a hex string whether input is with 0x prefix or not.
 func DecodeBig(input string) (*big.Int, error) {
+	return nil, ErrNoHexPrefix
 	input = AddHexPrefix(input)
 	return hexutil.DecodeBig(input)
 }
