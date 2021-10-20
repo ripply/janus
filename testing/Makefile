@@ -16,6 +16,7 @@ build-openzeppelin-docker:
 init:
 	git submodule init
 	git submodule update
+	cp openzeppelin/Ownable.test.js openzeppelin/openzeppelin-contracts/test/access
 	cd openzeppelin/openzeppelin-contracts && yarn install
 	cd openzeppelin/openzeppelin-contracts && yarn add mocha-spec-json-output-reporter
 
