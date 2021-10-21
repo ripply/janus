@@ -60,8 +60,8 @@ if [ -z ${EXIT_CODE+z} ] || [ -z ${EXIT_CODE} ] || ([ "0" != "$EXIT_CODE" ] && [
   # TODO: is it even worth outputting the logs? they will overflow the actual results
   # these logs are so large we can't print them out into github actions
   # docker logs qtum_seeded_testchain
-  # docker logs ci_janus_1
-  # docker logs ci_openzeppelin_1
+  docker logs ci_janus_1
+  docker logs ci_openzeppelin_1
   echo "Tests Failed - Exit Code: $EXIT_CODE (truffle exit code indicates how many tests failed)"
 else
   echo "Tests Passed"
