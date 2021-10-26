@@ -63,6 +63,10 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 		gasLimit = ethreq.Gas.Int
 	}
 
+	if gasLimit != nil && gasLimit.Int64() < MinimumGasLimit {
+		p.GetLogger().Log("msg", "Gas limit is too low", "gasLimit", gasLimit.String())
+	}
+
 	return &qtum.CallContractRequest{
 		To:       ethreq.To,
 		From:     from,
