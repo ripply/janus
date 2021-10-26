@@ -205,16 +205,23 @@ func formatQtumNonce(nonce int) string {
 // Returns Qtum block number. Result depends on a passed raw param. Raw param's slice of bytes should
 // has one of the following values:
 // 	- hex string representation of a number of a specific block
+//  - integer - returns the value
 // 	- string "latest" - for the latest mined block
 // 	- string "earliest" for the genesis block
 // 	- string "pending" - for the pending state/transactions
 // Uses defaultVal to differntiate from a eth_getBlockByNumber req and eth_getLogs/eth_newFilter
 func getBlockNumberByRawParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bool) (*big.Int, error) {
-	if !isBytesOfString(rawParam) {
-		return nil, errors.Errorf("invalid parameter format - string is expected")
+	var param string
+	if isBytesOfString(rawParam) {
+		param = string(rawParam[1 : len(rawParam)-1]) // trim \" runes
+	} else {
+		integer, err := strconv.ParseInt(string(rawParam), 10, 64)
+		if err == nil {
+			return big.NewInt(integer), nil
+		}
+		return nil, errors.Errorf("invalid parameter format - string or integer is expected")
 	}
 
-	param := string(rawParam[1 : len(rawParam)-1]) // trim \" runes
 	return getBlockNumberByParam(p, param, defaultVal)
 }
 
