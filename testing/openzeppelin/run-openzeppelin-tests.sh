@@ -41,7 +41,7 @@ if [ $? -ne 0 ] ; then
   exit 1
 fi
 # docker logs qtum_seeded_testchain -f&
-docker logs ci_janus_1 -f&
+# docker logs ci_janus_1 -f&
 docker logs ci_openzeppelin_1 -f&
 EXIT_CODE=`docker wait ci_openzeppelin_1`
 echo "Processing openzeppelin test results with exit code of:" $EXIT_CODE
