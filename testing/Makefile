@@ -16,6 +16,7 @@ build-openzeppelin-docker:
 init:
 	git submodule init
 	git submodule update
+	cp openzeppelin/openzeppelin-contracts/ERC2771Context.test.js openzeppelin/openzeppelin-contracts/test/metatx/ERC2771Context.test.js
 	cd openzeppelin/openzeppelin-contracts && yarn install
 	cd openzeppelin/openzeppelin-contracts && yarn add mocha-spec-json-output-reporter
 
