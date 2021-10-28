@@ -43,7 +43,7 @@ func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Con
 		return nil, errors.New("Unknown operation")
 	}
 
-	if p.CanGenerate() && err == nil {
+	if err == nil {
 		p.GenerateIfPossible()
 	}
 

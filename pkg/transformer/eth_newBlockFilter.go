@@ -30,9 +30,7 @@ func (p *ProxyETHNewBlockFilter) request() (eth.NewBlockFilterResponse, error) {
 	filter := p.filter.New(eth.NewBlockFilterTy)
 	filter.Data.Store("lastBlockNumber", blockCount.Uint64())
 
-	if p.CanGenerate() {
-		p.GenerateIfPossible()
-	}
+	p.GenerateIfPossible()
 
 	return eth.NewBlockFilterResponse(hexutil.EncodeUint64(filter.ID)), nil
 }

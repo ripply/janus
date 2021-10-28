@@ -32,6 +32,7 @@ var maximumBackoff = (2 * time.Second).Milliseconds()
 type Client struct {
 	URL  string
 	doer doer
+	ctx  context.Context
 
 	// hex addresses to return for eth_accounts
 	Accounts Accounts
@@ -92,7 +93,7 @@ func (c *Client) IsMain() bool {
 }
 
 func (c *Client) Request(method string, params interface{}, result interface{}) error {
-	return c.RequestWithContext(nil, method, params, result)
+	return c.RequestWithContext(c.GetContext(), method, params, result)
 }
 
 func (c *Client) RequestWithContext(ctx context.Context, method string, params interface{}, result interface{}) error {
@@ -141,7 +142,7 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 
 	debugLogger.Log("method", req.Method)
 
-	if c.IsDebugEnabled() && !c.GetFlagBool(FLAG_HIDE_QTUMD_LOGS) {
+	if c.IsDebugEnabled() && !c.GetFlagBool(FLAG_HIDE_QTUMD_LOGS) && c.logWriter != nil {
 		fmt.Fprintf(c.logWriter, "=> qtum RPC request\n%s\n", reqBody)
 	}
 
@@ -160,7 +161,7 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 			}
 		}
 
-		if err == nil {
+		if err == nil && c.logWriter != nil {
 			fmt.Fprintf(c.logWriter, "<= qtum RPC response\n%s\n", formattedBodyStr)
 		}
 	}
@@ -343,6 +344,17 @@ func SetHideQtumdLogs(hide bool) func(*Client) error {
 		c.SetFlag(FLAG_HIDE_QTUMD_LOGS, hide)
 		return nil
 	}
+}
+
+func SetContext(ctx context.Context) func(*Client) error {
+	return func(c *Client) error {
+		c.ctx = ctx
+		return nil
+	}
+}
+
+func (c *Client) GetContext() context.Context {
+	return c.ctx
 }
 
 func (c *Client) GetLogWriter() io.Writer {
