@@ -34,6 +34,11 @@ func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (interface{}, eth.JSONRP
 	if jsonErr != nil {
 		return nil, jsonErr
 	}
+	if qtumreq.GasLimit != nil && qtumreq.GasLimit.Cmp(big.NewInt(40000000)) > 0 {
+		qtumresp := eth.CallResponse("0x")
+		p.Qtum.GetLogger().Log("msg", "Caller gas above allowance, capping", "requested", qtumreq.GasLimit.Int64(), "cap", "40,000,000")
+		return &qtumresp, nil
+	}
 
 	qtumresp, err := p.CallContract(qtumreq)
 	if err != nil {
@@ -62,6 +67,10 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 	var gasLimit *big.Int
 	if ethreq.Gas != nil {
 		gasLimit = ethreq.Gas.Int
+	}
+
+	if gasLimit != nil && gasLimit.Int64() < MinimumGasLimit {
+		p.GetLogger().Log("msg", "Gas limit is too low", "gasLimit", gasLimit.String())
 	}
 
 	return &qtum.CallContractRequest{

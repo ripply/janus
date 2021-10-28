@@ -1,6 +1,9 @@
 package transformer
 
 import (
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/eth"
@@ -17,12 +20,23 @@ func (p *ProxyETHBlockNumber) Method() string {
 }
 
 func (p *ProxyETHBlockNumber) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
-	return p.request()
+	return p.request(c, 5)
 }
 
-func (p *ProxyETHBlockNumber) request() (*eth.BlockNumberResponse, eth.JSONRPCError) {
+func (p *ProxyETHBlockNumber) request(c echo.Context, retries int) (*eth.BlockNumberResponse, eth.JSONRPCError) {
 	qtumresp, err := p.Qtum.GetBlockCount()
 	if err != nil {
+		if retries > 0 && strings.Contains(err.Error(), qtum.ErrTryAgain.Error()) {
+			ctx := c.Request().Context()
+			t := time.NewTimer(500 * time.Millisecond)
+			select {
+			case <-ctx.Done():
+				return nil, eth.NewCallbackError(err.Error())
+			case <-t.C:
+				// fallthrough
+			}
+			return p.request(c, retries-1)
+		}
 		return nil, eth.NewCallbackError(err.Error())
 	}
 

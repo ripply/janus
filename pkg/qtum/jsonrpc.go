@@ -169,6 +169,9 @@ var (
 
 	// Http server work queue is full, returned as a raw string, not inside a JSON response
 	ErrQtumWorkQueueDepth = errors.New("Work queue depth exceeded")
+	// Sometimes truffle is too quick for qtumd and truffle gives up after one error
+	// couldn't proxy eth_blockNumber request: Client#do: Post \"***qtum:3889\": dial tcp: lookup qtum: Try again
+	ErrTryAgain = errors.New("Try again")
 	// TODO: add
 	// - insufficient balance
 	// - amount out of range

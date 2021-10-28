@@ -8,6 +8,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+var MinimumGasLimit = int64(22000)
+
 // ProxyETHSendTransaction implements ETHProxy
 type ProxyETHSendTransaction struct {
 	*qtum.Qtum
@@ -25,6 +27,10 @@ func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Con
 		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
+	if req.Gas != nil && req.Gas.Int64() < MinimumGasLimit {
+		p.GetLogger().Log("msg", "Gas limit is too low", "gasLimit", req.Gas.String())
+	}
+
 	var result interface{}
 	var jsonErr eth.JSONRPCError
 
@@ -38,7 +44,7 @@ func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Con
 		return nil, eth.NewInvalidParamsError("Unknown operation")
 	}
 
-	if p.CanGenerate() {
+	if p.CanGenerate() && err == nil {
 		p.GenerateIfPossible()
 	}
 

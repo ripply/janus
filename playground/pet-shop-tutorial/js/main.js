@@ -61,7 +61,6 @@ config[QTUMTestNet.chainId] = QTUMTestNet;
 config[QTUMRegTest.chainId] = QTUMRegTest;
 
 const metamask = true;
-
 window.App = {
   web3Provider: null,
   contracts: {},
@@ -100,7 +99,10 @@ window.App = {
 
   initEthers: function() {
     let qtumRpcProvider = new QtumProvider(QTUMTestNet.rpcUrls[0]);
-    let qtumWallet = new QtumWallet("1dd19e1648a23aaf2b3d040454d2569bd7f2cd816cf1b9b430682941a98151df", qtumRpcProvider);
+    let privKey = "1dd19e1648a23aaf2b3d040454d2569bd7f2cd816cf1b9b430682941a98151df";
+    // WIF format
+    // let privKey = "cMbgxCJrTYUqgcmiC1berh5DFrtY1KeU4PXZ6NZxgenniF1mXCRk";
+    let qtumWallet = new QtumWallet(privKey, qtumRpcProvider);
     
     window.qtumWallet = qtumWallet;
     App.account = qtumWallet.address

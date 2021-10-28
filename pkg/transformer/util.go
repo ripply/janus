@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/qtumproject/janus/pkg/eth"
@@ -205,16 +206,23 @@ func formatQtumNonce(nonce int) string {
 // Returns Qtum block number. Result depends on a passed raw param. Raw param's slice of bytes should
 // has one of the following values:
 // 	- hex string representation of a number of a specific block
+//  - integer - returns the value
 // 	- string "latest" - for the latest mined block
 // 	- string "earliest" for the genesis block
 // 	- string "pending" - for the pending state/transactions
 // Uses defaultVal to differntiate from a eth_getBlockByNumber req and eth_getLogs/eth_newFilter
 func getBlockNumberByRawParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bool) (*big.Int, eth.JSONRPCError) {
-	if !isBytesOfString(rawParam) {
-		return nil, eth.NewInvalidParamsError("invalid parameter format - string is expected")
+	var param string
+	if isBytesOfString(rawParam) {
+		param = string(rawParam[1 : len(rawParam)-1]) // trim \" runes
+	} else {
+		integer, err := strconv.ParseInt(string(rawParam), 10, 64)
+		if err == nil {
+			return big.NewInt(integer), nil
+		}
+		return nil, eth.NewInvalidParamsError("invalid parameter format - string or integer is expected")
 	}
 
-	param := string(rawParam[1 : len(rawParam)-1]) // trim \" runes
 	return getBlockNumberByParam(p, param, defaultVal)
 }
 
@@ -253,6 +261,9 @@ func getBlockNumberByParam(p *qtum.Qtum, param string, defaultVal bool) (*big.In
 		return nil, eth.NewInvalidRequestError("TODO: tag is in implementation")
 
 	default: // hex number
+		if !strings.HasPrefix(param, "0x") {
+			return nil, eth.NewInvalidParamsError("quantity values must start with 0x")
+		}
 		n, err := utils.DecodeBig(param)
 		if err != nil {
 			p.GetDebugLogger().Log("function", "getBlockNumberByParam", "msg", "Failed to decode hex parameter", "value", param)

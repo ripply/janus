@@ -13,15 +13,15 @@ type Method struct {
 	*Client
 }
 
-// func (m *Method) Base58AddressToHex(addr string) (string, error) {
-// 	var response GetHexAddressResponse
-// 	err := m.Request(MethodGetHexAddress, GetHexAddressRequest(addr), &response)
-// 	if err != nil {
-// 		return "", err
-// 	}
+func (m *Method) Base58AddressToHex(addr string) (string, error) {
+	var response GetHexAddressResponse
+	err := m.Request(MethodGetHexAddress, GetHexAddressRequest(addr), &response)
+	if err != nil {
+		return "", err
+	}
 
-// 	return string(response), nil
-// }
+	return string(response), nil
+}
 
 func marshalToString(i interface{}) string {
 	b, err := json.Marshal(i)

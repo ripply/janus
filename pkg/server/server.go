@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/pkg/errors"
@@ -60,6 +61,10 @@ func New(
 func (s *Server) Start() error {
 	logWriter := s.logWriter
 	e := s.echo
+
+	health := healthcheck.NewHandler()
+	health.AddLivenessCheck("qtumd-connection", func() error { return s.testConnectionToQtumd() })
+
 	e.Use(middleware.CORS())
 	e.Use(middleware.BodyDump(func(c echo.Context, req []byte, res []byte) {
 		myctx := c.Get("myctx")
@@ -69,12 +74,16 @@ func (s *Server) Start() error {
 		}
 
 		if s.debug {
-			reqBody, err := qtum.ReformatJSON(req)
-			resBody, err := qtum.ReformatJSON(res)
-			if err == nil {
+			reqBody, reqErr := qtum.ReformatJSON(req)
+			resBody, resErr := qtum.ReformatJSON(res)
+			if reqErr == nil && resErr == nil {
 				cc.GetDebugLogger().Log("msg", "ETH RPC")
 				fmt.Fprintf(logWriter, "=> ETH request\n%s\n", reqBody)
 				fmt.Fprintf(logWriter, "<= ETH response\n%s\n", resBody)
+			} else if reqErr != nil {
+				cc.GetErrorLogger().Log("msg", "Error reformatting request json", "error", reqErr, "body", string(req))
+			} else {
+				cc.GetErrorLogger().Log("msg", "Error reformatting response json", "error", resErr, "body", string(res))
 			}
 		}
 	}))
@@ -99,6 +108,17 @@ func (s *Server) Start() error {
 
 	e.HTTPErrorHandler = errorHandler
 	e.HideBanner = true
+	if health != nil {
+		e.GET("/live", func(c echo.Context) error {
+			health.LiveEndpoint(c.Response(), c.Request())
+			return nil
+		})
+		e.GET("/ready", func(c echo.Context) error {
+			health.ReadyEndpoint(c.Response(), c.Request())
+			return nil
+		})
+	}
+
 	if s.mutex == nil {
 		e.POST("/*", httpHandler)
 		e.GET("/*", websocketHandler)

@@ -1,10 +1,10 @@
 {
  "stats": {
   "suites": 894,
-  "tests": 1528,
-  "passes": 1345,
+  "tests": 1531,
+  "passes": 1348,
   "pending": 4,
-  "failures": 187
+  "failures": 186
  },
  "failures": [
   {
@@ -246,10 +246,6 @@
   {
    "fullTitle": "recover with invalid signature with short signature",
    "title": "with short signature"
-  },
-  {
-   "fullTitle": "refund state \"after each\" hook: after test for \"refunds refundees\"",
-   "title": "\"after each\" hook: after test for \"refunds refundees\""
   },
   {
    "fullTitle": "refund state refunds refundees",
@@ -2616,6 +2612,18 @@
   {
    "fullTitle": "permit rejects reused signature",
    "title": "rejects reused signature"
+  },
+  {
+   "fullTitle": "refund state does not allow beneficiary withdrawal",
+   "title": "does not allow beneficiary withdrawal"
+  },
+  {
+   "fullTitle": "refund state prevents entering the closed state",
+   "title": "prevents entering the closed state"
+  },
+  {
+   "fullTitle": "refund state prevents re-entering the refund state",
+   "title": "prevents re-entering the refund state"
   },
   {
    "fullTitle": "refund state rejects deposits",

@@ -792,6 +792,8 @@ type (
 		Time          int64  `json:"time"`
 		BlockTime     int64  `json:"blocktime"`
 
+		OP_SENDER string `json:"OP_SENDER"`
+
 		Vins  []RawTransactionVin  `json:"vin"`
 		Vouts []RawTransactionVout `json:"vout"`
 
@@ -804,6 +806,7 @@ type (
 		ID     string  `json:"txid"`
 		VoutN  int64   `json:"vout"`
 		Amount float64 `json:"value"`
+		Address string `json:"address"`
 
 		// Additional fields:
 		// - "scriptSig"

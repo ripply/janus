@@ -1,11 +1,10 @@
-  
 version: "3.3"
 volumes:
    qtumd-volume:
 
 services:
   janus:
-    image: qtum/janus:websockets
+    image: qtum/janus:dev
     container_name: janus
     build: 
         context: ../../

@@ -241,6 +241,23 @@ func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionB
 	// TODO: discuss
 	// ? Do we have to set `from` == `0x00..00`
 	ethTx.From = utils.AddHexPrefix(qtum.ZeroAddress)
+
+	// I used Base58AddressToHex at the moment
+	// because convertQtumAddress functions causes error for
+	// P2Sh address(such as MUrenj2sPqEVTiNbHQ2RARiZYyTAAeKiDX) and BECH32 address (such as qc1qkt33x6hkrrlwlr6v59wptwy6zskyrjfe40y0lx)
+	if rawQtumTx.OP_SENDER != "" {
+		// addr, err := convertQtumAddress(rawQtumTx.OP_SENDER)
+		addr, err := p.Base58AddressToHex(rawQtumTx.OP_SENDER)
+		if err == nil {
+			ethTx.From = utils.AddHexPrefix(addr)
+		}
+	} else if len(rawQtumTx.Vins) > 0 && rawQtumTx.Vins[0].Address != "" {
+		// addr, err := convertQtumAddress(rawQtumTx.Vins[0].Address)
+		addr, err := p.Base58AddressToHex(rawQtumTx.Vins[0].Address)
+		if err == nil {
+			ethTx.From = utils.AddHexPrefix(addr)
+		}
+	}
 	// TODO: discuss
 	// ? Where is a `to`
 	ethTx.To = utils.AddHexPrefix(qtum.ZeroAddress)
