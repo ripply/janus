@@ -12,7 +12,8 @@ Janus is a web3 proxy adapter that can be used as a web3 provider to interact wi
 - [Supported ETH methods](#support-eth-methods)
 - [Websocket ETH methods](#websocket-eth-methods-endpoint-at-ws)
 - [Janus methods](#janus-methods)
-- [Try to interact with contract](#try-to-interact-with-contract)
+- [Health checks](#health-checks)
+- [Trying to interact with contract](#deploying-and-interacting-with-a-contract-using-rpc-calls)
   - [Assumption parameters](#assumption-parameters)
   - [Deploy the contract](#deploy-the-contract)
   - [Get the transaction using the hash from previous the result](#get-the-transaction-using-the-hash-from-previous-the-result)
@@ -88,8 +89,8 @@ module.exports = {
 
 Getting Janus to work with Metamask requires two things
 - [Configuring Metamask to point to Janus](metamask)
-- Locally signing transactions through Metamask
-  - (This is being worked on and currently is not implemented yet)
+- Locally signing transactions with a Metamask fork
+  - [(Alpha) QTUM Metamask fork](https://github.com/earlgreytech/metamask-extension/releases)
 
 ## Supported ETH methods
 
@@ -104,30 +105,30 @@ Getting Janus to work with Metamask requires two things
 -   eth_hashrate
 -   eth_gasPrice
 -   eth_accounts
--   eth_blockNumber    
--   eth_getBalance    
--   eth_getStorageAt    
--   eth_getTransactionCount    
+-   eth_blockNumber
+-   eth_getBalance
+-   eth_getStorageAt
+-   eth_getTransactionCount
 -   eth_getCode
 -   eth_sign
--   eth_signTransaction    
--   eth_sendTransaction    
--   eth_sendRawTransaction    
--   eth_call    
--   eth_estimateGas    
--   eth_getBlockByHash    
--   eth_getBlockByNumber    
--   eth_getTransactionByHash    
--   eth_getTransactionByBlockHashAndIndex    
--   eth_getTransactionByBlockNumberAndIndex    
--   eth_getTransactionReceipt    
--   eth_getUncleByBlockHashAndIndex    
--   eth_getCompilers    
+-   eth_signTransaction
+-   eth_sendTransaction
+-   eth_sendRawTransaction
+-   eth_call
+-   eth_estimateGas
+-   eth_getBlockByHash
+-   eth_getBlockByNumber
+-   eth_getTransactionByHash
+-   eth_getTransactionByBlockHashAndIndex
+-   eth_getTransactionByBlockNumberAndIndex
+-   eth_getTransactionReceipt
+-   eth_getUncleByBlockHashAndIndex
+-   eth_getCompilers
 -   eth_newFilter
--   eth_newBlockFilter    
--   eth_uninstallFilter    
--   eth_getFilterChanges    
--   eth_getFilterLogs    
+-   eth_newBlockFilter
+-   eth_uninstallFilter
+-   eth_getFilterChanges
+-   eth_getFilterLogs
 -   eth_getLogs
 
 ## Websocket ETH methods (endpoint at /)
@@ -138,6 +139,10 @@ Getting Janus to work with Metamask requires two things
 ## Janus methods
 
 -   qtum_getUTXOs
+
+## Health checks
+
+There are two health check endpoints, `GET /live` and `GET /ready` they return 200 or 503 depending on health (if they can connect to qtumd)
 
 ## Deploying and Interacting with a contract using RPC calls
 
