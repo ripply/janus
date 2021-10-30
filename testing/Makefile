@@ -40,6 +40,9 @@ truffle-parser-extract-result-docker:
 	docker cp ${CONTAINER}:${INPUT} ./truffle-result-output.json
 
 truffle-parser-docker:
+	echo ==================================
+	cat ./truffle-result-output.json
+	echo ==================================
 	docker run --rm -v `pwd`:/output qtum/janus-truffle-parser \
         --expected /output/truffle-expected-output.json \
         --input /output/truffle-result-output.json \

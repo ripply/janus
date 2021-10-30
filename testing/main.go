@@ -17,6 +17,7 @@ type MochaSpecStats struct {
 	Passes   int `json:"passes,omitempty"`
 	Pending  int `json:"pending,omitempty"`
 	Failures int `json:"failures,omitempty"`
+	Flakes   int `json:"flakes,omitempty"`
 }
 
 type MochaSpecReceipt struct {
@@ -64,6 +65,7 @@ type MochaSpecJsonOutput struct {
 	Stats    MochaSpecStats    `json:"stats,omitempty"`
 	Failures MochaSpecFailures `json:"failures,omitempty"`
 	Passes   MochaSpecFailures `json:"passes,omitempty"`
+	Flakes   MochaSpecFailures `json:"flakes,omitempty"`
 }
 
 type MochaSpecFailures []MochaSpecFailure
@@ -118,6 +120,7 @@ func action(pc *kingpin.ParseContext) error {
 
 	sort.Sort(unmarshalledExpected.Failures)
 	sort.Sort(unmarshalledExpected.Passes)
+	sort.Sort(unmarshalledExpected.Flakes)
 	sort.Sort(unmarshalledInput.Failures)
 	sort.Sort(unmarshalledInput.Passes)
 
@@ -127,6 +130,7 @@ func action(pc *kingpin.ParseContext) error {
 	prune(unmarshalledExpected.Passes)
 	prune(unmarshalledInput.Failures)
 	prune(unmarshalledInput.Passes)
+	unmarshalledInput.Flakes = unmarshalledExpected.Flakes[:]
 
 	prunedInput, err := json.MarshalIndent(unmarshalledInput, "", " ")
 	if err != nil {
@@ -164,6 +168,23 @@ func action(pc *kingpin.ParseContext) error {
 
 func compareReports(expected MochaSpecJsonOutput, got MochaSpecJsonOutput) []error {
 	errs := []error{}
+
+	// flakes can end up in passes/failures
+	// so if expected has any flakes
+	// we need to detect if they are in got.Passes or got.Failures
+	// then decrement the passes/failure count by those flakes
+	gotFailedFlakes := getMultiple(expected.Flakes, got.Failures)
+	gotPassedFlakes := getMultiple(expected.Flakes, got.Passes)
+
+	failures := pruneMultiple(gotFailedFlakes, got.Failures)
+	passes := pruneMultiple(gotPassedFlakes, got.Passes)
+
+	got.Stats.Failures -= len(got.Failures) - len(failures)
+	got.Stats.Passes -= len(got.Passes) - len(passes)
+
+	got.Failures = failures
+	got.Passes = passes
+
 	if expected.Stats.Tests != got.Stats.Tests {
 		errs = append(errs, errors.Errorf("Total tests ran don't match: expected: %d got: %d", expected.Stats.Tests, got.Stats.Tests))
 	}
@@ -219,7 +240,20 @@ func expectIdentical(left MochaSpecFailures, right MochaSpecFailures) []error {
 	return errs
 }
 
-func get(failure MochaSpecFailure, from []MochaSpecFailure) *MochaSpecFailure {
+func getMultiple(flakes MochaSpecFailures, got MochaSpecFailures) MochaSpecFailures {
+	results := MochaSpecFailures{}
+
+	for _, flake := range flakes {
+		expectedFlake := get(flake, got)
+		if expectedFlake != nil {
+			results = append(results, *expectedFlake)
+		}
+	}
+
+	return results
+}
+
+func get(failure MochaSpecFailure, from MochaSpecFailures) *MochaSpecFailure {
 	// there will be < 2000 tests here, o^n complexity is fine
 	for _, fromFailure := range from {
 		if fromFailure.String() == failure.String() {
@@ -236,6 +270,24 @@ func prune(specs MochaSpecFailures) {
 		specs[i].Error = nil
 		specs[i].Duration = 0
 	}
+}
+
+func pruneMultiple(failuresToPrune MochaSpecFailures, pruneTarget MochaSpecFailures) MochaSpecFailures {
+	result := MochaSpecFailures{}
+
+	failuresToPruneMap := make(map[string]MochaSpecFailure)
+	for _, failure := range failuresToPrune {
+		failuresToPruneMap[failure.String()] = failure
+	}
+
+	for _, target := range pruneTarget {
+		_, ok := failuresToPruneMap[target.String()]
+		if !ok {
+			result = append(result, target)
+		}
+	}
+
+	return result
 }
 
 func Run() {
