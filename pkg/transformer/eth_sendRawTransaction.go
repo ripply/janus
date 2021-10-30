@@ -52,9 +52,7 @@ func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionReques
 			return eth.SendRawTransactionResponse(""), err
 		}
 	} else {
-		if p.CanGenerate() {
-			p.GenerateIfPossible()
-		}
+		p.GenerateIfPossible()
 	}
 
 	resp := *qtumresp

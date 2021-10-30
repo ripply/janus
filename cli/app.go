@@ -24,7 +24,7 @@ var (
 	accountsFile = app.Flag("accounts", "account private keys (in WIF) returned by eth_accounts").Envar("ACCOUNTS").File()
 
 	qtumRPC     = app.Flag("qtum-rpc", "URL of qtum RPC service").Envar("QTUM_RPC").Default("").String()
-	qtumNetwork = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("regtest").String()
+	qtumNetwork = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("auto").String()
 	bind        = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
 	port        = app.Flag("port", "port to serve proxy").Default("23889").Int()
 	httpsKey    = app.Flag("https-key", "https keyfile").Default("").String()
@@ -117,6 +117,7 @@ func action(pc *kingpin.ParseContext) error {
 		qtum.SetIgnoreUnknownTransactions(*ignoreUnknownTransactions),
 		qtum.SetDisableSnippingQtumRpcOutput(*disableSnipping),
 		qtum.SetHideQtumdLogs(*hideQtumdLogs),
+		qtum.SetContext(context.Background()),
 	)
 	if err != nil {
 		return errors.Wrap(err, "jsonrpc#New")
