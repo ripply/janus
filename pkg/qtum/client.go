@@ -414,7 +414,7 @@ func computeBackoff(i int, random bool) time.Duration {
 
 func checkRPCURL(u string) error {
 	if u == "" {
-		return errors.New("URL must be set")
+		return errors.New("RPC URL must be set")
 	}
 
 	qtumRPC, err := url.Parse(u)
