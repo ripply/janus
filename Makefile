@@ -98,7 +98,7 @@ run-janus:
 
 	go run `pwd`/cli/janus/main.go \
 		--qtum-rpc=http://${test_user}:${test_user_passwd}@0.0.0.0:3889 \
-		--qtum-network=regtest \
+		--qtum-network=auto \
 		--bind=0.0.0.0 \
 		--port=23889 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
@@ -110,7 +110,7 @@ run-janus-https:
 
 	go run `pwd`/cli/janus/main.go \
 		--qtum-rpc=http://${test_user}:${test_user_passwd}@0.0.0.0:3889 \
-		--qtum-network=regtest \
+		--qtum-network=auto \
 		--bind=0.0.0.0 \
 		--port=23889 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
