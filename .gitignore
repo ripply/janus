@@ -45,6 +45,7 @@ api.rest
 truffle-pruned-output.json
 truffle-result-output.json
 output.json
+testing/testing
 
 .parcel-cache
 playground/pet-shop-tutorial/dist
