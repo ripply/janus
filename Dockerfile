@@ -10,6 +10,10 @@ RUN go build \
             "-X 'github.com/qtumproject/janus/pkg/params.GitSha=`git rev-parse HEAD``git diff -s --exit-code || echo \"-local\"`'" \
         -o $GOPATH/bin $GOPATH/src/github.com/qtumproject/janus/...
 
+RUN rm -fr $GOPATH/src/github.com/qtumproject/janus/testing && \
+    rm -fr $GOPATH/src/github.com/qtumproject/janus/build && \
+    rm -fr $GOPATH/src/github.com/qtumproject/janus/.git
+
 ENV QTUM_RPC=http://qtum:testpasswd@localhost:3889
 ENV QTUM_NETWORK=auto
 
