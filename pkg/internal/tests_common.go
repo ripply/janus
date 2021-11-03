@@ -27,8 +27,8 @@ type Doer interface {
 	AddRawResponse(requestType string, rawResponse []byte)
 	AddResponse(requestType string, responseResult interface{}) error
 	AddResponseWithRequestID(requestID int, requestType string, responseResult interface{}) error
-	AddError(requestType string, responseError *eth.JSONRPCError) error
-	AddErrorWithRequestID(requestID int, requestType string, responseError *eth.JSONRPCError) error
+	AddError(requestType string, responseError eth.JSONRPCError) error
+	AddErrorWithRequestID(requestID int, requestType string, responseError eth.JSONRPCError) error
 }
 
 func NewDoerMappedMock() *doerMappedMock {
@@ -90,7 +90,7 @@ func PrepareEthRPCRequest(id int, params []json.RawMessage) (*eth.JSONRPCRequest
 	return &requestRPC, nil
 }
 
-func prepareRawResponse(requestID int, responseResult interface{}, responseError *eth.JSONRPCError) ([]byte, error) {
+func prepareRawResponse(requestID int, responseResult interface{}, responseError eth.JSONRPCError) ([]byte, error) {
 	requestIDRaw, err := json.Marshal(requestID)
 	if err != nil {
 		return nil, err
@@ -176,7 +176,7 @@ func (d *doerMappedMock) AddResponseWithRequestID(requestID int, requestType str
 	return nil
 }
 
-func (d *doerMappedMock) AddError(requestType string, responseError *eth.JSONRPCError) error {
+func (d *doerMappedMock) AddError(requestType string, responseError eth.JSONRPCError) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	requestID := d.latestId + 1
@@ -190,7 +190,7 @@ func (d *doerMappedMock) AddError(requestType string, responseError *eth.JSONRPC
 	return nil
 }
 
-func (d *doerMappedMock) AddErrorWithRequestID(requestID int, requestType string, responseError *eth.JSONRPCError) error {
+func (d *doerMappedMock) AddErrorWithRequestID(requestID int, requestType string, responseError eth.JSONRPCError) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	responseRaw, err := prepareRawResponse(requestID, nil, responseError)

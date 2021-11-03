@@ -20,7 +20,7 @@ var agentConfigNewHeadsInterval = 10 * time.Second
 
 // Allows dependency injection of eth rpc calls as the transformer package imports this package
 type Transformer interface {
-	Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error)
+	Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError)
 }
 
 func NewAgent(ctx context.Context, qtum *qtum.Qtum, transformer Transformer) *Agent {
@@ -348,13 +348,13 @@ func (a *Agent) run() {
 					if err != nil {
 						panic(fmt.Sprintf("Failed to serialize eth_getBlockByHash request parameters: %s", err))
 					}
-					result, err := transformer.Transform(&eth.JSONRPCRequest{
+					result, jsonErr := transformer.Transform(&eth.JSONRPCRequest{
 						JSONRPC: "2.0",
 						Method:  "eth_getBlockByHash",
 						Params:  params,
 					}, nil)
-					if err != nil {
-						a.qtum.GetErrorLogger().Log("msg", "Failed to eth_getBlockByHash", "hash", blockchainInfo.Bestblockhash, "err", err)
+					if jsonErr != nil {
+						a.qtum.GetErrorLogger().Log("msg", "Failed to eth_getBlockByHash", "hash", blockchainInfo.Bestblockhash, "err", jsonErr)
 					} else {
 						getBlockByHashResponse, ok := result.(*eth.GetBlockByHashResponse)
 						if !ok {

@@ -19,10 +19,11 @@ func (p *ProxyETHGetLogs) Method() string {
 	return "eth_getLogs"
 }
 
-func (p *ProxyETHGetLogs) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetLogs) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.GetLogsRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	// TODO: Graph Node is sending the topic
@@ -39,7 +40,7 @@ func (p *ProxyETHGetLogs) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (i
 	return p.request(qtumreq)
 }
 
-func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResponse, error) {
+func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResponse, eth.JSONRPCError) {
 	receipts, err := conversion.SearchLogsAndFilterExtraTopics(p.Qtum, req)
 	if err != nil {
 		return nil, err
@@ -55,7 +56,7 @@ func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResp
 	return &resp, nil
 }
 
-func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLogsRequest, error) {
+func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLogsRequest, eth.JSONRPCError) {
 	//transform EthRequest fromBlock to QtumReq fromBlock:
 	from, err := getBlockNumberByRawParam(p.Qtum, ethreq.FromBlock, true)
 	if err != nil {
@@ -73,13 +74,13 @@ func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLog
 	if ethreq.Address != nil {
 		if isBytesOfString(ethreq.Address) {
 			var addr string
-			if err = json.Unmarshal(ethreq.Address, &addr); err != nil {
-				return nil, err
+			if jsonErr := json.Unmarshal(ethreq.Address, &addr); jsonErr != nil {
+				return nil, eth.NewInvalidParamsError(jsonErr.Error())
 			}
 			addresses = append(addresses, addr)
 		} else {
-			if err = json.Unmarshal(ethreq.Address, &addresses); err != nil {
-				return nil, err
+			if jsonErr := json.Unmarshal(ethreq.Address, &addresses); jsonErr != nil {
+				return nil, eth.NewInvalidParamsError(jsonErr.Error())
 			}
 		}
 		for i := range addresses {
@@ -88,9 +89,9 @@ func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLog
 	}
 
 	//transform EthReq topics to QtumReq topics:
-	topics, err := eth.TranslateTopics(ethreq.Topics)
-	if err != nil {
-		return nil, err
+	topics, topicsErr := eth.TranslateTopics(ethreq.Topics)
+	if topicsErr != nil {
+		return nil, eth.NewCallbackError(topicsErr.Error())
 	}
 
 	return &qtum.SearchLogsRequest{

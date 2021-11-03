@@ -18,10 +18,10 @@ func (p *ProxyETHChainId) Method() string {
 	return "eth_chainId"
 }
 
-func (p *ProxyETHChainId) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHChainId) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var qtumresp *qtum.GetBlockChainInfoResponse
 	if err := p.Qtum.Request(qtum.MethodGetBlockChainInfo, nil, &qtumresp); err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	var chainId *big.Int

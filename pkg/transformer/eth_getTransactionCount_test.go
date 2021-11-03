@@ -24,9 +24,9 @@ func TestGetTransactionCountRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHTxCount{qtumClient}
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := string("0x1") //tx count is hardcoded inside the implement

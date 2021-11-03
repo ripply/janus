@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
@@ -19,28 +18,30 @@ func (p *ProxyETHGetTransactionByBlockNumberAndIndex) Method() string {
 	return "eth_getTransactionByBlockNumberAndIndex"
 }
 
-func (p *ProxyETHGetTransactionByBlockNumberAndIndex) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetTransactionByBlockNumberAndIndex) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.GetTransactionByBlockNumberAndIndex
 	if err := json.Unmarshal(rawreq.Params, &req); err != nil {
-		return nil, errors.Wrap(err, "couldn't unmarshal request")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("couldn't unmarshal request")
 	}
 	if req.BlockNumber == "" {
-		return nil, errors.New("invalid argument 0: empty hex string")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("invalid argument 0: empty hex string")
 	}
 
 	return p.request(&req)
 }
 
-func (p *ProxyETHGetTransactionByBlockNumberAndIndex) request(req *eth.GetTransactionByBlockNumberAndIndex) (interface{}, error) {
+func (p *ProxyETHGetTransactionByBlockNumberAndIndex) request(req *eth.GetTransactionByBlockNumberAndIndex) (interface{}, eth.JSONRPCError) {
 	// Decoded by ProxyETHGetTransactionByBlockHashAndIndex, quickly decode so we can fail cheaply without making any calls
-	_, err := hexutil.DecodeUint64(req.TransactionIndex)
-	if err != nil {
-		return nil, errors.Wrap(err, "invalid argument 1")
+	_, decodeErr := hexutil.DecodeUint64(req.TransactionIndex)
+	if decodeErr != nil {
+		return nil, eth.NewInvalidParamsError("invalid argument 1")
 	}
 
 	blockNum, err := getBlockNumberByParam(p.Qtum, req.BlockNumber, false)
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't get block number by parameter")
+		return nil, eth.NewCallbackError("couldn't get block number by parameter")
 	}
 
 	blockHash, err := proxyETHGetBlockByHash(p, p.Qtum, blockNum)

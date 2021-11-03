@@ -65,9 +65,9 @@ func TestEstimateGasRequest(t *testing.T) {
 	//preparing proxy & executing request
 	proxyEth := ProxyETHCall{qtumClient}
 	proxyEthEstimateGas := ProxyETHEstimateGas{&proxyEth}
-	got, err := proxyEthEstimateGas.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEthEstimateGas.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.EstimateGasResponse("0x54ae")
@@ -141,8 +141,8 @@ func TestEstimateGasRequestExecutionReverted(t *testing.T) {
 		t.Fatal("Expected error")
 	}
 
-	want := ErrExecutionReverted
-	if want != got {
+	want := eth.NewCallbackError(ErrExecutionReverted.Error())
+	if !reflect.DeepEqual(want, got) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
@@ -206,9 +206,9 @@ func TestEstimateGasNonVMRequest(t *testing.T) {
 	//preparing proxy & executing request
 	proxyEth := ProxyETHCall{qtumClient}
 	proxyEthEstimateGas := ProxyETHEstimateGas{&proxyEth}
-	got, err := proxyEthEstimateGas.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEthEstimateGas.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.EstimateGasResponse(NonContractVMGasLimit)

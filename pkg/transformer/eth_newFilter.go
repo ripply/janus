@@ -19,16 +19,17 @@ func (p *ProxyETHNewFilter) Method() string {
 	return "eth_newFilter"
 }
 
-func (p *ProxyETHNewFilter) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHNewFilter) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.NewFilterRequest
 	if err := json.Unmarshal(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	return p.request(&req)
 }
 
-func (p *ProxyETHNewFilter) request(ethreq *eth.NewFilterRequest) (*eth.NewFilterResponse, error) {
+func (p *ProxyETHNewFilter) request(ethreq *eth.NewFilterRequest) (*eth.NewFilterResponse, eth.JSONRPCError) {
 
 	from, err := getBlockNumberByRawParam(p.Qtum, ethreq.FromBlock, true)
 	if err != nil {
@@ -48,7 +49,7 @@ func (p *ProxyETHNewFilter) request(ethreq *eth.NewFilterRequest) (*eth.NewFilte
 	if len(ethreq.Topics) > 0 {
 		topics, err := eth.TranslateTopics(ethreq.Topics)
 		if err != nil {
-			return nil, err
+			return nil, eth.NewCallbackError(err.Error())
 		}
 		filter.Data.Store("topics", qtum.NewSearchLogsTopics(topics))
 	}

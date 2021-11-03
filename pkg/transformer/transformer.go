@@ -60,22 +60,22 @@ func (t *Transformer) Register(p ETHProxy) error {
 }
 
 // Transform takes a Transformer and transforms the request from ETH request and returns the proxy request
-func (t *Transformer) Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (t *Transformer) Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	proxy, err := t.getProxy(req.Method)
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't get proxy")
+		return nil, err
 	}
 	resp, err := proxy.Request(req, c)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "couldn't proxy %s request", req.Method)
+		return nil, err
 	}
 	return resp, nil
 }
 
-func (t *Transformer) getProxy(method string) (ETHProxy, error) {
+func (t *Transformer) getProxy(method string) (ETHProxy, eth.JSONRPCError) {
 	proxy, ok := t.transformers[method]
 	if !ok {
-		return nil, errors.Errorf("The method %s does not exist/is not available", method)
+		return nil, eth.NewMethodNotFoundError(method)
 	}
 	return proxy, nil
 }

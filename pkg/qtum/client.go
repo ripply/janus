@@ -31,6 +31,7 @@ var maximumBackoff = (2 * time.Second).Milliseconds()
 
 type Client struct {
 	URL  string
+	url  *url.URL
 	doer doer
 	ctx  context.Context
 
@@ -67,10 +68,16 @@ func NewClient(isMain bool, rpcURL string, opts ...func(*Client) error) (*Client
 		return nil, err
 	}
 
+	url, err := url.Parse(rpcURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to parse rpc url")
+	}
+
 	c := &Client{
 		isMain: isMain,
 		doer:   http.DefaultClient,
 		URL:    rpcURL,
+		url:    url,
 		logger: log.NewNopLogger(),
 		debug:  false,
 		id:     big.NewInt(0),
@@ -86,6 +93,10 @@ func NewClient(isMain bool, rpcURL string, opts ...func(*Client) error) (*Client
 	}
 
 	return c, nil
+}
+
+func (c *Client) GetURL() *url.URL {
+	return c.url
 }
 
 func (c *Client) IsMain() bool {

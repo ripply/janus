@@ -18,10 +18,10 @@ func (p *ProxyETHGasPrice) Method() string {
 	return "eth_gasPrice"
 }
 
-func (p *ProxyETHGasPrice) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGasPrice) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	qtumresp, err := p.Qtum.GetGasPrice()
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	// qtum res -> eth res

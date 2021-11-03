@@ -7,8 +7,8 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestAccountRequest(t *testing.T) {
@@ -37,9 +37,9 @@ func TestAccountRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHAccounts{qtumClient}
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr.Error())
 	}
 
 	want := eth.AccountsResponse{"0x6d358cf96533189dd5a602d0937fddf0888ad3ae", "0x7e22630f90e6db16283af2c6b04f688117a55db4"}

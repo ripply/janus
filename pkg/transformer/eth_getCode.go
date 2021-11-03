@@ -16,16 +16,17 @@ func (p *ProxyETHGetCode) Method() string {
 	return "eth_getCode"
 }
 
-func (p *ProxyETHGetCode) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetCode) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.GetCodeRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	return p.request(&req)
 }
 
-func (p *ProxyETHGetCode) request(ethreq *eth.GetCodeRequest) (eth.GetCodeResponse, error) {
+func (p *ProxyETHGetCode) request(ethreq *eth.GetCodeRequest) (eth.GetCodeResponse, eth.JSONRPCError) {
 	qtumreq := qtum.GetAccountInfoRequest(utils.RemoveHexPrefix(ethreq.Address))
 
 	qtumresp, err := p.GetAccountInfo(&qtumreq)
@@ -41,7 +42,7 @@ func (p *ProxyETHGetCode) request(ethreq *eth.GetCodeRequest) (eth.GetCodeRespon
 			**/
 			return "0x", nil
 		} else {
-			return "", err
+			return "", eth.NewCallbackError(err.Error())
 		}
 	}
 

@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/notifier"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -18,7 +17,7 @@ func (p *ETHUnsubscribe) Method() string {
 	return "eth_unsubscribe"
 }
 
-func (p *ETHUnsubscribe) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ETHUnsubscribe) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	notifier := getNotifier(c)
 	if notifier == nil {
 		p.GetLogger().Log("msg", "eth_unsubscribe only supported over websocket")
@@ -33,21 +32,22 @@ func (p *ETHUnsubscribe) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (in
 				}
 			}
 		*/
-		return nil, errors.New("The method eth_subscribe does not exist/is not available")
+		return nil, eth.NewMethodNotFoundError("eth_subscribe")
 	}
 
 	var req eth.EthUnsubscribeRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	return p.request(&req, notifier)
 }
 
-func (p *ETHUnsubscribe) request(req *eth.EthUnsubscribeRequest, notifier *notifier.Notifier) (eth.EthUnsubscribeResponse, error) {
+func (p *ETHUnsubscribe) request(req *eth.EthUnsubscribeRequest, notifier *notifier.Notifier) (eth.EthUnsubscribeResponse, eth.JSONRPCError) {
 	if len(*req) != 1 {
-		// TODO: Proper error response
-		return false, errors.New("requires one parameter")
+		// TODO: Correct error code?
+		return false, eth.NewInvalidParamsError("requires one parameter")
 	}
 	param := (*req)[0]
 	success := notifier.Unsubscribe(param)

@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -19,24 +18,26 @@ func (p *ProxyQTUMGetUTXOs) Method() string {
 	return "qtum_getUTXOs"
 }
 
-func (p *ProxyQTUMGetUTXOs) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyQTUMGetUTXOs) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var params eth.GetUTXOsRequest
 	if err := unmarshalRequest(req.Params, &params); err != nil {
-		return nil, errors.WithMessage(err, "couldn't unmarshal request parameters")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("couldn't unmarshal request parameters")
 	}
 
 	err := params.CheckHasValidValues()
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't validate parameters value")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("couldn't validate parameters value")
 	}
 
 	return p.request(params)
 }
 
-func (p *ProxyQTUMGetUTXOs) request(params eth.GetUTXOsRequest) (*eth.GetUTXOsResponse, error) {
+func (p *ProxyQTUMGetUTXOs) request(params eth.GetUTXOsRequest) (*eth.GetUTXOsResponse, eth.JSONRPCError) {
 	address, err := convertETHAddress(utils.RemoveHexPrefix(params.Address), p.Chain())
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't convert Ethereum address to Qtum address")
+		return nil, eth.NewInvalidParamsError("couldn't convert Ethereum address to Qtum address")
 	}
 
 	req := qtum.GetAddressUTXOsRequest{
@@ -45,7 +46,7 @@ func (p *ProxyQTUMGetUTXOs) request(params eth.GetUTXOsRequest) (*eth.GetUTXOsRe
 
 	resp, err := p.Qtum.GetAddressUTXOs(&req)
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	//Convert minSumAmount to Satoshis
@@ -61,7 +62,7 @@ func (p *ProxyQTUMGetUTXOs) request(params eth.GetUTXOsRequest) (*eth.GetUTXOsRe
 		}
 	}
 
-	return nil, errors.Errorf("required minimum amount is greater than total amount of UTXOs")
+	return nil, eth.NewCallbackError("required minimum amount is greater than total amount of UTXOs")
 }
 
 func toEthResponseType(utxo qtum.UTXO) eth.QtumUTXO {

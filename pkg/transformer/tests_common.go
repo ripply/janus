@@ -24,9 +24,9 @@ func testETHProxyRequest(t *testing.T, initializer ETHProxyInitializer, requestP
 
 	//preparing proxy & executing request
 	proxyEth := initializer(qtumClient)
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatalf("Failed to process request on %T.Request(%s): %s", proxyEth, requestParams, err)
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatalf("Failed to process request on %T.Request(%s): %s", proxyEth, requestParams, jsonErr)
 	}
 
 	if !reflect.DeepEqual(got, want) {

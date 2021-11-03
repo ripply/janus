@@ -24,9 +24,9 @@ func TestGasPriceRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGasPrice{qtumClient}
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := string("0x9502f9000") //price is hardcoded inside the implement

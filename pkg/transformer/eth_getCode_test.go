@@ -7,8 +7,8 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestGetAccountInfoRequest(t *testing.T) {
@@ -46,9 +46,9 @@ func TestGetAccountInfoRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetCode{qtumClient}
-	got, err := proxyEth.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.GetCodeResponse("0x606060405236156100ad576000357c0100000000000000000...")
@@ -88,9 +88,9 @@ func TestGetCodeInvalidAddressRequest(t *testing.T) {
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetCode{qtumClient}
-	got, err := proxyEth.Request(requestRPC, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(requestRPC, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.GetCodeResponse("0x")

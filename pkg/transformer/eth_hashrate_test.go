@@ -8,8 +8,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestHashrateRequest(t *testing.T) {
@@ -36,9 +36,9 @@ func TestHashrateRequest(t *testing.T) {
 	}
 
 	proxyEth := ProxyETHHashrate{qtumClient}
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	expected := hexutil.EncodeUint64(math.Float64bits(4.656542373906925e-010))

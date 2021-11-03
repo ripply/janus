@@ -18,10 +18,11 @@ func (p *ProxyETHGetStorageAt) Method() string {
 	return "eth_getStorageAt"
 }
 
-func (p *ProxyETHGetStorageAt) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetStorageAt) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.GetStorageRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	qtumAddress := utils.RemoveHexPrefix(req.Address)
@@ -37,10 +38,10 @@ func (p *ProxyETHGetStorageAt) Request(rawreq *eth.JSONRPCRequest, c echo.Contex
 	}, utils.RemoveHexPrefix(req.Index))
 }
 
-func (p *ProxyETHGetStorageAt) request(ethreq *qtum.GetStorageRequest, index string) (*eth.GetStorageResponse, error) {
+func (p *ProxyETHGetStorageAt) request(ethreq *qtum.GetStorageRequest, index string) (*eth.GetStorageResponse, eth.JSONRPCError) {
 	qtumresp, err := p.Qtum.GetStorage(ethreq)
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	// qtum res -> eth res

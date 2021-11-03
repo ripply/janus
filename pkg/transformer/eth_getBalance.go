@@ -19,10 +19,11 @@ func (p *ProxyETHGetBalance) Method() string {
 	return "eth_getBalance"
 }
 
-func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.GetBalanceRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	addr := utils.RemoveHexPrefix(req.Address)
@@ -44,7 +45,7 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest, c echo.Context)
 		base58Addr, err := p.FromHexAddress(addr)
 		if err != nil {
 			p.GetDebugLogger().Log("method", p.Method(), "address", req.Address, "msg", "error parsing address", "error", err)
-			return nil, err
+			return nil, eth.NewCallbackError(err.Error())
 		}
 
 		qtumreq := qtum.GetAddressBalanceRequest{Address: base58Addr}
@@ -55,7 +56,7 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest, c echo.Context)
 				return "0x0", nil
 			}
 			p.GetDebugLogger().Log("method", p.Method(), "address", req.Address, "msg", "error getting address balance", "error", err)
-			return nil, err
+			return nil, eth.NewCallbackError(err.Error())
 		}
 
 		// 1 QTUM = 10 ^ 8 Satoshi

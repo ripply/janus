@@ -18,14 +18,14 @@ func (p *ProxyETHHashrate) Method() string {
 	return "eth_hashrate"
 }
 
-func (p *ProxyETHHashrate) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHHashrate) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	return p.request()
 }
 
-func (p *ProxyETHHashrate) request() (*eth.HashrateResponse, error) {
+func (p *ProxyETHHashrate) request() (*eth.HashrateResponse, eth.JSONRPCError) {
 	qtumresp, err := p.Qtum.GetHashrate()
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	// qtum res -> eth res

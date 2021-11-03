@@ -99,16 +99,13 @@ func GetErrorCode(err error) int {
 	return errorCode
 }
 
-func GetErrorResponse(err error) *eth.JSONRPCError {
+func GetErrorResponse(err error) eth.JSONRPCError {
 	errorCode := GetErrorCode(err)
 	if errorCode == 0 {
 		return nil
 	}
 
-	return &eth.JSONRPCError{
-		Code:    errorCode,
-		Message: err.Error(),
-	}
+	return eth.NewJSONRPCError(errorCode, err.Error(), nil)
 }
 
 var (

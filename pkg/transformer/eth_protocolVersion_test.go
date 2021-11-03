@@ -16,9 +16,9 @@ func TestProtocolVersionReturnsHardcodedValue(t *testing.T) {
 	}
 
 	proxyEth := ETHProtocolVersion{}
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	expected := "0x41"

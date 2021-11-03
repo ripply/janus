@@ -22,13 +22,15 @@ func (p *ProxyETHGetTransactionReceipt) Method() string {
 	return "eth_getTransactionReceipt"
 }
 
-func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.GetTransactionReceiptRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 	if req == "" {
-		return nil, errors.New("empty transaction hash")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("empty transaction hash")
 	}
 	var (
 		txHash  = utils.RemoveHexPrefix(string(req))
@@ -37,7 +39,7 @@ func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest, c ec
 	return p.request(&qtumReq)
 }
 
-func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptRequest) (*eth.GetTransactionReceiptResponse, error) {
+func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptRequest) (*eth.GetTransactionReceiptResponse, eth.JSONRPCError) {
 	qtumReceipt, err := p.Qtum.GetTransactionReceipt(string(*req))
 	if err != nil {
 		ethTx, getRewardTransactionErr := getRewardTransactionByHash(p.Qtum, string(*req))
@@ -47,7 +49,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 				return nil, nil
 			}
 			p.Qtum.GetDebugLogger().Log("msg", "Transaction does not exist", "txid", string(*req))
-			return nil, err
+			return nil, eth.NewCallbackError(err.Error())
 		}
 		return &eth.GetTransactionReceiptResponse{
 			TransactionHash:  ethTx.Hash,
@@ -95,11 +97,13 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 
 	qtumTx, err := p.Qtum.GetRawTransaction(qtumReceipt.TransactionHash, false)
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't get transaction")
+		p.GetDebugLogger().Log("msg", "couldn't get transaction", "err", err)
+		return nil, eth.NewCallbackError("couldn't get transaction")
 	}
 	decodedRawQtumTx, err := p.Qtum.DecodeRawTransaction(qtumTx.Hex)
 	if err != nil {
-		return nil, errors.WithMessage(err, "couldn't decode raw transaction")
+		p.GetDebugLogger().Log("msg", "couldn't decode raw transaction", "err", err)
+		return nil, eth.NewCallbackError("couldn't decode raw transaction")
 	}
 	if decodedRawQtumTx.IsContractCreation() {
 		ethReceipt.To = ""

@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestMiningRequest(t *testing.T) {
@@ -31,9 +31,9 @@ func TestMiningRequest(t *testing.T) {
 	}
 
 	proxyEth := ProxyETHMining{qtumClient}
-	got, err := proxyEth.Request(request, nil)
-	if err != nil {
-		t.Fatal(err)
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
 	want := eth.MiningResponse(true)

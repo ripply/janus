@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
@@ -19,30 +18,33 @@ func (p *ProxyETHGetTransactionByBlockHashAndIndex) Method() string {
 	return "eth_getTransactionByBlockHashAndIndex"
 }
 
-func (p *ProxyETHGetTransactionByBlockHashAndIndex) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHGetTransactionByBlockHashAndIndex) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.GetTransactionByBlockHashAndIndex
 	if err := json.Unmarshal(rawreq.Params, &req); err != nil {
-		return nil, errors.Wrap(err, "couldn't unmarshal request")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 	if req.BlockHash == "" {
-		return nil, errors.New("invalid argument 0: empty hex string")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("invalid argument 0: empty hex string")
 	}
 
 	return p.request(&req)
 }
 
-func (p *ProxyETHGetTransactionByBlockHashAndIndex) request(req *eth.GetTransactionByBlockHashAndIndex) (interface{}, error) {
+func (p *ProxyETHGetTransactionByBlockHashAndIndex) request(req *eth.GetTransactionByBlockHashAndIndex) (interface{}, eth.JSONRPCError) {
 	transactionIndex, err := hexutil.DecodeUint64(req.TransactionIndex)
 	if err != nil {
-		return nil, errors.Wrap(err, "invalid argument 1")
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError("invalid argument 1")
 	}
 
 	// Proxy eth_getBlockByHash and return the transaction at requested index
 	getBlockByNumber := ProxyETHGetBlockByHash{p.Qtum}
-	blockByNumber, err := getBlockByNumber.request(&eth.GetBlockByHashRequest{BlockHash: req.BlockHash, FullTransaction: true})
+	blockByNumber, jsonErr := getBlockByNumber.request(&eth.GetBlockByHashRequest{BlockHash: req.BlockHash, FullTransaction: true})
 
-	if err != nil {
-		return nil, err
+	if jsonErr != nil {
+		return nil, jsonErr
 	}
 
 	if blockByNumber == nil {

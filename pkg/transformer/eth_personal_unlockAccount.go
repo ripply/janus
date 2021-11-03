@@ -12,6 +12,6 @@ func (p *ProxyETHPersonalUnlockAccount) Method() string {
 	return "personal_unlockAccount"
 }
 
-func (p *ProxyETHPersonalUnlockAccount) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHPersonalUnlockAccount) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	return eth.PersonalUnlockAccountResponse(true), nil
 }

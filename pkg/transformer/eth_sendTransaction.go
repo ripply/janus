@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -20,11 +19,12 @@ func (p *ProxyETHSendTransaction) Method() string {
 	return "eth_sendTransaction"
 }
 
-func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.SendTransactionRequest
 	err := unmarshalRequest(rawreq.Params, &req)
 	if err != nil {
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	if req.Gas != nil && req.Gas.Int64() < MinimumGasLimit {
@@ -32,28 +32,29 @@ func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Con
 	}
 
 	var result interface{}
+	var jsonErr eth.JSONRPCError
 
 	if req.IsCreateContract() {
-		result, err = p.requestCreateContract(&req)
+		result, jsonErr = p.requestCreateContract(&req)
 	} else if req.IsSendEther() {
-		result, err = p.requestSendToAddress(&req)
+		result, jsonErr = p.requestSendToAddress(&req)
 	} else if req.IsCallContract() {
-		result, err = p.requestSendToContract(&req)
+		result, jsonErr = p.requestSendToContract(&req)
 	} else {
-		return nil, errors.New("Unknown operation")
+		return nil, eth.NewInvalidParamsError("Unknown operation")
 	}
 
 	if err == nil {
 		p.GenerateIfPossible()
 	}
 
-	return result, err
+	return result, jsonErr
 }
 
-func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransactionRequest) (*eth.SendTransactionResponse, error) {
+func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransactionRequest) (*eth.SendTransactionResponse, eth.JSONRPCError) {
 	gasLimit, gasPrice, err := EthGasToQtum(ethtx)
 	if err != nil {
-		return nil, err
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	amount := decimal.NewFromFloat(0.0)
@@ -61,7 +62,7 @@ func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		var err error
 		amount, err = EthValueToQtumAmount(ethtx.Value, ZeroSatoshi)
 		if err != nil {
-			return nil, errors.Wrap(err, "EthValueToQtumAmount:")
+			return nil, eth.NewInvalidParamsError(err.Error())
 		}
 	}
 
@@ -76,21 +77,21 @@ func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransacti
 	if from := ethtx.From; from != "" && utils.IsEthHexAddress(from) {
 		from, err = p.FromHexAddress(from)
 		if err != nil {
-			return nil, err
+			return nil, eth.NewCallbackError(err.Error())
 		}
 		qtumreq.SenderAddress = from
 	}
 
 	var resp *qtum.SendToContractResponse
 	if err := p.Qtum.Request(qtum.MethodSendToContract, &qtumreq, &resp); err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	ethresp := eth.SendTransactionResponse(utils.AddHexPrefix(resp.Txid))
 	return &ethresp, nil
 }
 
-func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionRequest) (*eth.SendTransactionResponse, error) {
+func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionRequest) (*eth.SendTransactionResponse, eth.JSONRPCError) {
 	getQtumWalletAddress := func(addr string) (string, error) {
 		if utils.IsEthHexAddress(addr) {
 			return p.FromHexAddress(utils.RemoveHexPrefix(addr))
@@ -100,17 +101,17 @@ func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionR
 
 	from, err := getQtumWalletAddress(req.From)
 	if err != nil {
-		return nil, err
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	to, err := getQtumWalletAddress(req.To)
 	if err != nil {
-		return nil, err
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	amount, err := EthValueToQtumAmount(req.Value, ZeroSatoshi)
 	if err != nil {
-		return nil, errors.Wrap(err, "EthValueToQtumAmount:")
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	p.GetDebugLogger().Log("msg", "successfully converted from wei to QTUM", "wei", req.Value, "qtum", amount)
@@ -130,7 +131,7 @@ func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionR
 		// }
 		// this can happen if there are enough coins but some required are untrusted
 		// you can get the trusted coin balance via getbalances rpc call
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	ethresp := eth.SendTransactionResponse(utils.AddHexPrefix(string(qtumresp)))
@@ -138,10 +139,10 @@ func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionR
 	return &ethresp, nil
 }
 
-func (p *ProxyETHSendTransaction) requestCreateContract(req *eth.SendTransactionRequest) (*eth.SendTransactionResponse, error) {
+func (p *ProxyETHSendTransaction) requestCreateContract(req *eth.SendTransactionRequest) (*eth.SendTransactionResponse, eth.JSONRPCError) {
 	gasLimit, gasPrice, err := EthGasToQtum(req)
 	if err != nil {
-		return nil, err
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	qtumreq := &qtum.CreateContractRequest{
@@ -155,7 +156,7 @@ func (p *ProxyETHSendTransaction) requestCreateContract(req *eth.SendTransaction
 		if utils.IsEthHexAddress(from) {
 			from, err = p.FromHexAddress(from)
 			if err != nil {
-				return nil, err
+				return nil, eth.NewCallbackError(err.Error())
 			}
 		}
 
@@ -164,7 +165,7 @@ func (p *ProxyETHSendTransaction) requestCreateContract(req *eth.SendTransaction
 
 	var resp *qtum.CreateContractResponse
 	if err := p.Qtum.Request(qtum.MethodCreateContract, qtumreq, &resp); err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	ethresp := eth.SendTransactionResponse(utils.AddHexPrefix(string(resp.Txid)))

@@ -15,11 +15,11 @@ func (p *ProxyNetListening) Method() string {
 	return "net_listening"
 }
 
-func (p *ProxyNetListening) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyNetListening) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	networkInfo, err := p.GetNetworkInfo()
 	if err != nil {
 		p.GetDebugLogger().Log("method", p.Method(), "msg", "Failed to query network info", "err", err)
-		return false, err
+		return false, eth.NewCallbackError(err.Error())
 	}
 
 	p.GetDebugLogger().Log("method", p.Method(), "network active", networkInfo.NetworkActive)

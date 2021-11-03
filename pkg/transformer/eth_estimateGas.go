@@ -21,10 +21,11 @@ func (p *ProxyETHEstimateGas) Method() string {
 	return "eth_estimateGas"
 }
 
-func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var ethreq eth.CallRequest
-	if err := unmarshalRequest(rawreq.Params, &ethreq); err != nil {
-		return nil, err
+	if jsonErr := unmarshalRequest(rawreq.Params, &ethreq); jsonErr != nil {
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(jsonErr.Error())
 	}
 
 	if ethreq.Data == "" {
@@ -42,24 +43,23 @@ func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest, c echo.Context
 	ethreq.Gas = nil
 
 	// eth req -> qtum req
-	qtumreq, err := p.ToRequest(&ethreq)
-	if err != nil {
-		return nil, err
+	qtumreq, jsonErr := p.ToRequest(&ethreq)
+	if jsonErr != nil {
+		return nil, jsonErr
 	}
 
 	// qtum [code: -5] Incorrect address occurs here
 	qtumresp, err := p.CallContract(qtumreq)
 	if err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	return p.toResp(qtumresp)
 }
 
-func (p *ProxyETHEstimateGas) toResp(qtumresp *qtum.CallContractResponse) (*eth.EstimateGasResponse, error) {
+func (p *ProxyETHEstimateGas) toResp(qtumresp *qtum.CallContractResponse) (*eth.EstimateGasResponse, eth.JSONRPCError) {
 	if qtumresp.ExecutionResult.Excepted != "None" {
-		// TODO: Return code -32000
-		return nil, ErrExecutionReverted
+		return nil, eth.NewCallbackError(ErrExecutionReverted.Error())
 	}
 	gas := eth.EstimateGasResponse(hexutil.EncodeUint64(uint64(qtumresp.ExecutionResult.GasUsed)))
 	p.GetDebugLogger().Log(p.Method(), gas)

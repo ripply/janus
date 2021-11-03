@@ -133,7 +133,9 @@ func (s *Server) Start() error {
 	}
 
 	https := (s.httpsKey != "" && s.httpsCert != "")
-	level.Warn(s.logger).Log("listen", s.address, "qtum_rpc", s.qtumRPCClient.URL, "msg", "proxy started", "https", https)
+	// TODO: Upgrade golang to 1.15 to support s.qtumRPCClient.GetURL().Redacted() here
+	url := s.qtumRPCClient.URL
+	level.Info(s.logger).Log("listen", s.address, "qtum_rpc", url, "msg", "proxy started", "https", https)
 
 	if https {
 		level.Info(s.logger).Log("msg", "SSL enabled")

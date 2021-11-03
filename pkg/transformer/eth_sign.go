@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -23,11 +23,12 @@ func (p *ProxyETHSign) Method() string {
 	return "eth_sign"
 }
 
-func (p *ProxyETHSign) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHSign) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	var req eth.SignRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		p.GetDebugLogger().Log("method", p.Method(), "error", err)
-		return nil, err
+		// TODO: Correct error code?
+		return nil, eth.NewInvalidParamsError(err.Error())
 	}
 
 	addr := utils.RemoveHexPrefix(req.Account)
@@ -35,13 +36,13 @@ func (p *ProxyETHSign) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (inte
 	acc := p.Qtum.Accounts.FindByHexAddress(addr)
 	if acc == nil {
 		p.GetDebugLogger().Log("method", p.Method(), "account", addr, "msg", "Unknown account")
-		return nil, errors.Errorf("No such account: %s", addr)
+		return nil, eth.NewInvalidParamsError(fmt.Sprintf("No such account: %s", addr))
 	}
 
 	sig, err := signMessage(acc.PrivKey, req.Message)
 	if err != nil {
 		p.GetDebugLogger().Log("method", p.Method(), "msg", "Failed to sign message", "error", err)
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	p.GetDebugLogger().Log("method", p.Method(), "msg", "Successfully signed message")

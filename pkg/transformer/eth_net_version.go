@@ -15,14 +15,14 @@ func (p *ProxyETHNetVersion) Method() string {
 	return "net_version"
 }
 
-func (p *ProxyETHNetVersion) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
+func (p *ProxyETHNetVersion) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
 	return p.request()
 }
 
-func (p *ProxyETHNetVersion) request() (*eth.NetVersionResponse, error) {
+func (p *ProxyETHNetVersion) request() (*eth.NetVersionResponse, eth.JSONRPCError) {
 	var qtumresp *qtum.GetBlockChainInfoResponse
 	if err := p.Qtum.Request(qtum.MethodGetBlockChainInfo, nil, &qtumresp); err != nil {
-		return nil, err
+		return nil, eth.NewCallbackError(err.Error())
 	}
 
 	var networkID string
