@@ -8,6 +8,21 @@ else
 JANUS_PORT := 23889
 endif
 
+
+# Latest commit hash
+GIT_SHA=$(shell git rev-parse HEAD)
+
+# If working copy has changes, append `-local` to hash
+GIT_DIFF=$(shell git diff -s --exit-code || echo "-local")
+GIT_REV=$(GIT_SHA)$(GIT_DIFF)
+GIT_TAG=$(shell git describe --tags 2>/dev/null)
+
+ifeq ($(GIT_TAG),)
+GIT_TAG := $(GIT_REV)
+else
+GIT_TAG := $(GIT_TAG)$(GIT_DIFF)
+endif
+
 check-env:
 ifndef GOPATH
 	$(error GOPATH is undefined)
@@ -15,7 +30,9 @@ endif
 
 .PHONY: install
 install: 
-	go install github.com/qtumproject/janus/cli/janus
+	go install \
+		-ldflags "-X 'github.com/qtumproject/janus/pkg/params.GitSha=`git rev-parse HEAD``git diff -s --exit-code || echo \"-local\"`'" \
+		github.com/qtumproject/janus
 
 .PHONY: release
 release: darwin linux
@@ -34,34 +51,31 @@ quick-start:
 
 .PHONY: docker-dev
 docker-dev:
-	docker build -t qtum/janus:dev .
+	docker build -t qtum/janus:latest -t qtum/janus:dev -t qtum/janus:${GIT_TAG} -t qtum/janus:${GIT_REV} .
 	
 .PHONY: local-dev
-local-dev: check-env
-	go install github.com/qtumproject/janus/cli/janus
+local-dev: check-env install
 	docker run --rm --name qtum_testchain -d -p 3889:3889 qtum/qtum qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
 	sleep 3
 	docker cp ${GOPATH}/src/github.com/qtumproject/janus/docker/fill_user_account.sh qtum_testchain:.
 	docker exec qtum_testchain /bin/sh -c ./fill_user_account.sh
-	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=regtest $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev
+	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=auto $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev
 
 .PHONY: local-dev-https
-local-dev-https: check-env
-	go install github.com/qtumproject/janus/cli/janus
+local-dev-https: check-env install
 	docker run --rm --name qtum_testchain -d -p 3889:3889 qtum/qtum qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
 	sleep 3
 	docker cp ${GOPATH}/src/github.com/qtumproject/janus/docker/fill_user_account.sh qtum_testchain:.
 	docker exec qtum_testchain /bin/sh -c ./fill_user_account.sh > /dev/null&
-	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=regtest $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev --https-key https/key.pem --https-cert https/cert.pem
+	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=auto $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev --https-key https/key.pem --https-cert https/cert.pem
 
 .PHONY: local-dev-logs
-local-dev-logs: check-env
-	go install github.com/qtumproject/janus/cli/janus
+local-dev-logs: check-env install
 	docker run --rm --name qtum_testchain -d -p 3889:3889 qtum/qtum:dev qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
 	sleep 3
 	docker cp ${GOPATH}/src/github.com/qtumproject/janus/docker/fill_user_account.sh qtum_testchain:.
 	docker exec qtum_testchain /bin/sh -c ./fill_user_account.sh
-	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=regtest $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev > janus_dev_logs.txt
+	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=auto $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev > janus_dev_logs.txt
 
 .PHONY: unit-tests
 unit-tests: check-env
@@ -96,9 +110,9 @@ docker-configure-https-build:
 run-janus:
 	@ printf "\nRunning Janus...\n\n"
 
-	go run `pwd`/cli/janus/main.go \
+	go run `pwd`/main.go \
 		--qtum-rpc=http://${test_user}:${test_user_passwd}@0.0.0.0:3889 \
-		--qtum-network=regtest \
+		--qtum-network=auto \
 		--bind=0.0.0.0 \
 		--port=23889 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
@@ -108,9 +122,9 @@ run-janus:
 run-janus-https:
 	@ printf "\nRunning Janus...\n\n"
 
-	go run `pwd`/cli/janus/main.go \
+	go run `pwd`/main.go \
 		--qtum-rpc=http://${test_user}:${test_user_passwd}@0.0.0.0:3889 \
-		--qtum-network=regtest \
+		--qtum-network=auto \
 		--bind=0.0.0.0 \
 		--port=23889 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \

@@ -3,6 +3,10 @@ package qtum
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"math"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -11,30 +15,94 @@ import (
 type Qtum struct {
 	*Client
 	*Method
-	chain string
+	chainMutex       sync.RWMutex
+	queryingChain    bool
+	queryingComplete chan bool
+	chain            string
 }
 
 const (
 	ChainMain    = "main"
 	ChainTest    = "test"
 	ChainRegTest = "regtest"
+	ChainAuto    = "auto"
+	ChainUnknown = ""
 )
 
-var AllChains = []string{ChainMain, ChainRegTest, ChainTest}
+var AllChains = []string{ChainMain, ChainRegTest, ChainTest, ChainAuto, ChainUnknown}
 
 func New(c *Client, chain string) (*Qtum, error) {
 	if !utils.InStrSlice(AllChains, chain) {
-		return nil, errors.New("invalid qtum chain")
+		return nil, errors.Errorf("Invalid qtum chain: '%s'", chain)
 	}
 
-	return &Qtum{
+	qtum := &Qtum{
 		Client: c,
 		Method: &Method{Client: c},
 		chain:  chain,
-	}, nil
+	}
+
+	go qtum.detectChain()
+
+	return qtum, nil
+}
+
+func (c *Qtum) detectChain() {
+	c.chainMutex.Lock()
+	if c.queryingChain || // already querying
+		(c.chain != ChainAuto && c.chain != "") { // specified in command line arguments
+		c.chainMutex.Unlock()
+		return
+	}
+	c.queryingChain = true
+	c.queryingComplete = make(chan bool)
+	c.chainMutex.Unlock()
+
+	// detect chain we are pointing at
+	for i := 0; ; i++ {
+		blockchainInfo, err := c.GetBlockChainInfo()
+		if err == nil {
+			chain := strings.ToLower(blockchainInfo.Chain)
+			if utils.InStrSlice(AllChains, chain) {
+				c.chainMutex.Lock()
+				c.chain = chain
+				c.queryingChain = false
+				if c.queryingComplete != nil {
+					queryingComplete := c.queryingComplete
+					c.queryingComplete = nil
+					close(queryingComplete)
+				}
+				c.chainMutex.Unlock()
+				c.GetDebugLogger().Log("msg", "Detected chain type", "chain", chain)
+				return
+			} else {
+				c.GetErrorLogger().Log("msg", "Unknown chain type in getblockchaininfo", "chain", chain)
+			}
+		}
+
+		interval := 250 * time.Millisecond
+		backoff := time.Duration(math.Min(float64(i), 10)) * interval
+		c.GetDebugLogger().Log("msg", "Failed to detect chain type, backing off", "backoff", backoff)
+		time.Sleep(backoff)
+	}
 }
 
 func (c *Qtum) Chain() string {
+	c.chainMutex.RLock()
+	queryingChain := c.queryingChain
+	queryingComplete := c.queryingComplete
+	c.chainMutex.RUnlock()
+
+	if queryingChain && queryingComplete != nil {
+		select {
+		case <-c.ctx.Done():
+		case <-queryingComplete:
+		}
+	}
+
+	c.chainMutex.RLock()
+	defer c.chainMutex.RUnlock()
+
 	return c.chain
 }
 
