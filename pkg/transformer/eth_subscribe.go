@@ -48,5 +48,9 @@ func (p *ETHSubscribe) request(req *eth.EthSubscriptionRequest, notifier *notifi
 	notifier.ResponseRequired()
 	id, err := p.NewSubscription(notifier, req)
 	response := eth.EthSubscriptionResponse(id)
-	return &response, eth.NewCallbackError(err.Error())
+	if err == nil {
+		return &response, nil
+	} else {
+		return &response, eth.NewCallbackError(err.Error())
+	}
 }
