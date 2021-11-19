@@ -38,7 +38,7 @@ var (
 
 	ignoreUnknownTransactions = app.Flag("ignoreTransactions", "[Development] Ignore transactions inside blocks we can't fetch and return responses instead of failing").Default("false").Bool()
 	disableSnipping           = app.Flag("disableSnipping", "[Development] Disable ...snip... in logs").Default("false").Bool()
-	hideQtumdLogs             = app.Flag("hideQtumdLogs", "[Development] Hide QTUMD debug logs").Default("false").Bool()
+	hideQtumdLogs             = app.Flag("hideQtumdLogs", "[Development] Hide QTUMD debug logs").Envar("HIDE_QTUMD_LOGS").Default("false").Bool()
 )
 
 func loadAccounts(r io.Reader, l log.Logger) qtum.Accounts {
