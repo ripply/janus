@@ -19,8 +19,16 @@ func (p *ProxyETHChainId) Method() string {
 }
 
 func (p *ProxyETHChainId) Request(req *eth.JSONRPCRequest, c echo.Context) (interface{}, eth.JSONRPCError) {
+	chainId, err := getChainId(p.Qtum)
+	if err != nil {
+		return nil, err
+	}
+	return eth.ChainIdResponse(hexutil.EncodeBig(chainId)), nil
+}
+
+func getChainId(p *qtum.Qtum) (*big.Int, eth.JSONRPCError) {
 	var qtumresp *qtum.GetBlockChainInfoResponse
-	if err := p.Qtum.Request(qtum.MethodGetBlockChainInfo, nil, &qtumresp); err != nil {
+	if err := p.Request(qtum.MethodGetBlockChainInfo, nil, &qtumresp); err != nil {
 		return nil, eth.NewCallbackError(err.Error())
 	}
 
@@ -34,8 +42,8 @@ func (p *ProxyETHChainId) Request(req *eth.JSONRPCRequest, c echo.Context) (inte
 		chainId = big.NewInt(8890)
 	default:
 		chainId = big.NewInt(8890)
-		p.GetDebugLogger().Log("method", p.Method(), "msg", "Unknown chain "+qtumresp.Chain)
+		p.GetDebugLogger().Log("msg", "Unknown chain "+qtumresp.Chain)
 	}
 
-	return eth.ChainIdResponse(hexutil.EncodeBig(chainId)), nil
+	return chainId, nil
 }

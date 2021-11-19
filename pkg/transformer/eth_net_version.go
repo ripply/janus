@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -20,24 +21,10 @@ func (p *ProxyETHNetVersion) Request(_ *eth.JSONRPCRequest, c echo.Context) (int
 }
 
 func (p *ProxyETHNetVersion) request() (*eth.NetVersionResponse, eth.JSONRPCError) {
-	var qtumresp *qtum.GetBlockChainInfoResponse
-	if err := p.Qtum.Request(qtum.MethodGetBlockChainInfo, nil, &qtumresp); err != nil {
-		return nil, eth.NewCallbackError(err.Error())
+	networkID, err := getChainId(p.Qtum)
+	if err != nil {
+		return nil, err
 	}
-
-	var networkID string
-	switch qtumresp.Chain {
-	case "regtest":
-		// See: https://github.com/trufflesuite/ganache/issues/112 for an idea on how to generate an ID.
-		// https://github.com/ethereum/wiki/wiki/JSON-RPC#net_version
-		networkID = "113"
-	default:
-		// TODO: discuss policy? NetworkID has to be an integer, can't just return qtumresp.Chain.
-		networkID = "81"
-		p.GetDebugLogger().Log("method", p.Method(), "msg", "Unknown chain "+qtumresp.Chain)
-	}
-
-	resp := eth.NetVersionResponse(networkID)
-	p.GetDebugLogger().Log("method", p.Method(), "result", networkID)
-	return &resp, nil
+	response := eth.NetVersionResponse(hexutil.EncodeBig(networkID))
+	return &response, nil
 }
