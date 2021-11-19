@@ -276,6 +276,11 @@ func (a *Agent) isRunning() bool {
 }
 
 func (a *Agent) run() {
+	newHeadsSubscriptions := a.newHeads.Count()
+	if newHeadsSubscriptions == 0 {
+		return
+	}
+
 	a.mutex.Lock()
 	if a.running {
 		a.mutex.Unlock()
