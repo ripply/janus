@@ -21,10 +21,10 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 ### wallet_addEthereumChain
 ```
 // request account access
-window.ethereum.request({ method: 'eth_requestAccounts' })
+window.qtum.request({ method: 'eth_requestAccounts' })
     .then(() => {
         // add chain
-        window.ethereum.request({
+        window.qtum.request({
             method: "wallet_addEthereumChain",
             params: [{
                 {

@@ -11,38 +11,52 @@
 
 <script>
 let QTUMMainnet = {
-  chainId: '0x71',
-  chainName: 'Qtum Mainnet',
-  rpcUrls: ['https://localhost:23889'],
+  chainId: '0x22B8', // 8888
+  chainName: 'QTUM Mainnet',
+  rpcUrls: ['https://janus.qiswap.com/api/'],
   blockExplorerUrls: ['https://qtum.info/'],
   iconUrls: [
     'https://qtum.info/images/metamask_icon.svg',
     'https://qtum.info/images/metamask_icon.png',
   ],
+  nativeCurrency: {
+    decimals: 18,
+    symbol: 'QTUM',
+  },
 };
 let QTUMTestNet = {
-  chainId: '0x71',
-  chainName: 'Qtum Testnet',
-  rpcUrls: ['https://localhost:23889'],
+  chainId: '0x22B9', // 8889
+  chainName: 'QTUM Testnet',
+  rpcUrls: ['https://testnet-janus.qiswap.com/api/'],
   blockExplorerUrls: ['https://testnet.qtum.info/'],
   iconUrls: [
     'https://qtum.info/images/metamask_icon.svg',
     'https://qtum.info/images/metamask_icon.png',
   ],
+  nativeCurrency: {
+    decimals: 18,
+    symbol: 'QTUM',
+  },
+};
+let QTUMRegTest = {
+  chainId: '0x22BA', // 8890
+  chainName: 'QTUM Regtest',
+  rpcUrls: ['https://localhost:23889'],
+  // blockExplorerUrls: ['https://testnet.qtum.info/'],
+  iconUrls: [
+    'https://qtum.info/images/metamask_icon.svg',
+    'https://qtum.info/images/metamask_icon.png',
+  ],
+  nativeCurrency: {
+    decimals: 18,
+    symbol: 'QTUM',
+  },
 };
 let config = {
-  "0x1": QTUMMainnet,
-  // ETH Ropsten
-  "0x3": QTUMTestNet,
-  // ETH Rinkby
-  "0x4": QTUMTestNet,
-  // ETH Görli
-  "0x5": QTUMTestNet,
-  // ETH Kovan
-  "0x71": QTUMTestNet,
+  "0x22B8": QTUMMainnet,
+  "0x22B9": QTUMTestNet,
+  "0x22BA": QTUMRegTest,
 };
-config[QTUMMainnet.chainId] = QTUMMainnet;
-config[QTUMTestNet.chainId] = QTUMTestNet;
 
 export default {
   name: 'Web3Button',
@@ -58,7 +72,7 @@ export default {
   },
   methods: {
     getChainId: function() {
-      return window.ethereum.chainId;
+      return window.qtum.chainId;
     },
     isOnQtumChainId: function() {
       let chainId = this.getChainId();
@@ -69,7 +83,7 @@ export default {
         return;
       }
       let self = this;
-      window.ethereum.request({ method: 'eth_requestAccounts' })
+      window.qtum.request({ method: 'eth_requestAccounts' })
         .then(() => {
           console.log("Emitting web3Connected event");
           let qtumConnected = self.isOnQtumChainId();
@@ -80,8 +94,8 @@ export default {
             self.$emit("qtumConnected", true);
           }
         })
-        .catch(() => {
-          console.log("Connecting to web3 failed", arguments);
+        .catch((e) => {
+          console.log("Connecting to web3 failed", arguments, e);
         })
     },
     connectToQtum: function() {
@@ -90,7 +104,7 @@ export default {
       let self = this;
       let qtumConfig = config[this.getChainId()] || QTUMTestNet;
       console.log("Adding network to Metamask", qtumConfig);
-      window.ethereum.request({
+      window.qtum.request({
         method: "wallet_addEthereumChain",
         params: [qtumConfig],
       })

@@ -12,7 +12,7 @@ window.jQuery = $;
 let QTUMMainnet = {
   chainId: '0x22B8', // 8888
   chainName: 'QTUM Mainnet',
-  rpcUrls: ['https://localhost:23889'],
+  rpcUrls: ['https://janus.qiswap.com/api/'],
   blockExplorerUrls: ['https://qtum.info/'],
   iconUrls: [
     'https://qtum.info/images/metamask_icon.svg',
@@ -26,7 +26,7 @@ let QTUMMainnet = {
 let QTUMTestNet = {
   chainId: '0x22B9', // 8889
   chainName: 'QTUM Testnet',
-  rpcUrls: ['https://localhost:23889'],
+  rpcUrls: ['https://testnet-janus.qiswap.com/api/'],
   blockExplorerUrls: ['https://testnet.qtum.info/'],
   iconUrls: [
     'https://qtum.info/images/metamask_icon.svg',
@@ -90,7 +90,7 @@ window.App = {
   },
 
   getChainId: function() {
-    return (window.ethereum || {}).chainId || 8890;
+    return (window.qtum || {}).chainId || 8890;
   },
   isOnQtumChainId: function() {
     let chainId = this.getChainId();
@@ -114,13 +114,13 @@ window.App = {
     let self = this;
     let qtumConfig = config[this.getChainId()] || QTUMRegTest;
     console.log("Adding network to Metamask", qtumConfig);
-    window.ethereum.request({
+    window.qtum.request({
       method: "wallet_addEthereumChain",
       params: [qtumConfig],
     })
       .then(() => {
         console.log("Successfully connected to qtum")
-        window.ethereum.request({ method: 'eth_requestAccounts' })
+        window.qtum.request({ method: 'eth_requestAccounts' })
           .then((accounts) => {
             console.log("Successfully logged into metamask", accounts);
             let qtumConnected = self.isOnQtumChainId();
@@ -137,7 +137,7 @@ window.App = {
             if (!metamask) {
               App.web3Provider = qtumWallet;
             } else {
-              App.web3Provider = new providers.Web3Provider(window.ethereum);
+              App.web3Provider = new providers.Web3Provider(window.qtum);
             }
             
             return App.initContract();

@@ -11,8 +11,8 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 Vue.config.productionTip = false
 // Make BootstrapVue available throughout your project
 Vue.use(BootstrapVue)
-if (window.web3) {
-  Vue.prototype.Web3 = new Web3(window.web3.currentProvider);
+if (window.qtum) {
+  Vue.prototype.Web3 = new Web3(window.qtum.currentProvider);
 }
 
 new Vue({
