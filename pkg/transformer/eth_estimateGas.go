@@ -12,6 +12,8 @@ import (
 var NonContractVMGasLimit = "0x55f0"
 var ErrExecutionReverted = errors.New("execution reverted")
 
+var GAS_BUFFER = 1.10
+
 // ProxyETHEstimateGas implements ETHProxy
 type ProxyETHEstimateGas struct {
 	*ProxyETHCall
@@ -61,7 +63,7 @@ func (p *ProxyETHEstimateGas) toResp(qtumresp *qtum.CallContractResponse) (*eth.
 	if qtumresp.ExecutionResult.Excepted != "None" {
 		return nil, eth.NewCallbackError(ErrExecutionReverted.Error())
 	}
-	gas := eth.EstimateGasResponse(hexutil.EncodeUint64(uint64(qtumresp.ExecutionResult.GasUsed)))
+	gas := eth.EstimateGasResponse(hexutil.EncodeUint64(uint64(float64(qtumresp.ExecutionResult.GasUsed) * GAS_BUFFER)))
 	p.GetDebugLogger().Log(p.Method(), gas)
 	return &gas, nil
 }

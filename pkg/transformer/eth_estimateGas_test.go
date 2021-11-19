@@ -70,7 +70,7 @@ func TestEstimateGasRequest(t *testing.T) {
 		t.Fatal(jsonErr)
 	}
 
-	want := eth.EstimateGasResponse("0x54ae")
+	want := eth.EstimateGasResponse("0x5d25")
 	if !reflect.DeepEqual(got, &want) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
