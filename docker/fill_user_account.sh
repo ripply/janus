@@ -9,7 +9,8 @@ repeat_until_success () {
             echo Giving up running command - "$@"
             return
         fi
-        sleep 1
+        echo Sleeping $i seconds
+        sleep $i
         echo Retrying
         i=`expr $i + 1`
     done

@@ -32,11 +32,21 @@ Janus is a web3 proxy adapter that can be used as a web3 provider to interact wi
 ## Installation
 
 ```
-$ go get github.com/qtumproject/janus/...
-$ cd $GOPATH/src/github.com/qtumproject/janus/playground
-$ make
-$ make docker-dev
-$ make quick-start
+$ sudo apt install make git golang docker-compose
+# Configure GOPATH if not configured
+$ export GOPATH=`go env GOPATH`
+$ mkdir -p $GOPATH/src/github.com/qtumproject && \
+  cd $GOPATH/src/github.com/qtumproject && \
+  git clone https://github.com/qtumproject/janus
+$ cd $GOPATH/src/github.com/qtumproject/janus
+# Generate self-signed SSL cert (optional)
+# If you do this step, Janus will respond in SSL
+# otherwise, Janus will respond unencrypted
+$ make docker-configure-https
+# Pick a network to quick-start with
+$ make quick-start-regtest
+$ make quick-start-testnet
+$ make quick-start-mainnet
 ```
 This will build the docker image for the local version of Janus as well as spin up two containers:
 

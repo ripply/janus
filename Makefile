@@ -46,8 +46,16 @@ linux:
 	GOOS=linux GOARCH=amd64 go build -o ./build/janus-linux-amd64 github.com/qtumproject/janus/cli/janus
 
 .PHONY: quick-start
-quick-start:
-	cd docker && ./spin_up.sh && cd ..
+quick-start-regtest:
+	cd docker && ./spin_up.regtest.sh && cd ..
+
+.PHONY: quick-start-testnet
+quick-start-testnet:
+	cd docker && ./spin_up.testnet.sh && cd ..
+
+.PHONY: quick-start-mainnet
+quick-start-mainnet:
+	cd docker && ./spin_up.mainnet.sh && cd ..
 
 .PHONY: docker-dev
 docker-dev:

@@ -15,5 +15,6 @@ ENV QTUM_RPC=http://qtum:testpasswd@localhost:3889
 ENV QTUM_NETWORK=auto
 
 EXPOSE 23889
+EXPOSE 23890
 
 ENTRYPOINT [ "janus" ]

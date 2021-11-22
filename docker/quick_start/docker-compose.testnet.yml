@@ -1,11 +1,13 @@
-  
 version: "3.3"
+
+networks:
+  qtumd_testnet_network:
 volumes:
-   qtumd-volume:
+  qtumd_testnet_volume:
 
 services:
-  janus:
-    image: qtum/janus
+  janus_testnet:
+    image: qtum/janus:dev
     container_name: janus_testchain
     build: 
         context: ../../
@@ -14,18 +16,25 @@ services:
     ports:
         - "23889:23889"
     environment: 
-        - QTUM_RPC=http://qtum:testpasswd@qtum:3889
+        - QTUM_RPC=http://qtum:testpasswd@qtum_testnet:3889
+        - COMPOSE_PROJECT_NAME=testnet
     volumes:
         - ../standalone/myaccounts.txt:$GOPATH/github.com/qtumproject/janus/myaccounts.txt
         - ../../https:/https
+        - ../../logs:/logs
     depends_on:
-      - qtum
-    command: --bind 0.0.0.0 --ignoreTransactions --accounts $GOPATH/github.com/qtumproject/janus/myaccounts.txt --dev --https-key /https/key.pem --https-cert /https/cert.pem
-  qtum:
+      - qtum_testnet
+    command: --bind 0.0.0.0 --port 23889 --ignoreTransactions --accounts $GOPATH/github.com/qtumproject/janus/myaccounts.txt --dev --https-key /https/key.pem --https-cert /https/cert.pem
+    networks:
+      - qtumd_testnet_network
+
+  qtum_testnet:
     ports:
       - "3889:3889"
     image: qtum/qtum
-    container_name: qtum_testchain
+    container_name: qtum_testnet
     command: qtumd -testnet -txindex -addrindex=1 -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole
     volumes:
-      - qtumd-volume
+      - qtumd_testnet_volume:/root/.qtum
+    networks:
+      - qtumd_testnet_network
