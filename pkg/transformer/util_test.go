@@ -6,6 +6,7 @@ import (
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
@@ -143,7 +144,7 @@ func TestAddressesConversion(t *testing.T) {
 			require.NoError(t, err, "couldn't convert Ethereum address to Qtum address")
 			require.Equal(t, in.qtumAddress, qtumAddress, "unexpected converted Qtum address value")
 
-			ethAddress, err := convertQtumAddress(in.qtumAddress)
+			ethAddress, err := utils.ConvertQtumAddress(in.qtumAddress)
 			require.NoError(t, err, "couldn't convert Qtum address to Ethereum address")
 			require.Equal(t, in.ethAddress, ethAddress, "unexpected converted Ethereum address value")
 		})

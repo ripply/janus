@@ -1,11 +1,14 @@
 package utils
 
 import (
+	"encoding/hex"
 	"math/big"
 	"strings"
 
+	"github.com/decred/base58"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
 )
 
 func RemoveHexPrefix(hex string) string {
@@ -37,4 +40,16 @@ func AddHexPrefixIfNotEmpty(hex string) string {
 func DecodeBig(input string) (*big.Int, error) {
 	input = AddHexPrefix(input)
 	return hexutil.DecodeBig(input)
+}
+
+// Converts Qtum address to an Ethereum address
+func ConvertQtumAddress(address string) (ethAddress string, _ error) {
+	if n := len(address); n < 22 {
+		return "", errors.Errorf("invalid address: length is less than 22 bytes - %d", n)
+	}
+
+	// Drop Qtum chain prefix and checksum suffix
+	ethAddrBytes := base58.Decode(address)[1:21]
+
+	return hex.EncodeToString(ethAddrBytes), nil
 }

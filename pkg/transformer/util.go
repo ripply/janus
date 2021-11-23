@@ -148,6 +148,10 @@ func getNonContractTxSenderAddress(p *qtum.Qtum, vins []*qtum.DecodedRawTransact
 			}
 		}
 	}
+	if len(vins) == 0 {
+		// coinbase?
+		return "", nil
+	}
 	return "", errors.New("not found")
 }
 
@@ -321,18 +325,6 @@ func convertETHAddress(address string, chain string) (qtumAddress string, _ erro
 		qtumAddressBytes  = append(prefixedAddrBytes, checksum...)
 	)
 	return base58.Encode(qtumAddressBytes), nil
-}
-
-// Converts Qtum address to an Ethereum address
-func convertQtumAddress(address string) (ethAddress string, _ error) {
-	if n := len(address); n < 22 {
-		return "", errors.Errorf("invalid address: length is less than 22 bytes - %d", n)
-	}
-
-	// Drop Qtum chain prefix and checksum suffix
-	ethAddrBytes := base58.Decode(address)[1:21]
-
-	return hex.EncodeToString(ethAddrBytes), nil
 }
 
 func processFilter(p *ProxyETHGetFilterChanges, rawreq *eth.JSONRPCRequest) (*eth.Filter, eth.JSONRPCError) {

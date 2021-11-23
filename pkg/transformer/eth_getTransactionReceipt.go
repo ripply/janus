@@ -42,7 +42,7 @@ func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest, c ec
 func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptRequest) (*eth.GetTransactionReceiptResponse, eth.JSONRPCError) {
 	qtumReceipt, err := p.Qtum.GetTransactionReceipt(string(*req))
 	if err != nil {
-		ethTx, getRewardTransactionErr := getRewardTransactionByHash(p.Qtum, string(*req))
+		ethTx, _, getRewardTransactionErr := getRewardTransactionByHash(p.Qtum, string(*req))
 		if getRewardTransactionErr != nil {
 			errCause := errors.Cause(err)
 			if errCause == qtum.EmptyResponseErr {

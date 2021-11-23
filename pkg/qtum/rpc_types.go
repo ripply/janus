@@ -514,19 +514,29 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 	// TODO: discuss
 	// ? Can Vouts have several contracts
 
+	var info *ContractInfo
+
 	for _, vout := range resp.Vouts {
 		var (
 			script  = strings.Split(vout.ScriptPubKey.ASM, " ")
 			finalOp = script[len(script)-1]
 		)
+
 		switch finalOp {
 		case "OP_CALL":
+			if info != nil {
+				return ContractInfo{}, false, errors.New("Duplicate OP_CALL/OP_CREATE vouts")
+			}
 			callInfo, err := ParseCallSenderASM(script)
 			// OP_CALL with OP_SENDER has the script type "nonstandard"
 			if err != nil {
-				return ContractInfo{}, false, errors.WithMessage(err, "couldn't parse call sender ASM")
+				// Check for OP_CALL without OP_SENDER
+				callInfo, err = ParseCallASM(script)
+				if err != nil {
+					return ContractInfo{}, false, errors.WithMessage(err, "couldn't parse call sender ASM")
+				}
 			}
-			info := ContractInfo{
+			info = &ContractInfo{
 				From:     callInfo.From,
 				To:       callInfo.To,
 				GasLimit: callInfo.GasLimit,
@@ -537,15 +547,23 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 
 				UserInput: callInfo.CallData,
 			}
-			return info, true, nil
+
+			return *info, true, nil
 
 		case "OP_CREATE":
+			if info != nil {
+				return ContractInfo{}, false, errors.New("Duplicate OP_CALL/OP_CREATE vouts")
+			}
 			// OP_CALL with OP_SENDER has the script type "create_sender"
 			createInfo, err := ParseCreateSenderASM(script)
 			if err != nil {
-				return ContractInfo{}, false, errors.WithMessage(err, "couldn't parse create sender ASM")
+				// Check for OP_CREATE without OP_SENDER
+				createInfo, err = ParseCreateASM(script)
+				if err != nil {
+					return ContractInfo{}, false, errors.WithMessage(err, "couldn't parse create sender ASM")
+				}
 			}
-			info := ContractInfo{
+			info = &ContractInfo{
 				From: createInfo.From,
 				To:   createInfo.To,
 
@@ -560,12 +578,17 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 
 				UserInput: createInfo.CallData,
 			}
-			return info, true, nil
+
+			return *info, true, nil
 
 		case "OP_SPEND":
 			// TODO: complete
 			return ContractInfo{}, true, errors.New("OP_SPEND contract parsing partially implemented")
 		}
+	}
+
+	if info != nil {
+		return *info, true, nil
 	}
 
 	return ContractInfo{}, false, nil

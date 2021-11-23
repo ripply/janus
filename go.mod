@@ -6,6 +6,7 @@ require (
 	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/dcb9/go-ethereum v1.8.10
+	github.com/decred/base58 v1.0.3
 	github.com/ethereum/go-ethereum v1.10.11
 	github.com/go-kit/kit v0.12.0
 	github.com/gorilla/websocket v1.4.2
