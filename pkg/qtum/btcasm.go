@@ -18,23 +18,57 @@ type (
 	}
 )
 
+func ParseCallASM(parts []string) (*ContractInvokeInfo, error) {
+
+	// "4 25548 40 8588b2c50000000000000000000000000000000000000000000000000000000000000000 57946bb437560b13275c32a468c6fd1e0c2cdd48 OP_CAL"
+
+	if len(parts) != 6 {
+		return nil, errors.New(fmt.Sprintf("invalid OP_CALL script for parts 6: %v", parts))
+	}
+
+	// 4                     // EVM version
+	// 100000                // gas limit
+	// 10                    // gas price
+	// 1234                  // data to be sent by the contract
+	// Contract Address      // contract address
+	// OP_CALL
+
+	gasLimit, err := stringBase10ToHex(parts[1])
+	if err != nil {
+		return nil, err
+	}
+
+	gasPrice, err := stringBase10ToHex(parts[2])
+	if err != nil {
+		return nil, err
+	}
+
+	return &ContractInvokeInfo{
+		// From:     parts[1],
+		GasPrice: gasPrice,
+		GasLimit: gasLimit,
+		CallData: parts[3],
+		To:       parts[4],
+	}, nil
+
+}
+
 func ParseCallSenderASM(parts []string) (*ContractInvokeInfo, error) {
 	// See: https://github.com/qtumproject/qips/issues/6
 
 	// "1 7926223070547d2d15b2ef5e7383e541c338ffe9 69463043021f3ba540f52e0bae0c608c3d7135424fb683c77ee03217fcfe0af175c586aadc02200222e460a42268f02f130bc46f3ef62f228dd8051756dc13693332423515fcd401210299d391f528b9edd07284c7e23df8415232a8ce41531cf460a390ce32b4efd112 OP_SENDER 4 40000000 40 60fe47b10000000000000000000000000000000000000000000000000000000000000319 9e11fba86ee5d0ba4996b0d1973de6b694f4fc95 OP_CALL"
 
 	if len(parts) != 10 {
-		fmt.Println("Hit the len of parts does not equal 10")
 		return nil, errors.New(fmt.Sprintf("invalid create_sender script for parts 10: %v", parts))
 	}
 
 	// 1    // address type of the pubkeyhash (public key hash)
 	// Address               // sender's pubkeyhash address
-	// {signature, pubkey}   //serialized scriptSig
+	// {signature, pubkey}   // serialized scriptSig
 	// OP_SENDER
 	// 4                     // EVM version
-	// 100000                //gas limit
-	// 10                    //gas price
+	// 100000                // gas limit
+	// 10                    // gas price
 	// 1234                  // data to be sent by the contract
 	// Contract Address      // contract address
 	// OP_CALL
@@ -56,6 +90,36 @@ func ParseCallSenderASM(parts []string) (*ContractInvokeInfo, error) {
 		CallData: parts[7],
 		To:       parts[8],
 	}, nil
+
+}
+
+func ParseCreateASM(parts []string) (*ContractInvokeInfo, error) {
+
+	// 4                     // EVM version
+	// 100000                // gas limit
+	// 10                    // gas price
+	// 1234                  // data to be sent by the contract
+	// OP_CREATE
+
+	if len(parts) != 5 {
+		return nil, errors.New(fmt.Sprintf("invalid OP_CREATE script for parts 5: %v", len(parts)))
+	}
+
+	gasLimit, err := stringBase10ToHex(parts[1])
+	if err != nil {
+		return nil, err
+	}
+	gasPrice, err := stringBase10ToHex(parts[2])
+	if err != nil {
+		return nil, err
+	}
+	info := &ContractInvokeInfo{
+		// From:     parts[1],
+		GasPrice: gasPrice,
+		GasLimit: gasLimit,
+		CallData: parts[4],
+	}
+	return info, nil
 
 }
 

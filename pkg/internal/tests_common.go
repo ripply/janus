@@ -263,7 +263,7 @@ var (
 		Nonce:            "0x0",
 		Value:            "0x0",
 		Input:            "0x020000000159c0514feea50f915854d9ec45bc6458bb14419c78b17e7be3f7fd5f563475b5010000006a473044022072d64a1f4ea2d54b7b05050fc853ab192c91cc5ca17e23007867f92f2ab59d9202202b8c9ab9348c8edbb3b98b1788382c8f37642ec9bd6a4429817ab79927319200012103520b1500a400483f19b93c4cb277a2f29693ea9d6739daaf6ae6e971d29e3140feffffff02000000000000000063010403400d0301644440c10f190000000000000000000000006b22910b1e302cf74803ffd1691c2ecb858d3712000000000000000000000000000000000000000000000000000000000000000a14be528c8378ff082e4ba43cb1baa363dbf3f577bfc260e66272970100001976a9146b22910b1e302cf74803ffd1691c2ecb858d371288acb00f0000",
-		From:             "0x0000000000000000000000000000000000000000",
+		From:             "0x7926223070547d2d15b2ef5e7383e541c338ffe9",
 		To:               "0x0000000000000000000000000000000000000000",
 		Gas:              "0x0",
 		GasPrice:         "0x0",
@@ -430,6 +430,10 @@ func QtumWaitForLogsEntry(log qtum.Log) qtum.WaitForLogsEntry {
 }
 
 func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer Doer) {
+	SetupGetBlockByHashResponsesWithVouts(t, []*qtum.DecodedRawTransactionOutV{}, mockedClientDoer)
+}
+
+func SetupGetBlockByHashResponsesWithVouts(t *testing.T, vouts []*qtum.DecodedRawTransactionOutV, mockedClientDoer Doer) {
 	//preparing answer to "getblockhash"
 	getBlockHashResponse := qtum.GetBlockHashResponse(GetTransactionByHashBlockHexHash)
 	err := mockedClientDoer.AddResponse(qtum.MethodGetBlockHash, getBlockHashResponse)
@@ -509,7 +513,7 @@ func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer Doer) {
 				Hex: "483045022100af4de764705dbd3c0c116d73fe0a2b78c3fab6822096ba2907cfdae2bb28784102206304340a6d260b364ef86d6b19f2b75c5e55b89fb2f93ea72c05e09ee037f60b012103520b1500a400483f19b93c4cb277a2f29693ea9d6739daaf6ae6e971d29e3140",
 			},
 		}},
-		Vouts: []*qtum.DecodedRawTransactionOutV{},
+		Vouts: vouts,
 	}
 	err = mockedClientDoer.AddResponse(qtum.MethodDecodeRawTransaction, decodedRawTransactionResponse)
 	if err != nil {

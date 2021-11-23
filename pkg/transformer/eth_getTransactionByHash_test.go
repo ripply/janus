@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/shopspring/decimal"
 )
 
 /*
@@ -23,6 +25,56 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
 
 	internal.SetupGetBlockByHashResponses(t, mockedClientDoer)
+
+	//preparing proxy & executing request
+	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
+	got, jsonErr := proxyEth.Request(request, nil)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
+	}
+
+	want := &internal.GetTransactionByHashResponseData
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf(
+			"error\ninput: %s\nwant: %s\ngot: %s",
+			request,
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
+		)
+	}
+}
+
+func TestGetTransactionByHashRequestWithContractVout(t *testing.T) {
+	//preparing request
+	requestParams := []json.RawMessage{[]byte(`"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"`)}
+	request, err := internal.PrepareEthRPCRequest(1, requestParams)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mockedClientDoer := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(mockedClientDoer)
+
+	internal.SetupGetBlockByHashResponsesWithVouts(
+		t,
+		// TODO: Clean this up, refactor
+		[]*qtum.DecodedRawTransactionOutV{
+			{
+				Value: decimal.Zero,
+				N:     0,
+				ScriptPubKey: struct {
+					ASM       string   `json:"asm"`
+					Hex       string   `json:"hex"`
+					ReqSigs   int64    `json:"reqSigs"`
+					Type      string   `json:"type"`
+					Addresses []string `json:"addresses"`
+				}{
+					ASM:       "4 25548 40 8588b2c50000000000000000000000000000000000000000000000000000000000000000 57946bb437560b13275c32a468c6fd1e0c2cdd48 OP_CAL",
+					Addresses: []string{},
+				},
+			},
+		},
+		mockedClientDoer,
+	)
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
