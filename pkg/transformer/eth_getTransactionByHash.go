@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"encoding/json"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
@@ -118,12 +119,15 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 		}
 	}
 
-	ethAmount, err := formatQtumAmount(qtumDecodedRawTx.CalcAmount())
-	if err != nil {
-		// TODO: Correct error code?
-		return nil, eth.NewInvalidParamsError("couldn't format amount")
+	if ethTx.Value == "" {
+		// TODO: This CalcAmount() func needs improvement
+		ethAmount, err := formatQtumAmount(qtumDecodedRawTx.CalcAmount())
+		if err != nil {
+			// TODO: Correct error code?
+			return nil, eth.NewInvalidParamsError("couldn't format amount")
+		}
+		ethTx.Value = ethAmount
 	}
-	ethTx.Value = ethAmount
 
 	qtumTxContractInfo, isContractTx, err := qtumDecodedRawTx.ExtractContractInfo()
 	if err != nil {
@@ -279,6 +283,71 @@ func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionB
 	// TODO: discuss
 	// ? Where is a `to`
 	ethTx.To = utils.AddHexPrefix(qtum.ZeroAddress)
+
+	// when sending QTUM, the first vout will be the target
+	// the second will be change from the vin, it will be returned to the same account
+	if len(rawQtumTx.Vouts) >= 2 {
+		from := ""
+		if len(rawQtumTx.Vins) > 0 {
+			from = rawQtumTx.Vins[0].Address
+		}
+
+		var valueIn int64
+		var valueOut int64
+		var refund int64
+		var sent int64
+		var sentTo int64
+
+		for _, vin := range rawQtumTx.Vins {
+			valueIn += vin.AmountSatoshi
+		}
+
+		var to string
+
+		for _, vout := range rawQtumTx.Vouts {
+			valueOut += vout.AmountSatoshi
+			addressesCount := len(vout.Details.Addresses)
+			if addressesCount > 0 && vout.Details.Addresses[0] == from {
+				refund += vout.AmountSatoshi
+			} else {
+				if addressesCount > 0 && vout.Details.Addresses[0] != "" {
+					if to == "" {
+						to = vout.Details.Addresses[0]
+					}
+					if to == vout.Details.Addresses[0] {
+						sentTo += vout.AmountSatoshi
+					}
+				}
+				sent += vout.AmountSatoshi
+			}
+		}
+		fee := valueIn - valueOut
+		if fee < 0 {
+			return nil, nil, errors.New("Detected negative fee - shouldn't happen")
+		}
+
+		if refund == 0 && sent == 0 {
+			// entire tx was burnt
+		} else if refund == 0 {
+			// no refund, entire vin was consumed
+			// subtract fee from sent coins
+			sent -= fee
+			sentTo -= fee
+		} else {
+			// no coins sent to anybody
+			// subtract fee from refund
+			refund -= fee
+		}
+		sentToInWei := convertFromSatoshiToWei(big.NewInt(sentTo))
+		ethTx.Value = hexutil.EncodeUint64(sentToInWei.Uint64())
+
+		toAddress, err := p.Base58AddressToHex(to)
+		if err == nil {
+			ethTx.To = utils.AddHexPrefix(toAddress)
+		}
+
+		// TODO: compute gasPrice based on fee, guess a gas amount based on vin/vout
+	}
 
 	return ethTx, rawQtumTx, nil
 }

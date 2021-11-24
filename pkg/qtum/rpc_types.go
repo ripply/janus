@@ -480,6 +480,7 @@ type (
 
 	DecodedRawTransactionOutV struct {
 		Value        decimal.Decimal `json:"value"`
+		ValueSatoshi decimal.Decimal `json:"valueSat"`
 		N            int64           `json:"n"`
 		ScriptPubKey struct {
 			ASM       string   `json:"asm"`
@@ -826,10 +827,11 @@ type (
 
 	}
 	RawTransactionVin struct {
-		ID      string  `json:"txid"`
-		VoutN   int64   `json:"vout"`
-		Amount  float64 `json:"value"`
-		Address string  `json:"address"`
+		ID            string  `json:"txid"`
+		VoutN         int64   `json:"vout"`
+		Amount        float64 `json:"value"`
+		AmountSatoshi int64   `json:"valueSat"`
+		Address       string  `json:"address"`
 
 		// Additional fields:
 		// - "scriptSig"
@@ -837,8 +839,9 @@ type (
 		// - "txinwitness"
 	}
 	RawTransactionVout struct {
-		Amount  float64 `json:"value"`
-		Details struct {
+		Amount        float64 `json:"value"`
+		AmountSatoshi int64   `json:"valueSat"`
+		Details       struct {
 			Addresses []string `json:"addresses"`
 			Asm       string   `json:"asm"`
 			Hex       string   `json:"hex"`
