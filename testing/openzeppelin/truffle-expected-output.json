@@ -1288,10 +1288,6 @@
    "title": "can withdraw payment"
   },
   {
-   "fullTitle": "withdrawals can withdraw payments",
-   "title": "can withdraw payments"
-  },
-  {
    "fullTitle": "withdrawals emits a withdrawn event",
    "title": "emits a withdrawn event"
   },
@@ -7652,10 +7648,6 @@
   {
    "fullTitle": "withdrawals can do an empty withdrawal",
    "title": "can do an empty withdrawal"
-  },
-  {
-   "fullTitle": "withdrawals can withdraw payments",
-   "title": "can withdraw payments"
   },
   {
    "fullTitle": "withdrawals only the owner can withdraw",
