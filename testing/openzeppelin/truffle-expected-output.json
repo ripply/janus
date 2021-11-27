@@ -2,9 +2,9 @@
  "stats": {
   "suites": 1133,
   "tests": 1868,
-  "passes": 1591,
+  "passes": 1590,
   "pending": 4,
-  "failures": 323
+  "failures": 322
  },
  "failures": [
   {
