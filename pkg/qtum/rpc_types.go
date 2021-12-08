@@ -495,7 +495,7 @@ type (
 func (resp *DecodedRawTransactionResponse) CalcAmount() decimal.Decimal {
 	var amount decimal.Decimal
 	for _, out := range resp.Vouts {
-		amount.Add(out.Value)
+		amount = amount.Add(out.Value)
 	}
 	return amount
 }
@@ -803,10 +803,10 @@ type (
 
 	}
 	RawTransactionVin struct {
-		ID     string  `json:"txid"`
-		VoutN  int64   `json:"vout"`
-		Amount float64 `json:"value"`
-		Address string `json:"address"`
+		ID      string  `json:"txid"`
+		VoutN   int64   `json:"vout"`
+		Amount  float64 `json:"value"`
+		Address string  `json:"address"`
 
 		// Additional fields:
 		// - "scriptSig"
