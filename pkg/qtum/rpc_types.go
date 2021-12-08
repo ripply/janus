@@ -493,10 +493,12 @@ type (
 
 // Calculates transaction total amount of Qtum
 func (resp *DecodedRawTransactionResponse) CalcAmount() decimal.Decimal {
-	var amount decimal.Decimal
+	totalVouts := big.NewFloat(0)
 	for _, out := range resp.Vouts {
-		amount.Add(out.Value)
+		totalVouts = totalVouts.Add(totalVouts, out.Value.BigFloat())
 	}
+	x, _ := totalVouts.Float64()
+	amount := decimal.NewFromFloat(x)
 	return amount
 }
 
@@ -803,10 +805,10 @@ type (
 
 	}
 	RawTransactionVin struct {
-		ID     string  `json:"txid"`
-		VoutN  int64   `json:"vout"`
-		Amount float64 `json:"value"`
-		Address string `json:"address"`
+		ID      string  `json:"txid"`
+		VoutN   int64   `json:"vout"`
+		Amount  float64 `json:"value"`
+		Address string  `json:"address"`
 
 		// Additional fields:
 		// - "scriptSig"
