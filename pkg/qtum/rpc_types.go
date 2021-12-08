@@ -493,12 +493,10 @@ type (
 
 // Calculates transaction total amount of Qtum
 func (resp *DecodedRawTransactionResponse) CalcAmount() decimal.Decimal {
-	totalVouts := big.NewFloat(0)
+	var amount decimal.Decimal
 	for _, out := range resp.Vouts {
-		totalVouts = totalVouts.Add(totalVouts, out.Value.BigFloat())
+		amount = amount.Add(out.Value)
 	}
-	x, _ := totalVouts.Float64()
-	amount := decimal.NewFromFloat(x)
 	return amount
 }
 
