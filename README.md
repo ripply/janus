@@ -1,3 +1,6 @@
+[![Github Build Status](https://github.com/qtumproject/janus/workflows/Openzeppelin/badge.svg)](https://github.com/qtumproject/janus/actions)
+[![Github Build Status](https://github.com/qtumproject/janus/workflows/Unit%20tests/badge.svg)](https://github.com/qtumproject/janus/actions)
+
 # Qtum adapter to Ethereum JSON RPC
 Janus is a web3 proxy adapter that can be used as a web3 provider to interact with Qtum. It supports HTTP(s) and websockets and the current version enables self hosting of keys.
 
