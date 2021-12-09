@@ -430,6 +430,10 @@ func QtumWaitForLogsEntry(log qtum.Log) qtum.WaitForLogsEntry {
 }
 
 func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer Doer) {
+	SetupGetBlockByHashResponsesWithVouts(t, []*qtum.DecodedRawTransactionOutV{}, mockedClientDoer)
+}
+
+func SetupGetBlockByHashResponsesWithVouts(t *testing.T, vouts []*qtum.DecodedRawTransactionOutV, mockedClientDoer Doer) {
 	//preparing answer to "getblockhash"
 	getBlockHashResponse := qtum.GetBlockHashResponse(GetTransactionByHashBlockHexHash)
 	err := mockedClientDoer.AddResponse(qtum.MethodGetBlockHash, getBlockHashResponse)
@@ -509,7 +513,7 @@ func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer Doer) {
 				Hex: "483045022100af4de764705dbd3c0c116d73fe0a2b78c3fab6822096ba2907cfdae2bb28784102206304340a6d260b364ef86d6b19f2b75c5e55b89fb2f93ea72c05e09ee037f60b012103520b1500a400483f19b93c4cb277a2f29693ea9d6739daaf6ae6e971d29e3140",
 			},
 		}},
-		Vouts: []*qtum.DecodedRawTransactionOutV{},
+		Vouts: vouts,
 	}
 	err = mockedClientDoer.AddResponse(qtum.MethodDecodeRawTransaction, decodedRawTransactionResponse)
 	if err != nil {

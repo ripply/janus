@@ -2,9 +2,9 @@
  "stats": {
   "suites": 1133,
   "tests": 1868,
-  "passes": 1590,
+  "passes": 1591,
   "pending": 4,
-  "failures": 322
+  "failures": 321
  },
  "failures": [
   {
@@ -622,10 +622,6 @@
   {
    "fullTitle": "recover with valid signature reverts with high-s value signature",
    "title": "reverts with high-s value signature"
-  },
-  {
-   "fullTitle": "refund state refunds refundees",
-   "title": "refunds refundees"
   },
   {
    "fullTitle": "regression should add fallback function",
@@ -3812,6 +3808,10 @@
   {
    "fullTitle": "refund state prevents re-entering the refund state",
    "title": "prevents re-entering the refund state"
+  },
+  {
+   "fullTitle": "refund state refunds refundees",
+   "title": "refunds refundees"
   },
   {
    "fullTitle": "refund state rejects deposits",
