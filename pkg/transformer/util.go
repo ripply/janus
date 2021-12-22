@@ -165,7 +165,11 @@ func findNonContractTxReceiverAddress(vouts []*qtum.DecodedRawTransactionOutV) (
 	for _, vout := range vouts {
 		for _, address := range vout.ScriptPubKey.Addresses {
 			if address != "" {
-				return utils.AddHexPrefix(address), nil
+				hex, err := utils.ConvertQtumAddress(address)
+				if err != nil {
+					return "", err
+				}
+				return utils.AddHexPrefix(hex), nil
 			}
 		}
 	}
