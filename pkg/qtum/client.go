@@ -103,14 +103,19 @@ func (c *Client) IsMain() bool {
 	return c.isMain
 }
 
-func (c *Client) Request(method string, params interface{}, result interface{}) error {
-	return c.RequestWithContext(c.GetContext(), method, params, result)
+func (c *Client) Request(method string, params interface{}, result ...interface{}) error {
+	_, err := c.RequestWithContext(c.GetContext(), method, params, result...)
+	return err
 }
 
-func (c *Client) RequestWithContext(ctx context.Context, method string, params interface{}, result interface{}) error {
+func (c *Client) RequestWithResult(method string, params interface{}, result ...interface{}) (interface{}, error) {
+	return c.RequestWithContext(c.GetContext(), method, params, result...)
+}
+
+func (c *Client) RequestWithContext(ctx context.Context, method string, params interface{}, result ...interface{}) (interface{}, error) {
 	req, err := c.NewRPCRequest(method, params)
 	if err != nil {
-		return errors.WithMessage(err, "couldn't make new rpc request")
+		return nil, errors.WithMessage(err, "couldn't make new rpc request")
 	}
 
 	var resp *SuccessJSONRPCResult
@@ -128,19 +133,35 @@ func (c *Client) RequestWithContext(ctx context.Context, method string, params i
 				if i != 0 {
 					c.GetLogger().Log("msg", fmt.Sprintf("Giving up on QTUM RPC call after %d tries since its busy", i+1))
 				}
-				return err
+				return nil, err
 			}
 		} else {
 			break
 		}
 	}
 
-	err = json.Unmarshal(resp.RawResult, result)
-	if err != nil {
-		c.GetDebugLogger().Log("method", method, "params", params, "result", result, "error", err)
-		return errors.Wrap(err, "couldn't unmarshal response result field")
+	var unmarshalErrorLogger func()
+	var successfulResult interface{}
+	for i := 0; i < len(result); i++ {
+		err = json.Unmarshal(resp.RawResult, result[i])
+		if err != nil {
+			rawResult, _ := resp.RawResult.MarshalJSON()
+			unmarshalErrorLogger = func() {
+				c.GetDebugLogger().Log("method", method, "params", params, "result", result, "error", err, "rawResult", string(rawResult))
+			}
+		} else {
+			unmarshalErrorLogger = nil
+			successfulResult = result[i]
+			break
+		}
 	}
-	return nil
+
+	if unmarshalErrorLogger != nil {
+		unmarshalErrorLogger()
+		return nil, errors.Wrap(err, "couldn't unmarshal response result field")
+	}
+
+	return successfulResult, nil
 }
 
 func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
@@ -180,7 +201,7 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 	res, err := c.responseBodyToResult(respBody)
 	if err != nil {
 		if respBody == nil || len(respBody) == 0 {
-			debugLogger.Log("Empty response")
+			debugLogger.Log("msg", "Empty response")
 			return nil, errors.Wrap(err, "responseBodyToResult empty response")
 		}
 		if IsKnownError(err) {

@@ -629,8 +629,9 @@ type (
 
 // ========== GetTransactionReceipt ============= //
 type (
-	GetTransactionReceiptRequest  string
-	GetTransactionReceiptResponse TransactionReceipt
+	GetTransactionReceiptRequest   string
+	GetTransactionReceiptResponse  TransactionReceipt
+	GetTransactionReceiptResponses []TransactionReceipt
 	/*
 	   {
 	     "blockHash": "975326b65c20d0b8500f00a59f76b08a98513fff7ce0484382534a47b55f8985",

@@ -107,9 +107,10 @@ func (m *Method) GetRawTransaction(txID string, hexEncoded bool) (*GetRawTransac
 	return resp, nil
 }
 
-func (m *Method) GetTransactionReceipt(txHash string) (*GetTransactionReceiptResponse, error) {
-	resp := new(GetTransactionReceiptResponse)
-	err := m.Request(MethodGetTransactionReceipt, GetTransactionReceiptRequest(txHash), resp)
+func (m *Method) GetTransactionReceipt(txHash string) (*GetTransactionReceiptResponses, error) {
+	resp := new(TransactionReceipt)
+	fallbackResp := new(GetTransactionReceiptResponses)
+	result, err := m.RequestWithResult(MethodGetTransactionReceipt, GetTransactionReceiptRequest(txHash), resp, fallbackResp)
 	if err != nil {
 		if m.IsDebugEnabled() {
 			m.GetDebugLogger().Log("function", "GetTransactionReceipt", "Transaction Hash", txHash, "error", err)
@@ -119,7 +120,13 @@ func (m *Method) GetTransactionReceipt(txHash string) (*GetTransactionReceiptRes
 	if m.IsDebugEnabled() {
 		m.GetDebugLogger().Log("function", "GetTransactionReceipt", "Transaction Hash", txHash, "result", marshalToString(resp))
 	}
-	return resp, nil
+
+	if result == resp {
+		fallbackResp2 := append(*fallbackResp, *resp)
+		fallbackResp = &fallbackResp2
+	}
+
+	return fallbackResp, nil
 }
 
 func (m *Method) DecodeRawTransaction(hex string) (*DecodedRawTransactionResponse, error) {
@@ -429,7 +436,7 @@ func (m *Method) WaitForLogs(req *WaitForLogsRequest) (resp *WaitForLogsResponse
 }
 
 func (m *Method) WaitForLogsWithContext(ctx context.Context, req *WaitForLogsRequest) (resp *WaitForLogsResponse, err error) {
-	if err := m.RequestWithContext(ctx, MethodWaitForLogs, req, &resp); err != nil {
+	if _, err := m.RequestWithContext(ctx, MethodWaitForLogs, req, &resp); err != nil {
 		if m.IsDebugEnabled() {
 			m.GetDebugLogger().Log("function", "WaitForLogs", "error", err)
 		}

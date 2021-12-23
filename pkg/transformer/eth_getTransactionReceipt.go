@@ -40,8 +40,8 @@ func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest, c ec
 }
 
 func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptRequest) (*eth.GetTransactionReceiptResponse, eth.JSONRPCError) {
-	qtumReceipt, err := p.Qtum.GetTransactionReceipt(string(*req))
-	if err != nil {
+	qtumReceipts, err := p.Qtum.GetTransactionReceipt(string(*req))
+	if err != nil || (qtumReceipts != nil && len(*qtumReceipts) == 0) {
 		ethTx, _, getRewardTransactionErr := getRewardTransactionByHash(p.Qtum, string(*req))
 		if getRewardTransactionErr != nil {
 			errCause := errors.Cause(err)
@@ -68,34 +68,60 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 		}, nil
 	}
 
-	ethReceipt := &eth.GetTransactionReceiptResponse{
-		TransactionHash:   utils.AddHexPrefix(qtumReceipt.TransactionHash),
-		TransactionIndex:  hexutil.EncodeUint64(qtumReceipt.TransactionIndex),
-		BlockHash:         utils.AddHexPrefix(qtumReceipt.BlockHash),
-		BlockNumber:       hexutil.EncodeUint64(qtumReceipt.BlockNumber),
-		ContractAddress:   utils.AddHexPrefixIfNotEmpty(qtumReceipt.ContractAddress),
-		CumulativeGasUsed: hexutil.EncodeUint64(qtumReceipt.CumulativeGasUsed),
-		GasUsed:           hexutil.EncodeUint64(qtumReceipt.GasUsed),
-		From:              utils.AddHexPrefixIfNotEmpty(qtumReceipt.From),
-		To:                utils.AddHexPrefixIfNotEmpty(qtumReceipt.To),
+	var cumulativeGasUsed uint64
+	var gasUsed uint64
+	excepted := "None"
 
-		// TODO: researching
-		// ! Temporary accept this value to be always zero, as it is at eth logs
-		LogsBloom: eth.EmptyLogsBloom,
+	ethReceipt := &eth.GetTransactionReceiptResponse{}
+	// if len(*qtumReceipts) > 1 then the transaction has multiple EVM outputs
+	// this is fundamentally different from ethereum so this will never map 1 to 1
+	// users will generally not be doing multiple EVM outputs in the same transaction
+	// to return something to the client that matches up with what web3 libraries expect
+	// we take the first output's values and then add up the gas from all of the outputs
+	// if any of the outputs revert, we consider the entire transaction a failure
+	for i, qtumReceipt := range *qtumReceipts {
+		if excepted == "None" && qtumReceipt.Excepted != "None" {
+			excepted = qtumReceipt.Excepted
+		}
+
+		if i == 0 {
+			ethReceipt.TransactionHash = utils.AddHexPrefix(qtumReceipt.TransactionHash)
+			ethReceipt.TransactionIndex = hexutil.EncodeUint64(qtumReceipt.TransactionIndex)
+			ethReceipt.BlockHash = utils.AddHexPrefix(qtumReceipt.BlockHash)
+			ethReceipt.BlockNumber = hexutil.EncodeUint64(qtumReceipt.BlockNumber)
+			ethReceipt.ContractAddress = utils.AddHexPrefixIfNotEmpty(qtumReceipt.ContractAddress)
+			ethReceipt.From = utils.AddHexPrefixIfNotEmpty(qtumReceipt.From)
+			ethReceipt.To = utils.AddHexPrefixIfNotEmpty(qtumReceipt.To)
+			// TODO: researching
+			// ! Temporary accept this value to be always zero, as it is at eth logs
+			ethReceipt.LogsBloom = eth.EmptyLogsBloom
+		}
+
+		gasUsed += qtumReceipt.GasUsed
+		cumulativeGasUsed += qtumReceipt.CumulativeGasUsed
 	}
 
+	ethReceipt.CumulativeGasUsed = hexutil.EncodeUint64(cumulativeGasUsed)
+	ethReceipt.GasUsed = hexutil.EncodeUint64(gasUsed)
+
 	status := STATUS_FAILURE
-	if qtumReceipt.Excepted == "None" {
+	if excepted == "None" {
 		status = STATUS_SUCCESS
 	} else {
-		p.Qtum.GetDebugLogger().Log("transaction", ethReceipt.TransactionHash, "msg", "transaction excepted", "message", qtumReceipt.Excepted)
+		p.Qtum.GetDebugLogger().Log("transaction", ethReceipt.TransactionHash, "msg", "transaction excepted", "message", excepted)
 	}
 	ethReceipt.Status = status
 
-	r := qtum.TransactionReceipt(*qtumReceipt)
-	ethReceipt.Logs = conversion.ExtractETHLogsFromTransactionReceipt(&r, r.Log)
+	for _, qtumReceipt := range *qtumReceipts {
+		r := qtum.TransactionReceipt(qtumReceipt)
+		logs := conversion.ExtractETHLogsFromTransactionReceipt(&r, r.Log)
+		if ethReceipt.Logs == nil && logs != nil {
+			ethReceipt.Logs = []eth.Log{}
+		}
+		ethReceipt.Logs = append(ethReceipt.Logs, logs...)
+	}
 
-	qtumTx, err := p.Qtum.GetRawTransaction(qtumReceipt.TransactionHash, false)
+	qtumTx, err := p.Qtum.GetRawTransaction((*qtumReceipts)[0].TransactionHash, false)
 	if err != nil {
 		p.GetDebugLogger().Log("msg", "couldn't get transaction", "err", err)
 		return nil, eth.NewCallbackError("couldn't get transaction")
