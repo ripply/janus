@@ -271,37 +271,85 @@ func websocketHandler(c echo.Context) error {
 			return nil
 		}
 
-		var rpcReq eth.JSONRPCRequest
-		json.Unmarshal(req, &rpcReq)
+		var responseBytes []byte
 
-		cc.rpcReq = &rpcReq
+		if len(req) > 0 && req[0] == '[' {
+			// this is a batch request
+			var rpcReqs []eth.JSONRPCRequest
+			json.Unmarshal(req, &rpcReqs)
 
-		result, jsonError := cc.transformer.Transform(&rpcReq, c)
+			responses := make([]interface{}, 0, len(rpcReqs))
 
-		response := result
+			for _, rpcReq := range rpcReqs {
 
-		if jsonError != nil {
-			if jsonError.Error() == nil {
-				cc.GetErrorLogger().Log("err", jsonError.Error())
-				response = jsonError
+				cc.rpcReq = &rpcReq
+
+				result, jsonError := cc.transformer.Transform(&rpcReq, c)
+
+				response := result
+
+				if jsonError != nil {
+					if jsonError.Error() == nil {
+						cc.GetErrorLogger().Log("err", jsonError.Error())
+						response = jsonError
+					}
+				}
+
+				// Allow transformer to return an explicit JSON error
+				if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
+					response = cc.GetJSONRPCError(jerr)
+				} else {
+					response, err = cc.GetJSONRPCResult(response)
+					if err != nil {
+						cc.GetErrorLogger().Log("err", err.Error())
+						return nil
+					}
+				}
+
+				responses = append(responses, response)
 			}
-		}
+			responseBytes, err = json.Marshal(responses)
 
-		// Allow transformer to return an explicit JSON error
-		if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
-			response = cc.GetJSONRPCError(jerr)
-		} else {
-			response, err = cc.GetJSONRPCResult(response)
 			if err != nil {
 				cc.GetErrorLogger().Log("err", err.Error())
 				return nil
 			}
-		}
 
-		responseBytes, err := json.Marshal(response)
-		if err != nil {
-			cc.GetErrorLogger().Log("err", err.Error())
-			return nil
+		} else {
+			var rpcReq eth.JSONRPCRequest
+			json.Unmarshal(req, &rpcReq)
+
+			cc.rpcReq = &rpcReq
+
+			result, jsonError := cc.transformer.Transform(&rpcReq, c)
+
+			response := result
+
+			if jsonError != nil {
+				if jsonError.Error() == nil {
+					cc.GetErrorLogger().Log("err", jsonError.Error())
+					response = jsonError
+				}
+			}
+
+			// Allow transformer to return an explicit JSON error
+			if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
+				response = cc.GetJSONRPCError(jerr)
+			} else {
+				response, err = cc.GetJSONRPCResult(response)
+				if err != nil {
+					cc.GetErrorLogger().Log("err", err.Error())
+					return nil
+				}
+			}
+
+			responseBytes, err = json.Marshal(response)
+
+			if err != nil {
+				cc.GetErrorLogger().Log("err", err.Error())
+				return nil
+			}
+
 		}
 
 		cc.GetDebugLogger().Log("response", string(responseBytes))
