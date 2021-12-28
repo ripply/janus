@@ -264,22 +264,28 @@ func websocketHandler(c echo.Context) error {
 
 	for {
 		cc.GetDebugLogger().Log("msg", "reading websocket request")
-		// Read
 		_, req, err := ws.ReadMessage()
 		if err != nil {
 			cc.GetLogger().Log("msg", "Failed to read websocket message", "err", err)
 			return nil
 		}
+		var rpcReqs []eth.JSONRPCRequest
 
-		var responseBytes []byte
+		isBatchRequests := func(msg json.RawMessage) bool {
+			return len(msg) != 0 && msg[0] == '['
+		}
 
-		if len(req) > 0 && req[0] == '[' {
-			// this is a batch request
-			var rpcReqs []eth.JSONRPCRequest
+		if !isBatchRequests(req) {
+			var rpcReq eth.JSONRPCRequest
+			json.Unmarshal(req, &rpcReq)
+			rpcReqs = append(rpcReqs, rpcReq)
+		} else {
 			json.Unmarshal(req, &rpcReqs)
+		}
+
+		getRpcResponses := func(rpcReqs []eth.JSONRPCRequest) []interface{} {
 
 			responses := make([]interface{}, 0, len(rpcReqs))
-
 			for _, rpcReq := range rpcReqs {
 
 				cc.rpcReq = &rpcReq
@@ -308,48 +314,16 @@ func websocketHandler(c echo.Context) error {
 
 				responses = append(responses, response)
 			}
-			responseBytes, err = json.Marshal(responses)
+			return responses
+		}
 
-			if err != nil {
-				cc.GetErrorLogger().Log("err", err.Error())
-				return nil
-			}
+		responses := getRpcResponses(rpcReqs)
 
-		} else {
-			var rpcReq eth.JSONRPCRequest
-			json.Unmarshal(req, &rpcReq)
+		responseBytes, err := json.Marshal(responses)
 
-			cc.rpcReq = &rpcReq
-
-			result, jsonError := cc.transformer.Transform(&rpcReq, c)
-
-			response := result
-
-			if jsonError != nil {
-				if jsonError.Error() == nil {
-					cc.GetErrorLogger().Log("err", jsonError.Error())
-					response = jsonError
-				}
-			}
-
-			// Allow transformer to return an explicit JSON error
-			if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
-				response = cc.GetJSONRPCError(jerr)
-			} else {
-				response, err = cc.GetJSONRPCResult(response)
-				if err != nil {
-					cc.GetErrorLogger().Log("err", err.Error())
-					return nil
-				}
-			}
-
-			responseBytes, err = json.Marshal(response)
-
-			if err != nil {
-				cc.GetErrorLogger().Log("err", err.Error())
-				return nil
-			}
-
+		if err != nil {
+			cc.GetErrorLogger().Log("err", err.Error())
+			return nil
 		}
 
 		cc.GetDebugLogger().Log("response", string(responseBytes))
