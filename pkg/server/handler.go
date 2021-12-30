@@ -264,41 +264,63 @@ func websocketHandler(c echo.Context) error {
 
 	for {
 		cc.GetDebugLogger().Log("msg", "reading websocket request")
-		// Read
 		_, req, err := ws.ReadMessage()
 		if err != nil {
 			cc.GetLogger().Log("msg", "Failed to read websocket message", "err", err)
 			return nil
 		}
+		var rpcReqs []eth.JSONRPCRequest
 
-		var rpcReq eth.JSONRPCRequest
-		json.Unmarshal(req, &rpcReq)
-
-		cc.rpcReq = &rpcReq
-
-		result, jsonError := cc.transformer.Transform(&rpcReq, c)
-
-		response := result
-
-		if jsonError != nil {
-			if jsonError.Error() == nil {
-				cc.GetErrorLogger().Log("err", jsonError.Error())
-				response = jsonError
-			}
+		isBatchRequests := func(msg json.RawMessage) bool {
+			return len(msg) != 0 && msg[0] == '['
 		}
 
-		// Allow transformer to return an explicit JSON error
-		if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
-			response = cc.GetJSONRPCError(jerr)
+		if !isBatchRequests(req) {
+			var rpcReq eth.JSONRPCRequest
+			json.Unmarshal(req, &rpcReq)
+			rpcReqs = append(rpcReqs, rpcReq)
 		} else {
-			response, err = cc.GetJSONRPCResult(response)
-			if err != nil {
-				cc.GetErrorLogger().Log("err", err.Error())
-				return nil
-			}
+			json.Unmarshal(req, &rpcReqs)
 		}
 
-		responseBytes, err := json.Marshal(response)
+		getRpcResponses := func(rpcReqs []eth.JSONRPCRequest) []interface{} {
+
+			responses := make([]interface{}, 0, len(rpcReqs))
+			for _, rpcReq := range rpcReqs {
+
+				cc.rpcReq = &rpcReq
+
+				result, jsonError := cc.transformer.Transform(&rpcReq, c)
+
+				response := result
+
+				if jsonError != nil {
+					if jsonError.Error() == nil {
+						cc.GetErrorLogger().Log("err", jsonError.Error())
+						response = jsonError
+					}
+				}
+
+				// Allow transformer to return an explicit JSON error
+				if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
+					response = cc.GetJSONRPCError(jerr)
+				} else {
+					response, err = cc.GetJSONRPCResult(response)
+					if err != nil {
+						cc.GetErrorLogger().Log("err", err.Error())
+						return nil
+					}
+				}
+
+				responses = append(responses, response)
+			}
+			return responses
+		}
+
+		responses := getRpcResponses(rpcReqs)
+
+		responseBytes, err := json.Marshal(responses)
+
 		if err != nil {
 			cc.GetErrorLogger().Log("err", err.Error())
 			return nil
