@@ -209,6 +209,43 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+func isBatchRequests(msg json.RawMessage) bool {
+	return len(msg) != 0 && msg[0] == '['
+}
+
+func getRpcResponses(c echo.Context, cc *myCtx, rpcReqs []eth.JSONRPCRequest) ([]interface{}, error) {
+	responses := make([]interface{}, 0, len(rpcReqs))
+	for _, rpcReq := range rpcReqs {
+		cc.rpcReq = &rpcReq
+
+		result, jsonError := cc.transformer.Transform(&rpcReq, c)
+
+		response := result
+
+		if jsonError != nil {
+			if jsonError.Error() == nil {
+				cc.GetErrorLogger().Log("err", jsonError.Error())
+				response = jsonError
+			}
+		}
+
+		// Allow transformer to return an explicit JSON error
+		if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
+			response = cc.GetJSONRPCError(jerr)
+		} else {
+			var err error
+			response, err = cc.GetJSONRPCResult(response)
+			if err != nil {
+				cc.GetErrorLogger().Log("err", err.Error())
+				return nil, err
+			}
+		}
+
+		responses = append(responses, response)
+	}
+	return responses, nil
+}
+
 func websocketHandler(c echo.Context) error {
 	myctx := c.Get("myctx")
 	cc, ok := myctx.(*myCtx)
@@ -271,11 +308,8 @@ func websocketHandler(c echo.Context) error {
 		}
 		var rpcReqs []eth.JSONRPCRequest
 
-		isBatchRequests := func(msg json.RawMessage) bool {
-			return len(msg) != 0 && msg[0] == '['
-		}
-
-		if !isBatchRequests(req) {
+		isBatchedRequest := isBatchRequests(req)
+		if !isBatchedRequest {
 			var rpcReq eth.JSONRPCRequest
 			json.Unmarshal(req, &rpcReq)
 			rpcReqs = append(rpcReqs, rpcReq)
@@ -283,43 +317,22 @@ func websocketHandler(c echo.Context) error {
 			json.Unmarshal(req, &rpcReqs)
 		}
 
-		getRpcResponses := func(rpcReqs []eth.JSONRPCRequest) []interface{} {
-
-			responses := make([]interface{}, 0, len(rpcReqs))
-			for _, rpcReq := range rpcReqs {
-
-				cc.rpcReq = &rpcReq
-
-				result, jsonError := cc.transformer.Transform(&rpcReq, c)
-
-				response := result
-
-				if jsonError != nil {
-					if jsonError.Error() == nil {
-						cc.GetErrorLogger().Log("err", jsonError.Error())
-						response = jsonError
-					}
-				}
-
-				// Allow transformer to return an explicit JSON error
-				if jerr, isJSONErr := response.(eth.JSONRPCError); isJSONErr {
-					response = cc.GetJSONRPCError(jerr)
-				} else {
-					response, err = cc.GetJSONRPCResult(response)
-					if err != nil {
-						cc.GetErrorLogger().Log("err", err.Error())
-						return nil
-					}
-				}
-
-				responses = append(responses, response)
-			}
-			return responses
+		responses, err := getRpcResponses(c, cc, rpcReqs)
+		if err != nil {
+			cc.GetErrorLogger().Log("err", err.Error())
+			return nil
 		}
 
-		responses := getRpcResponses(rpcReqs)
+		var response interface{}
+		if isBatchedRequest {
+			response = responses
+		} else if len(responses) > 0 {
+			response = responses[0]
+		} else {
+			response = []interface{}{}
+		}
 
-		responseBytes, err := json.Marshal(responses)
+		responseBytes, err := json.Marshal(response)
 
 		if err != nil {
 			cc.GetErrorLogger().Log("err", err.Error())
