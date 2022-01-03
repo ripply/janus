@@ -1,7 +1,6 @@
 package eth
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -896,17 +895,68 @@ type EthSubscription struct {
 
 // ======= qtum_getUTXOs ============= //
 
+type UTXOScriptType int
+
+const (
+	ALL_UTXO_TYPES UTXOScriptType = iota
+	UNKNOWN_UTXO
+	OPRETURN_UTXO
+	IMMATURE
+	// len(spk)==35 and (spk[0:1] + spk[34:35]).hex()=='21ac'
+	P2PK // pay to pubkey
+	// len(spk)==25 and (spk[0:3] + spk[23:25]).hex()=='76a91488ac'
+	P2PKH // pay to public key hash
+	// len(spk) == 23 and (spk[0:2] + spk[22:23]).hex() == 'a91487'
+	P2SH // pay to script hash
+	// len(spk) == 22 and (spk[0:2]).hex() == '0014'
+	P2WPKH // pay to witness public key hash
+	// len(spk) == 34 and (spk[0:2]).hex() == '0020'
+	P2WSH // pay to witness script hash
+	// is_p2sh() and len(ss) == 23 and (ss[0:3]).hex() == '160014'
+	P2SHP2WPKH // P2SH Encapsulating Pay to Witness Public Key Hash
+	// is_p2sh() and len(ss) == 35 and (ss[0:3]).hex() == '220020'
+	P2SHP2WSH // P2SH Encapsulating Pay to Witness Script Hash
+	P2MS      // pay to multisig
+)
+
+var AllUTXOScriptTypes = []UTXOScriptType{
+	ALL_UTXO_TYPES,
+	UNKNOWN_UTXO,
+	OPRETURN_UTXO,
+	IMMATURE,
+	P2PK,
+	P2PKH,
+	P2SH,
+	P2WPKH,
+	P2WSH,
+	P2SHP2WPKH,
+	P2SHP2WSH,
+}
+
+func (utxo UTXOScriptType) String() string {
+	return []string{"all", "unknown", "opreturn", "immature", "P2PK", "P2PKH", "P2SH", "P2WPKH", "P2WSH", "P2SHP2WPKH", "P2SHP2WSH", "P2MS"}[utxo]
+}
+
 type (
 	GetUTXOsRequest struct {
 		Address      string
 		MinSumAmount decimal.Decimal
+		Types        []UTXOScriptType
 	}
 
 	QtumUTXO struct {
-		Address string `json:"address"`
-		TXID    string `json:"txid"`
-		Vout    uint   `json:"vout"`
-		Amount  string `json:"amount"`
+		Address   string `json:"address"`
+		TXID      string `json:"txid"`
+		Vout      uint   `json:"vout"`
+		Amount    string `json:"amount"`
+		Safe      bool   `json:"safe"`
+		Spendable bool   `json:"spendable"`
+		// Solvable bool `json:"solvable"`
+		Confirmations int64  `json:"confirmations"`
+		Height        uint64 `json:"height"`
+		Type          string `json:"type"`
+		ScriptPubKey  string `json:"scriptPubKey"`
+		RedeemScript  string `json:"redeemScript,omitempty"`
 	}
 
 	GetUTXOsResponse []QtumUTXO
@@ -918,42 +968,125 @@ func (req *GetUTXOsRequest) UnmarshalJSON(params []byte) error {
 		return fmt.Errorf("bytes number < 2")
 	}
 
-	params = params[1 : paramsBytesNum-1] // drop `[`, `]`
-
-	for i, vByte := range params {
-		if vByte == ',' {
-			req.Address = string(bytes.Trim((params[:i]), " \n\t\""))
-
-			if paramsBytesNum < i+1 {
-				// `,` is the last byte, that is
-				// there are no bytes left
-				return nil
-			}
-
-			var (
-				minAmount = string(bytes.Trim(params[i+1:], " \n\t\""))
-				err       error
-			)
-			req.MinSumAmount, err = decimal.NewFromString(minAmount)
-			if err != nil {
-				return fmt.Errorf("couldn't convert minimum amount from string: %s", err)
-			}
-
-			return nil
-		}
+	var parameters []string
+	err := json.Unmarshal(params, &parameters)
+	if err != nil {
+		return err
 	}
 
-	return fmt.Errorf("an array of length 2 - address and minimum amount - is expected")
+	validTypes := map[string]UTXOScriptType{}
+	for _, scriptType := range AllUTXOScriptTypes {
+		validTypes[strings.ToLower(scriptType.String())] = scriptType
+	}
+
+	if len(parameters) >= 1 {
+		typesStartAt := 2
+		req.Address = parameters[0]
+		req.Types = []UTXOScriptType{}
+		allTypes := false
+		if len(parameters) >= 2 {
+			req.MinSumAmount, err = decimal.NewFromString(parameters[1])
+			if err != nil {
+				parameter := strings.ToLower(parameters[1])
+				if _, ok := validTypes[parameter]; ok {
+					// send all
+					typesStartAt = 1
+					req.MinSumAmount = decimal.NewFromInt(0)
+				} else {
+					return err
+				}
+			}
+		} else {
+			allTypes = true
+		}
+
+		for i := typesStartAt; i < len(parameters); i++ {
+			parameter := strings.ToLower(parameters[i])
+			if typ, ok := validTypes[parameter]; ok {
+				if typ == ALL_UTXO_TYPES {
+					allTypes = true
+				}
+				req.Types = append(req.Types, typ)
+			}
+		}
+		if allTypes {
+			req.Types = []UTXOScriptType{ALL_UTXO_TYPES}
+		}
+
+		if len(parameters) > 3 && len(req.Types) == 0 {
+			return fmt.Errorf("unknown script type requested")
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("Address required")
 }
 
 func (req GetUTXOsRequest) CheckHasValidValues() error {
 	if !common.IsHexAddress(req.Address) {
 		return errors.Errorf("invalid Ethereum address - %q", req.Address)
 	}
-	if req.MinSumAmount.LessThanOrEqual(decimal.NewFromInt(0)) {
-		return errors.Errorf("invalid minimum amount - %q (<= 0)", req.MinSumAmount)
-	}
 	return nil
+}
+
+func (utxo QtumUTXO) IsP2PK() bool {
+	// len(spk)==35 and (spk[0:1] + spk[34:35]).hex()=='21ac'
+	return len(utxo.ScriptPubKey) == 70 && strings.ToLower((utxo.ScriptPubKey[0:2]+utxo.ScriptPubKey[68:70])) == "21ac"
+}
+
+func (utxo QtumUTXO) IsP2PKH() bool {
+	// len(spk)==25 and (spk[0:3] + spk[23:25]).hex()=='76a91488ac'
+	return len(utxo.ScriptPubKey) == 50 && strings.ToLower((utxo.ScriptPubKey[0:6]+utxo.ScriptPubKey[46:50])) == "76a91488ac"
+}
+
+func (utxo QtumUTXO) IsP2SH() bool {
+	// 76a9143ade697fc8030489727bbb6af6a68f0a9eab2ec188ac
+	// len(spk) == 23 and (spk[0:2] + spk[22:23]).hex() == 'a91487'
+	return len(utxo.ScriptPubKey) == 46 && strings.ToLower((utxo.ScriptPubKey[0:4]+utxo.ScriptPubKey[44:46])) == "a91487"
+}
+
+func (utxo QtumUTXO) IsP2WPKH() bool {
+	// len(spk) == 22 and (spk[0:2]).hex() == '0014'
+	return len(utxo.ScriptPubKey) == 44 && strings.ToLower(utxo.ScriptPubKey[0:4]) == "0014"
+}
+
+func (utxo QtumUTXO) IsP2WSH() bool {
+	// len(spk) == 34 and (spk[0:2]).hex() == '0020'
+	return len(utxo.ScriptPubKey) == 68 && strings.ToLower(utxo.ScriptPubKey[0:4]) == "0020"
+}
+
+func (utxo QtumUTXO) IsP2SHP2WPKH() bool {
+	// is_p2sh() and len(ss) == 23 and (ss[0:3]).hex() == '160014'
+	return utxo.IsP2SH() && len(utxo.ScriptPubKey) == 46 && strings.ToLower(utxo.ScriptPubKey[0:6]) == "160014"
+}
+
+func (utxo QtumUTXO) IsP2SHP2WSH() bool {
+	// is_p2sh() and len(ss) == 35 and (ss[0:3]).hex() == '220020'
+	return utxo.IsP2SH() && len(utxo.ScriptPubKey) == 70 && strings.ToLower(utxo.ScriptPubKey[0:6]) == "220020"
+}
+
+func (utxo QtumUTXO) GetType() UTXOScriptType {
+	if utxo.IsP2PK() {
+		return P2PK
+	} else if utxo.IsP2PKH() {
+		return P2PKH
+	} else if utxo.IsP2SH() {
+		if utxo.IsP2SHP2WPKH() {
+			return P2SHP2WPKH
+		} else if utxo.IsP2SHP2WSH() {
+			return P2SHP2WSH
+		} else {
+			return P2SH
+		}
+	} else if utxo.IsP2WPKH() {
+		return P2WPKH
+	} else if utxo.IsP2WSH() {
+		return P2WSH
+	} else {
+		return UNKNOWN_UTXO
+	}
+	// TODO: OP_RETURN
 }
 
 // ======= web3_sha3 ======= //

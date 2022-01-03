@@ -25,6 +25,7 @@ var FLAG_GENERATE_ADDRESS_TO = "REGTEST_GENERATE_ADDRESS_TO"
 var FLAG_IGNORE_UNKNOWN_TX = "IGNORE_UNKNOWN_TX"
 var FLAG_DISABLE_SNIPPING_LOGS = "DISABLE_SNIPPING_LOGS"
 var FLAG_HIDE_QTUMD_LOGS = "HIDE_QTUMD_LOGS"
+var FLAG_MATURE_BLOCK_HEIGHT_OVERRIDE = "FLAG_MATURE_BLOCK_HEIGHT_OVERRIDE"
 
 var maximumRequestTime = 10000
 var maximumBackoff = (2 * time.Second).Milliseconds()
@@ -288,6 +289,18 @@ func (c *Client) GetFlagBool(key string) bool {
 	return result
 }
 
+func (c *Client) GetFlagInt(key string) *int {
+	value := c.GetFlag(key)
+	if value == nil {
+		return nil
+	}
+	result, ok := value.(int)
+	if !ok {
+		return nil
+	}
+	return &result
+}
+
 type doer interface {
 	Do(*http.Request) (*http.Response, error)
 }
@@ -353,6 +366,15 @@ func SetDisableSnippingQtumRpcOutput(disable bool) func(*Client) error {
 func SetHideQtumdLogs(hide bool) func(*Client) error {
 	return func(c *Client) error {
 		c.SetFlag(FLAG_HIDE_QTUMD_LOGS, hide)
+		return nil
+	}
+}
+
+func SetMatureBlockHeight(height *int) func(*Client) error {
+	return func(c *Client) error {
+		if height != nil {
+			c.SetFlag(FLAG_MATURE_BLOCK_HEIGHT_OVERRIDE, height)
+		}
 		return nil
 	}
 }

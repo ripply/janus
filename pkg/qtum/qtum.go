@@ -106,6 +106,15 @@ func (c *Qtum) Chain() string {
 	return c.chain
 }
 
+func (c *Qtum) GetMatureBlockHeight() int {
+	blockHeightOverride := c.GetFlagInt(FLAG_MATURE_BLOCK_HEIGHT_OVERRIDE)
+	if blockHeightOverride != nil {
+		return *blockHeightOverride
+	}
+
+	return 2000
+}
+
 func (c *Qtum) CanGenerate() bool {
 	return c.Chain() == ChainRegTest
 }

@@ -1465,7 +1465,7 @@ type (
 		Address     string          `json:"address"`
 		TXID        string          `json:"txid"`
 		OutputIndex uint            `json:"outputIndex"`
-		Script      string          `json:"string"`
+		Script      string          `json:"script"`
 		Satoshis    decimal.Decimal `json:"satoshis"`
 		Height      *big.Int        `json:"height"`
 		IsStake     bool            `json:"isStake"`

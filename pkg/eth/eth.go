@@ -22,7 +22,7 @@ type JSONRPCResult struct {
 	JSONRPC   string          `json:"jsonrpc"`
 	RawResult json.RawMessage `json:"result,omitempty"`
 	Error     JSONRPCError    `json:"error,omitempty"`
-	ID        json.RawMessage `json:"id"`
+	ID        json.RawMessage `json:"id,omitempty"`
 }
 
 func NewJSONRPCResult(id json.RawMessage, res interface{}) (*JSONRPCResult, error) {

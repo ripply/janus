@@ -32,6 +32,7 @@ var (
 	httpsKey            = app.Flag("https-key", "https keyfile").Default("").String()
 	httpsCert           = app.Flag("https-cert", "https certificate").Default("").String()
 	logFile             = app.Flag("log-file", "write logs to a file").Envar("LOG_FILE").Default("").String()
+	matureBlockHeight   = app.Flag("mature-block-height-override", "override how old a coinbase/coinstake needs to be to be considered mature enough for spending (QTUM uses 2000 blocks after the 32s block fork) - if this value is incorrect transactions can be rejected").Int()
 
 	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
 	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
@@ -117,6 +118,7 @@ func action(pc *kingpin.ParseContext) error {
 		qtum.SetIgnoreUnknownTransactions(*ignoreUnknownTransactions),
 		qtum.SetDisableSnippingQtumRpcOutput(*disableSnipping),
 		qtum.SetHideQtumdLogs(*hideQtumdLogs),
+		qtum.SetMatureBlockHeight(matureBlockHeight),
 		qtum.SetContext(context.Background()),
 	)
 	if err != nil {
