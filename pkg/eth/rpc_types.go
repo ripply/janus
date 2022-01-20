@@ -695,6 +695,8 @@ type (
 	*/
 
 	EthSubscriptionNewHeadResponse struct {
+		Hash             string `json:"hash"` //! added for go-ethereum client support
+		Number           string `json:"number"`
 		Difficulty       string `json:"difficulty"`
 		ExtraData        string `json:"extraData"`
 		GasLimit         string `json:"gasLimit"`
@@ -702,13 +704,14 @@ type (
 		LogsBloom        string `json:"logsBloom"`
 		Miner            string `json:"miner"`
 		Nonce            string `json:"nonce"`
-		Number           string `json:"number"`
 		ParentHash       string `json:"parentHash"`
-		ReceiptRoot      string `json:"receiptRoot"`
+		ReceiptRoot      string `json:"receiptsRoot"` //! replaced 'receipt' with 'receipts' for go-ethereum client support
 		Sha3Uncles       string `json:"sha3Uncles"`
 		StateRoot        string `json:"stateRoot"`
 		Timestamp        string `json:"timestamp"`
 		TransactionsRoot string `json:"transactionsRoot"`
+		MixHash          string `json:"mixHash"` //! added for go-ethereum client support
+		// BaseFeePerGas    string `json:"baseFeePerGas"` // added for go-ethereum client support
 	}
 )
 
@@ -803,6 +806,10 @@ func NewEthSubscriptionNewHeadResponse(block *GetBlockByHashResponse) *EthSubscr
 		Sha3Uncles:       block.Sha3Uncles,
 		Timestamp:        block.Timestamp,
 		TransactionsRoot: block.TransactionsRoot,
+		//! This is ok?
+		MixHash:   "0x0000000000000000000000000000000000000000000000000000000000000000", // Added for go-ethereum client support
+		StateRoot: block.StateRoot,                                                      // Added for go-ethereum client support
+		Hash:      block.Hash,
 	}
 }
 
@@ -889,8 +896,16 @@ type ChainIdResponse string
 
 // ======= eth_subscription ======== //
 type EthSubscription struct {
-	SubscriptionID string      `json:"subscription"`
+	SubscriptionID string                `json:"subscription"`
+	Result         interface{}           `json:"result"`
+	Params         EthSubscriptionParams `json:"params"`            // Added for go-ethereum client support
+	Version        string                `json:"jsonrpc,omitempty"` // Added for go-ethereum client support
+	Method         string                `json:"method,omitempty"`  // Added for go-ethereum client support
+}
+
+type EthSubscriptionParams struct {
 	Result         interface{} `json:"result"`
+	SubscriptionID string      `json:"subscription"`
 }
 
 // ======= qtum_getUTXOs ============= //

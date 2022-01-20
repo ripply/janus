@@ -90,9 +90,21 @@ func (s *subscriptionRegistry) SendAll(message interface{}) {
 	send := func(s *subscriptionInformation) {
 		// send writes to a queue that can block when full if a client has a lot of responses queued up
 		// that could potentially affect other clients so we run this in a goroutine
-		subscription := &eth.EthSubscription{
+		// params := struct {
+		// 	Subscription string      `json:"subscription"`
+		// 	Result       interface{} `json:"result"`
+		// }{
+		// 	Subscription: s.Subscription.id,
+		// 	Result:       message,
+		// }
+		params := eth.EthSubscriptionParams{
 			SubscriptionID: s.Subscription.id,
 			Result:         message,
+		}
+		subscription := &eth.EthSubscription{
+			Version: "2.0",
+			Method:  "eth_subscription",
+			Params:  params,
 		}
 		go s.Send(subscription)
 	}
