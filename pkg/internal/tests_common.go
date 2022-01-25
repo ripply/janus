@@ -267,6 +267,9 @@ var (
 		To:               "0x0000000000000000000000000000000000000000",
 		Gas:              "0x0",
 		GasPrice:         "0x0",
+		V:                "0x0",
+		R:                "0x0",
+		S:                "0x0",
 	}
 
 	GetTransactionByHashResponse = CreateTransactionByHashResponse()
