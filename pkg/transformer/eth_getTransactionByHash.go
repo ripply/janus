@@ -96,9 +96,10 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 
 			// TODO: researching
 			// ? Do we need those values
-			V: "",
-			R: "",
-			S: "",
+			//! Added for go-ethereum client support
+			V: "0x0",
+			R: "0x0",
+			S: "0x0",
 
 			Gas:      "0x0",
 			GasPrice: "0x0",
@@ -229,9 +230,10 @@ func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionB
 
 		// TODO: researching
 		// ? Do we need those values
-		V: "",
-		R: "",
-		S: "",
+		//! Added for go-ethereum client support
+		V: "0x0",
+		R: "0x0",
+		S: "0x0",
 	}
 
 	if !rawQtumTx.IsPending() {
