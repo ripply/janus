@@ -162,12 +162,14 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 		// TODO: Figure out proper way to do this
 		// There is a problem with this function, sometimes it returns errors on regtest, empty block?
 		// commenting it out as its being overwritten below anyway
-		/*
-			ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.Vins)
-			if err != nil {
-				return nil, eth.NewCallbackError("couldn't get non contract transaction sender address")
-			}
-		*/
+		
+		// TODO 2 - Electric bugaloo: Attempt to get this working properly, wish me luck
+		
+		ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.Vins)
+		if err != nil {
+			return nil, eth.NewCallbackError("couldn't get non contract transaction sender address")
+		}
+		
 		// TODO: discuss
 		// ? Does func above return incorrect address for graph-node (len is < 40)
 		// ! Temporary solution
