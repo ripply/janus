@@ -132,27 +132,40 @@ func unmarshalRequest(data []byte, v interface{}) error {
 	return nil
 }
 
-// NOTE:
+// NOTE: 
+// A fundamental design difference between the Qtum and Eth blockchain is that an Eth tx only have a single "sender" (sender account), 
+// while a Qtum tx can have several "senders" (being composed of multiple Vins from different addresses)
+//
+// Current design decision for Janus is to take the address of the first Vin as sender address, 
+// which should produce corrent behavior in most relevant cases (primarily with smart contracts, where the Vins AFAIK are always from the contract address)
+//
+// (Old) NOTE:
 // 	- is not for reward transactions
 // 	- Vin[i].N (vout number) -> get Transaction(txID).Vout[N].Address
 // 	- returning address already has 0x prefix
-func getNonContractTxSenderAddress(p *qtum.Qtum, vins []*qtum.DecodedRawTransactionInV) (string, error) {
-	for _, vin := range vins {
-		prevQtumTx, err := p.GetRawTransaction(vin.TxID, false)
-		if err != nil {
-			return "", errors.WithMessage(err, "couldn't get vin's previous transaction")
-		}
-		for _, out := range prevQtumTx.Vouts {
-			for _, address := range out.Details.Addresses {
-				return utils.AddHexPrefix(address), nil
-			}
-		}
+
+func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
+
+	// Get raw Tx struct which contains the Vin address data we need 
+	rawTx, err := p.GetRawTransaction(txID, false)
+	
+	if err != nil {
+		return "", errors.WithMessage(err, "Couldn't get raw Tx data from Tx ID")
 	}
-	if len(vins) == 0 {
-		// coinbase?
-		return "", nil
+	
+	// If Tx has no vins it's a reward transaction (Right?). This is outside the intended scope of this function, so throw an error
+	if len(rawTx.Vins) == 0 {
+		return "", errors.New("Tx has 0 Vins")
 	}
-	return "", errors.New("not found")
+	
+	// Take the address of the first Vin as sender address, as per design decision
+	// TODO: Make this not loop, it's not necessary and can in theory produce unintended behavior without causing an error
+	// TODO (research): Is the raw TX Vin list always in the "correct" order? It has to be for this function to produce correct behavior
+	for _, in := range rawTx.Vins {
+		return utils.AddHexPrefix(in.Address), nil
+	}
+	
+	return "", errors.New("No address found for any Vin")
 }
 
 // NOTE:

@@ -164,8 +164,9 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 		// commenting it out as its being overwritten below anyway
 		
 		// TODO 2 - Electric bugaloo: Attempt to get this working properly, wish me luck
+		// Tried to change the function below to use Tx ID instead of Vin list to cut down on roundabout decoding
 		
-		ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.Vins)
+		ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.ID)
 		if err != nil {
 			return nil, eth.NewCallbackError("couldn't get non contract transaction sender address")
 		}
