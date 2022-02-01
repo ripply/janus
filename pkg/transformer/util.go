@@ -146,8 +146,14 @@ func unmarshalRequest(data []byte, v interface{}) error {
 
 func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
 
+	// TODO DEBUG REMOVE
+	p.GetDebugLogger().Log("msg", "Trying to get raw TX from provided ID string", "txid", txID)
+
 	// Get raw Tx struct which contains the Vin address data we need 
 	rawTx, err := p.GetRawTransaction(txID, false)
+
+	// TODO DEBUG REMOVE
+	p.GetDebugLogger().Log("msg", "Got a raw TX", "txid", rawTx.ID)
 	
 	if err != nil {
 		return "", errors.WithMessage(err, "Couldn't get raw Tx data from Tx ID")
