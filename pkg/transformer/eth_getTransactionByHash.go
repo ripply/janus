@@ -159,18 +159,13 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 	if qtumTx.Generated {
 		ethTx.From = utils.AddHexPrefix(qtum.ZeroAddress)
 	} else {
-		// TODO: Figure out proper way to do this
-		// There is a problem with this function, sometimes it returns errors on regtest, empty block?
-		// commenting it out as its being overwritten below anyway
-		
-		// TODO 2 - Electric bugaloo: Attempt to get this working properly, wish me luck
-		// Tried to change the function below to use Tx ID instead of Vin list to cut down on roundabout decoding
-		
+		// TODO: Figure out if following code still cause issues in some cases, see next comment
+
 		ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.ID)
 		if err != nil {
-			return nil, eth.NewCallbackError("couldn't get non contract transaction sender address")
+			return nil, eth.NewCallbackError("Couldn't get non contract transaction sender address: " + err.Error())
 		}
-		
+
 		// TODO: discuss
 		// ? Does func above return incorrect address for graph-node (len is < 40)
 		// ! Temporary solution

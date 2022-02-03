@@ -132,38 +132,26 @@ func unmarshalRequest(data []byte, v interface{}) error {
 	return nil
 }
 
-// NOTE: 
-// A fundamental design difference between the Qtum and Eth blockchain is that an Eth tx only have a single "sender" (sender account), 
-// while a Qtum tx can have several "senders" (being composed of multiple Vins from different addresses)
+// Function for getting the sender address of a transaction by ID.
+// As per design desicion for Janus, the address of the first Vin is used
 //
-// Current design decision for Janus is to take the address of the first Vin as sender address, 
-// which should produce corrent behavior in most relevant cases (primarily with smart contracts, where the Vins AFAIK are always from the contract address)
+// txID string		- ID of valid Qtum non-reward (and non-contract?) transaction
 //
-// (Old) NOTE:
-// 	- is not for reward transactions
-// 	- Vin[i].N (vout number) -> get Transaction(txID).Vout[N].Address
-// 	- returning address already has 0x prefix
+// return string	- Sender address for given transaction, hex-prefixed eth format
 
 func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
-
-	// TODO DEBUG REMOVE
-	p.GetDebugLogger().Log("msg", "Trying to get raw TX from provided ID string", "txid", txID)
-
-	// Get raw Tx struct which contains the Vin address data we need 
+	// Get raw Tx struct which contains the Vin address data we need
 	rawTx, err := p.GetRawTransaction(txID, false)
 
-	// TODO DEBUG REMOVE
-	p.GetDebugLogger().Log("msg", "Got a raw TX", "txid", rawTx.ID)
-	
 	if err != nil {
-		return "", errors.WithMessage(err, "Couldn't get raw Tx data from Tx ID")
+		return "", errors.New("Couldn't get raw Transaction data from Transaction ID: " + err.Error())
 	}
-	
-	// If Tx has no vins it's a reward transaction (Right?). This is outside the intended scope of this function, so throw an error
+
+	// If Tx has no vins it's either a reward transaction or invalid/corrupt (Right?). This is outside the intended scope of this function, so throw an error
 	if len(rawTx.Vins) == 0 {
-		return "", errors.New("Tx has 0 Vins")
+		return "", errors.New("Transaction has 0 Vins and thus no valid sender address")
 	}
-	
+
 	// Take the address of the first Vin as sender address, as per design decision
 	// TODO: Make this not loop, it's not necessary and can in theory produce unintended behavior without causing an error
 	// TODO (research): Is the raw TX Vin list always in the "correct" order? It has to be for this function to produce correct behavior
@@ -174,7 +162,7 @@ func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
 		}
 		return utils.AddHexPrefix(hex), nil
 	}
-	
+
 	return "", errors.New("No address found for any Vin")
 }
 
