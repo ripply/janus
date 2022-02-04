@@ -55,7 +55,7 @@ func (c *Qtum) detectChain() {
 		return
 	}
 	c.queryingChain = true
-	c.queryingComplete = make(chan bool)
+	c.queryingComplete = make(chan bool, 1000)
 	c.chainMutex.Unlock()
 
 	// detect chain we are pointing at

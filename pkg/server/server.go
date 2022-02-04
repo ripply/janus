@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sync"
+	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -32,6 +33,11 @@ type Server struct {
 	debug         bool
 	mutex         *sync.Mutex
 	echo          *echo.Echo
+
+	blocksMutex     sync.RWMutex
+	lastBlock       int64
+	nextBlockCheck  *time.Time
+	lastBlockStatus error
 }
 
 func New(
@@ -64,6 +70,8 @@ func (s *Server) Start() error {
 
 	health := healthcheck.NewHandler()
 	health.AddLivenessCheck("qtumd-connection", func() error { return s.testConnectionToQtumd() })
+	health.AddLivenessCheck("qtumd-logevents-enabled", func() error { return s.testLogEvents() })
+	health.AddLivenessCheck("qtumd-blocks-syncing", func() error { return s.testBlocksSyncing() })
 
 	e.Use(middleware.CORS())
 	e.Use(middleware.BodyDump(func(c echo.Context, req []byte, res []byte) {
