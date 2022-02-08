@@ -135,9 +135,11 @@ func unmarshalRequest(data []byte, v interface{}) error {
 // Function for getting the sender address of a transaction by ID.
 // As per design desicion for Janus, the address of the first Vin is used
 //
-// txID string		- ID of valid Qtum non-reward (and non-contract?) transaction
+// txID string		- ID (hash) of valid Qtum non-reward (and non-contract?) transaction
 //
 // return string	- Sender address for given transaction, hex-prefixed eth format
+//
+// TODO: Investigate if limitations on Qtum RPC command GetRawTransaction can cause issues here
 
 func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
 	// Get raw Tx struct which contains the Vin address data we need

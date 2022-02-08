@@ -531,6 +531,11 @@ func SetupGetBlockByHashResponsesWithVouts(t *testing.T, vouts []*qtum.DecodedRa
 
 	// TODO: Get an actual response for this (only addresses are used in this test though)
 	getRawTransactionResponse := qtum.GetRawTransactionResponse{
+		Vins: []qtum.RawTransactionVin{
+			{
+				Address: "QXeZZ5MsAF5pPrPy47ZFMmtCpg7RExT4mi",
+			},
+		},
 		Vouts: []qtum.RawTransactionVout{
 			{
 				Details: struct {
