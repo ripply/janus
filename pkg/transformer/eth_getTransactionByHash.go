@@ -47,6 +47,11 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 }
 
 // TODO: think of returning flag if it's a reward transaction for miner
+//
+// FUTURE WORK: It might be possible to simplify this (and other?) translation by using a single verbose getblock qtum RPC command,
+// since it returns a lot of data including the equivalent of calling GetRawTransaction on every transaction in block.
+// The last point is of particular interest because GetRawTransaction doesn't by default work for every transaction.
+// This would mean fetching a lot of probably unnecessary data, but in this setup query response delay is reasonably the biggest bottleneck anyway
 func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashResponse, eth.JSONRPCError) {
 	qtumTx, err := p.GetTransaction(hash)
 	var ethTx *eth.GetTransactionByHashResponse

@@ -546,7 +546,7 @@ func SetupGetBlockByHashResponsesWithVouts(t *testing.T, vouts []*qtum.DecodedRa
 					Type string `json:"type"`
 				}{
 					Addresses: []string{
-						"7926223070547d2d15b2ef5e7383e541c338ffe9",
+						"7926223070547d2d15b2ef5e7383e541c338ffe9", // This address is hex format but should be base58, but it doesn't appear to be in use right now anyway
 					},
 				},
 			},

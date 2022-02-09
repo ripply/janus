@@ -140,6 +140,8 @@ func unmarshalRequest(data []byte, v interface{}) error {
 // return string	- Sender address for given transaction, hex-prefixed eth format
 //
 // TODO: Investigate if limitations on Qtum RPC command GetRawTransaction can cause issues here
+// Brief explanation: A default config Qtum node can only serve this command for transactions in the mempool, so it will likely break for SOME setup at SOME point.
+// However the same info can be found with getblock verbosity = 2, so maybe use that instead?
 
 func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
 	// Get raw Tx struct which contains the Vin address data we need
