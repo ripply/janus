@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/big"
 	"strings"
 	"sync"
 	"time"
@@ -118,8 +119,19 @@ func (s *subscriptionInformation) run() {
 		timeAfterCall := time.Now()
 		if err == nil {
 			nextBlock = int(resp.NextBlock)
-			for _, qtumLog := range resp.Entries {
-				qtumLogs := []qtum.Log{qtumLog.Log()}
+			reqSearchLogs := qtum.SearchLogsRequest{
+				FromBlock: big.NewInt(int64(resp.NextBlock - 1)),
+				ToBlock:   big.NewInt(int64(resp.NextBlock - 1)),
+				Addresses: *req.Filter.Addresses,
+				Topics:    *req.Filter.Topics,
+			}
+			receiptsSearchLogs, err := s.qtum.SearchLogs(&reqSearchLogs)
+			if err != nil {
+				s.qtum.GetErrorLogger().Log("msg", "Error calling searchLogs", "subscriptionId", s.id, "error", err)
+				return
+			}
+			for _, qtumLog := range receiptsSearchLogs {
+				qtumLogs := qtumLog.Log
 				logs := conversion.FilterQtumLogs(stringAddresses, qtumTopics, qtumLogs)
 				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(qtumLog, logs)
 				for _, ethLog := range ethLogs {
