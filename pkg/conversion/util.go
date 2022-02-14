@@ -104,7 +104,7 @@ func FilterQtumLogs(addresses []string, filters []qtum.SearchLogsTopic, logs []q
 	filteredLogs := []qtum.Log{}
 
 	for _, log := range logs {
-		if hasAddresses && !requestedAddressesMap[strings.ToLower(log.Address)] {
+		if hasAddresses && !requestedAddressesMap[strings.ToLower(strings.TrimPrefix(log.Address, "0x"))] {
 			continue
 		}
 

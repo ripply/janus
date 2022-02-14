@@ -20,10 +20,10 @@ func TestAgentAddSubscriptionLogs(t *testing.T) {
 	defer cancel()
 
 	expectedSubscriptionID := "0x08e2af779d38a09e4c11442d9de22413"
-	want := `{"subscription":"` + expectedSubscriptionID + `","result":{"address":"0x0000000000000000000000000000000000000000","blockHash":"0xbba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5","blockNumber":"0xf8f","data":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","logIndex":"0x0","topics":["0xtopic1"],"transactionHash":"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5","transactionIndex":"0x2"},"params":{"result":null,"subscription":"` + expectedSubscriptionID + `"}}`
+	want := `{"subscription":"` + expectedSubscriptionID + `","result":{"address":"0x0000000000000000000000000000000000000000","blockHash":"0xbba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5","blockNumber":"0xf8f","data":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","logIndex":"0x0","topics":["0xd8d7ecc4800d25fa53ce0372f13a416d98907a7ef3d8d3bdd79cf4fe75529c65"],"transactionHash":"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5","transactionIndex":"0x2"},"params":{"result":null,"subscription":"` + expectedSubscriptionID + `"}}`
 
 	doer := internal.NewDoerMappedMock()
-	topic1 := "topic1"
+	topic1 := "d8d7ecc4800d25fa53ce0372f13a416d98907a7ef3d8d3bdd79cf4fe75529c65"
 
 	doer.AddResponse(qtum.MethodWaitForLogs, qtum.WaitForLogsResponse{
 		Entries: []qtum.WaitForLogsEntry{
@@ -36,6 +36,20 @@ func TestAgentAddSubscriptionLogs(t *testing.T) {
 		Count:     1,
 		NextBlock: internal.QtumTransactionReceipt(nil).BlockNumber + 1,
 	})
+
+	doer.AddResponse(
+		qtum.MethodSearchLogs,
+		qtum.SearchLogsResponse{
+			internal.QtumTransactionReceipt(
+				[]qtum.Log{
+					{
+						Address: internal.QtumTransactionReceipt(nil).ContractAddress,
+						Topics:  []string{topic1},
+						Data:    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+					},
+				},
+			),
+		})
 
 	mockedClient, err := internal.CreateMockedClient(doer)
 	if err != nil {
