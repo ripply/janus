@@ -132,27 +132,42 @@ func unmarshalRequest(data []byte, v interface{}) error {
 	return nil
 }
 
-// NOTE:
-// 	- is not for reward transactions
-// 	- Vin[i].N (vout number) -> get Transaction(txID).Vout[N].Address
-// 	- returning address already has 0x prefix
-func getNonContractTxSenderAddress(p *qtum.Qtum, vins []*qtum.DecodedRawTransactionInV) (string, error) {
-	for _, vin := range vins {
-		prevQtumTx, err := p.GetRawTransaction(vin.TxID, false)
+// Function for getting the sender address of a transaction by ID.
+// As per design desicion for Janus, the address of the first Vin is used
+//
+// txID string		- ID (hash) of valid Qtum non-reward (and non-contract?) transaction
+//
+// return string	- Sender address for given transaction, hex-prefixed eth format
+//
+// TODO: Investigate if limitations on Qtum RPC command GetRawTransaction can cause issues here
+// Brief explanation: A default config Qtum node can only serve this command for transactions in the mempool, so it will likely break for SOME setup at SOME point.
+// However the same info can be found with getblock verbosity = 2, so maybe use that instead?
+
+func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
+	// Get raw Tx struct which contains the Vin address data we need
+	rawTx, err := p.GetRawTransaction(txID, false)
+
+	if err != nil {
+		return "", errors.New("Couldn't get raw Transaction data from Transaction ID: " + err.Error())
+	}
+
+	// If Tx has no vins it's either a reward transaction or invalid/corrupt (Right?). This is outside the intended scope of this function, so throw an error
+	if len(rawTx.Vins) == 0 {
+		return "", errors.New("Transaction has 0 Vins and thus no valid sender address")
+	}
+
+	// Take the address of the first Vin as sender address, as per design decision
+	// TODO: Make this not loop, it's not necessary and can in theory produce unintended behavior without causing an error
+	// TODO (research): Is the raw TX Vin list always in the "correct" order? It has to be for this function to produce correct behavior
+	for _, in := range rawTx.Vins {
+		hex, err := utils.ConvertQtumAddress(in.Address)
 		if err != nil {
-			return "", errors.WithMessage(err, "couldn't get vin's previous transaction")
+			return "", err
 		}
-		for _, out := range prevQtumTx.Vouts {
-			for _, address := range out.Details.Addresses {
-				return utils.AddHexPrefix(address), nil
-			}
-		}
+		return utils.AddHexPrefix(hex), nil
 	}
-	if len(vins) == 0 {
-		// coinbase?
-		return "", nil
-	}
-	return "", errors.New("not found")
+
+	return "", errors.New("No address found for any Vin")
 }
 
 // NOTE:

@@ -68,8 +68,10 @@ func TestGetTransactionByHashRequestWithContractVout(t *testing.T) {
 					Type      string   `json:"type"`
 					Addresses []string `json:"addresses"`
 				}{
-					ASM:       "4 25548 40 8588b2c50000000000000000000000000000000000000000000000000000000000000000 57946bb437560b13275c32a468c6fd1e0c2cdd48 OP_CAL",
-					Addresses: []string{},
+					ASM: "4 25548 40 8588b2c50000000000000000000000000000000000000000000000000000000000000000 57946bb437560b13275c32a468c6fd1e0c2cdd48 OP_CAL",
+					Addresses: []string{
+						"QXeZZ5MsAF5pPrPy47ZFMmtCpg7RExT4mi",
+					},
 				},
 			},
 		},
@@ -83,7 +85,7 @@ func TestGetTransactionByHashRequestWithContractVout(t *testing.T) {
 		t.Fatal(jsonErr)
 	}
 
-	want := &internal.GetTransactionByHashResponseData
+	want := &internal.GetTransactionByHashResponseDataWithVout
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",

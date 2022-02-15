@@ -47,6 +47,11 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 }
 
 // TODO: think of returning flag if it's a reward transaction for miner
+//
+// FUTURE WORK: It might be possible to simplify this (and other?) translation by using a single verbose getblock qtum RPC command,
+// since it returns a lot of data including the equivalent of calling GetRawTransaction on every transaction in block.
+// The last point is of particular interest because GetRawTransaction doesn't by default work for every transaction.
+// This would mean fetching a lot of probably unnecessary data, but in this setup query response delay is reasonably the biggest bottleneck anyway
 func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashResponse, eth.JSONRPCError) {
 	qtumTx, err := p.GetTransaction(hash)
 	var ethTx *eth.GetTransactionByHashResponse
@@ -159,15 +164,13 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 	if qtumTx.Generated {
 		ethTx.From = utils.AddHexPrefix(qtum.ZeroAddress)
 	} else {
-		// TODO: Figure out proper way to do this
-		// There is a problem with this function, sometimes it returns errors on regtest, empty block?
-		// commenting it out as its being overwritten below anyway
-		/*
-			ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.Vins)
-			if err != nil {
-				return nil, eth.NewCallbackError("couldn't get non contract transaction sender address")
-			}
-		*/
+		// TODO: Figure out if following code still cause issues in some cases, see next comment
+
+		ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.ID)
+		if err != nil {
+			return nil, eth.NewCallbackError("Couldn't get non contract transaction sender address: " + err.Error())
+		}
+
 		// TODO: discuss
 		// ? Does func above return incorrect address for graph-node (len is < 40)
 		// ! Temporary solution
