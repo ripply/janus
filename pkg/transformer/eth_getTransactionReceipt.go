@@ -51,6 +51,11 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 			p.Qtum.GetDebugLogger().Log("msg", "Transaction does not exist", "txid", string(*req))
 			return nil, eth.NewCallbackError(err.Error())
 		}
+		if ethTx == nil {
+			// unconfirmed tx, return nil
+			// https://github.com/openethereum/parity-ethereum/issues/3482
+			return nil, nil
+		}
 		return &eth.GetTransactionReceiptResponse{
 			TransactionHash:  ethTx.Hash,
 			TransactionIndex: ethTx.TransactionIndex,

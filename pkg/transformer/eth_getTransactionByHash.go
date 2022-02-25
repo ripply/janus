@@ -239,7 +239,10 @@ func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionB
 		S: "0x0",
 	}
 
-	if !rawQtumTx.IsPending() {
+	if rawQtumTx.IsPending() {
+		// geth returns null if the tx is pending
+		return nil, rawQtumTx, nil
+	} else {
 		blockIndex, err := getTransactionIndexInBlock(p, hash, rawQtumTx.BlockHash)
 		if err != nil {
 			return nil, nil, errors.WithMessage(err, "couldn't get transaction index in block")
@@ -348,12 +351,15 @@ func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionB
 		sentToInWei := convertFromSatoshiToWei(big.NewInt(sentTo))
 		ethTx.Value = hexutil.EncodeUint64(sentToInWei.Uint64())
 
-		toAddress, err := p.Base58AddressToHex(to)
-		if err == nil {
-			ethTx.To = utils.AddHexPrefix(toAddress)
+		if to != "" {
+			toAddress, err := p.Base58AddressToHex(to)
+			if err == nil {
+				ethTx.To = utils.AddHexPrefix(toAddress)
+			}
 		}
 
 		// TODO: compute gasPrice based on fee, guess a gas amount based on vin/vout
+		// gas price is set in the OP_CALL/OP_CREATE script
 	}
 
 	return ethTx, rawQtumTx, nil
