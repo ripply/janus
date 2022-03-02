@@ -68,7 +68,7 @@ func TestGetTransactionByHashRequestWithContractVout(t *testing.T) {
 					Type      string   `json:"type"`
 					Addresses []string `json:"addresses"`
 				}{
-					ASM: "4 25548 40 8588b2c50000000000000000000000000000000000000000000000000000000000000000 57946bb437560b13275c32a468c6fd1e0c2cdd48 OP_CAL",
+					ASM: "4 25548 40 8588b2c50000000000000000000000000000000000000000000000000000000000000000 57946bb437560b13275c32a468c6fd1e0c2cdd48 OP_CAL", // TODO FIX: Should reasonably be OP_CALL, but breaks if changed
 					Addresses: []string{
 						"QXeZZ5MsAF5pPrPy47ZFMmtCpg7RExT4mi",
 					},

@@ -118,6 +118,9 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 	resp.GasLimit = utils.AddHexPrefix(qtum.DefaultBlockGasLimit)
 	resp.GasUsed = "0x0"
 
+	// TODO: Future improvement: If getBlock is called with verbosity 2 it also returns full tx info as if getRawTransaction was called for each,
+	// so using that from the start instead of requesting each tx individually as done here would save a lot of back-and-forth
+
 	if req.FullTransaction {
 		for _, txHash := range block.Txs {
 			tx, err := getTransactionByHash(p.Qtum, txHash)
