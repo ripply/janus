@@ -604,6 +604,76 @@ func (resp *DecodedRawTransactionResponse) IsContractCreation() bool {
 	return false
 }
 
+// Get address from first OP_SENDER script operation found in Vouts, if any. Can also be used to check for presence of said op.
+func (resp *DecodedRawTransactionResponse) GetOpSenderAddress() (address string, _ error) {
+	for _, vout := range resp.Vouts {
+		// OP_SENDER is only valid in scripts ending in ether OP_CREATE or OP_CALL
+		if strings.HasSuffix(vout.ScriptPubKey.ASM, "OP_CREATE") || strings.HasSuffix(vout.ScriptPubKey.ASM, "OP_CALL") {
+			var scriptChunks = strings.Split(vout.ScriptPubKey.ASM, " ")
+
+			// OP_CREATE prefixed by OP_SENDER always have this structure:
+			//
+			// 1    // address type of the pubkeyhash (public key hash)
+			// Address               // sender's pubkeyhash address
+			// {signature, pubkey}   //serialized scriptSig
+			// OP_SENDER
+			// 4                     // EVM version
+			// 100000                //gas limit
+			// 10                    //gas price
+			// 1234                  // data to be sent by the contract
+			// OP_CREATE
+			var isOpCreateWithOpSender = len(scriptChunks) == 9
+
+			// OP_CALL prefixed by OP_SENDER always have this structure:
+			//
+			// 1                     // address type of the pubkeyhash (public key hash)
+			// Address               // sender's pubkeyhash address
+			// {signature, pubkey}   // serialized scriptSig
+			// OP_SENDER
+			// 4                     // EVM version
+			// 100000                // gas limit
+			// 10                    // gas price
+			// 1234                  // data to be sent by the contract
+			// Contract Address      // contract address
+			// OP_CALL
+			var isOpCallWithOpSender = len(scriptChunks) == 10
+
+			// Note: This check isn't redundant with the initial opcode check, since both opcodes are valid without OP_SENDER prefix
+			if isOpCreateWithOpSender || isOpCallWithOpSender {
+				// Address type, only support 1 for now
+				// TODO: Instead of throeing an error, should it keep going to see if another Vout has OP_SENDER with a valid address?
+				// TODO: Is type "1" called "push data"?
+				// TODO: This should be logged according to task
+				if scriptChunks[0] != "1" {
+					return "", errors.New("OP_SENDER address if of invalid type (only type 1 is supported currently)")
+				}
+
+				// TODO: Is it necessary to check that the first three ASM entries are valid, as done in QtumJ?
+
+				// TODO: These following sanity checks are present in the QtumJ code used as reference, but will probably always pass for valid blockchain data.
+				// If Janus is stable and performance is a concern these can probably be safely removed
+				if scriptChunks[3] != "OP_SENDER" {
+					return "", errors.New("Expected opcode OP_SENDER missing or malformatted (This should probably never happen with valid blockchain data)")
+				}
+
+				if isOpCreateWithOpSender && scriptChunks[8] != "OP_CREATE" {
+					return "", errors.New("Expected opcode OP_CREATE missing or malformatted (This should probably never happen with valid blockchain data)")
+				}
+
+				if isOpCallWithOpSender && scriptChunks[9] != "OP_CALL" {
+					return "", errors.New("Expected opcode OP_CALL missing or malformatted (This should probably never happen with valid blockchain data)")
+				}
+
+				// TODO: This should already be in hex/eth format, but should we also add a hex prefix?
+				var opSenderAddress = scriptChunks[1]
+
+				return opSenderAddress, nil
+			}
+		}
+	}
+	return "", errors.New("No script with OP_SENDER found in Vouts")
+}
+
 // ========== GetTransactionOut ============= //
 type (
 	GetTransactionOutRequest struct {
