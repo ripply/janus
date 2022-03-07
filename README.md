@@ -317,6 +317,8 @@ $ curl --header 'Content-Type: application/json' --data \
   - Use [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) to sign transactions for use in eth_sendRawTransaction
     - Currently, the library only supports sending 1 tx per block due to Bitcoin inputs being re-used so test your code to redo transactions if they are rejected with eth_sendRawTransaction
       - This will be fixed in a future version
+- Solidity
+  - msg.value is denoted in satoshis, not wei, your dapp needs to handle this correctly
 - Sending coins with the creation of a contract will cause a loss of coins
   - This is a Qtum intentional deisgn decision and will not change
   - Janus will prevent this with eth_sendTransaction but will permit it with eth_sendRawTransaction
@@ -329,13 +331,12 @@ $ curl --header 'Content-Type: application/json' --data \
     - For contract address generation code, see [generateContractAddress](https://github.com/earlgreytech/qtum-ethers/blob/main/src/lib/helpers/utils.ts)
 - Account address generation differs from EVM chains
   - You really only need to worry about this if you need to use the same account address on different chains
-  - eth_accounts and [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) will abstract this away from you
+  - [eth_accounts](pkg/transformer/eth_accounts.go) and [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) will abstract this away from you
   - For account address generation code, see [computeAddress](https://github.com/earlgreytech/qtum-ethers/blob/main/src/lib/helpers/utils.ts)
 - Block hash is computed differently from EVM chains
   - If you are generating the blockhash from the block header, it will be wrong
     - we plan to add a compatiblity layer in Janus to transparently serve the correct block when requesting an Ethereum block hash
-- Solidity
-  - msg.value is denoted in satoshis, not wei, your dapp needs to handle this correctly
+      - this will eventually require hooking up Janus to a database to keep a map of hash(block header) => QTUM block hash
 - Remix
   - Debug calls are not supported so you will not be able to do any debugging in Remix
   - You can use Remix with Janus or [(Alpha) QTUM Metamask fork](https://github.com/earlgreytech/metamask-extension/releases)
@@ -371,7 +372,7 @@ $ curl --header 'Content-Type: application/json' --data \
     - Adding this to Janus is on the roadmap
 - Since QTUM runs on Bitcoin, QTUM has the concept of [dust](https://en.bitcoinwiki.org/wiki/Cryptocurrency_dust)
   - Janus delegates transaction signing to QTUM so QTUM will handle dealing with dust
-  - [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) currently uses dust, but at some point will prevent spending dust
+  - [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) currently uses dust, but at some point will prevent spending dust by default with a semver change
 - On a transfer of Qtum to a Qtum address, there is no receipt generated for such a transfer
 - When converting from WEI -> QTUM, precision is lost due to QTUM's smallest demonination being 1 satoshi.
   - 1 satoshi = 0.00000001 QTUM = 10000000000 wei
