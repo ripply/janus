@@ -360,12 +360,15 @@ $ curl --header 'Content-Type: application/json' --data \
     - Support for Pay to public key (P2PK) input scripts is on the roadmap
 - [eth_estimateGas](/pkg/transformer/eth_estimateGas.go)
   - Gas estimation on QTUM is not perfect, so a buffer of 10% is added in Janus
+  - Gas will be refunded in the block that your transaction is mined
+    - Keep in mind that to re-use this gas refund, you must wait 2000 blocks
 - [eth_sendTransaction](/pkg/transformer/eth_sendTransaction.go)
   - When trying to send all your QTUM Balance in a transaction, in EVM you would do value = total - (gas limit * gas price)
   - Since QTUM uses Bitcoin transactions, the cost of a transaction differs based on how many bytes are in the transaction
     - This means if you have many inputs in a transaction, it will cost more to send
   - There is no easy way to send your entire QTUM balance in a single transaction with Janus
     - However, [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) supports this via value = total - (gas limit * gas price)
+    - Adding this to Janus is on the roadmap
 - Since QTUM runs on Bitcoin, QTUM has the concept of [dust](https://en.bitcoinwiki.org/wiki/Cryptocurrency_dust)
   - Janus delegates transaction signing to QTUM so QTUM will handle dealing with dust
   - [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) currently uses dust, but at some point will prevent spending dust
