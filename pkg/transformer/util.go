@@ -133,19 +133,21 @@ func unmarshalRequest(data []byte, v interface{}) error {
 }
 
 // Function for getting the sender address of a transaction by ID.
-// As per design desicion for Janus, the address of the first Vin is used
-//
-// txID string		- ID (hash) of valid Qtum non-reward (and non-contract?) transaction
-//
-// return string	- Sender address for given transaction, hex-prefixed eth format
+// If OP_SENDER operation is found in any Vout script, that address is used. If not then the address of the first Vin is used, as per design decision.
 //
 // TODO: Investigate if limitations on Qtum RPC command GetRawTransaction can cause issues here
 // Brief explanation: A default config Qtum node can only serve this command for transactions in the mempool, so it will likely break for SOME setup at SOME point.
 // However the same info can be found with getblock verbosity = 2, so maybe use that instead?
+func getNonContractTxSenderAddress(p *qtum.Qtum, tx *qtum.DecodedRawTransactionResponse) (string, error) {
+	// We start by checking for OP_SENDER address data, since it by definition overrides UTXO origin address in this context.
+	// Also nice because it doesn't require another RPC call
+	hexAddress, err := tx.GetOpSenderAddress()
+	if err == nil {
+		return utils.AddHexPrefix(hexAddress), nil
+	}
 
-func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
-	// Get raw Tx struct which contains the Vin address data we need
-	rawTx, err := p.GetRawTransaction(txID, false)
+	// If no OP_SENDER address is found we fetch raw Tx struct, which contains address data for Vins
+	rawTx, err := p.GetRawTransaction(tx.ID, false)
 
 	if err != nil {
 		return "", errors.New("Couldn't get raw Transaction data from Transaction ID: " + err.Error())
@@ -160,11 +162,11 @@ func getNonContractTxSenderAddress(p *qtum.Qtum, txID string) (string, error) {
 	// TODO: Make this not loop, it's not necessary and can in theory produce unintended behavior without causing an error
 	// TODO (research): Is the raw TX Vin list always in the "correct" order? It has to be for this function to produce correct behavior
 	for _, in := range rawTx.Vins {
-		hex, err := utils.ConvertQtumAddress(in.Address)
+		hexAddress, err := utils.ConvertQtumAddress(in.Address)
 		if err != nil {
 			return "", err
 		}
-		return utils.AddHexPrefix(hex), nil
+		return utils.AddHexPrefix(hexAddress), nil
 	}
 
 	return "", errors.New("No address found for any Vin")

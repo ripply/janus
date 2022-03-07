@@ -288,6 +288,24 @@ var (
 		R:                "0x0",
 		S:                "0x0",
 	}
+	// Ugly solution to make tests pass 2.0: Electric Buggaloo
+	// Test setup could really use some love
+	GetTransactionByHashResponseDataWithOpSender = eth.GetTransactionByHashResponse{
+		BlockHash:        "0xbba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5",
+		BlockNumber:      "0xf8f",
+		TransactionIndex: "0x2",
+		Hash:             "0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
+		Nonce:            "0x0",
+		Value:            "0x0",
+		Input:            "0xa9059cbb000000000000000000000000710e94d7f8a5d7a1e5be52bd783370d6e3008a2a0000000000000000000000000000000000000000000000000000000005f5e100",
+		From:             "0x81e872329e767a0487de7e970992b13b644f1f4f",
+		To:               "0xaf1ae4e29253ba755c723bca25e883b8deb777b8",
+		Gas:              "0x64366438",
+		GasPrice:         "0x3238",
+		V:                "0x0",
+		R:                "0x0",
+		S:                "0x0",
+	}
 
 	GetTransactionByHashResponse = CreateTransactionByHashResponse()
 
