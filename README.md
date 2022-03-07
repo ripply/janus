@@ -330,7 +330,7 @@ $ curl --header 'Content-Type: application/json' --data \
 - Account address generation differs from EVM chains
   - You really only need to worry about this if you need to use the same account address on different chains
   - eth_accounts and [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) will abstract this away from you
-  - For account address generation code, see [computeAddress][https://github.com/earlgreytech/qtum-ethers/blob/main/src/lib/helpers/utils.ts]
+  - For account address generation code, see [computeAddress](https://github.com/earlgreytech/qtum-ethers/blob/main/src/lib/helpers/utils.ts)
 - Block hash is computed differently from EVM chains
   - If you are generating the blockhash from the block header, it will be wrong
     - we plan to add a compatiblity layer in Janus to transparently serve the correct block when requesting an Ethereum block hash
@@ -351,14 +351,15 @@ $ curl --header 'Content-Type: application/json' --data \
     - this can result in transactions being rejected
   - [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) will not use immature coins for transactions, but if you end up using high gas limits for your transactions you could quickly run out of usable coins
     - if there are no mature coins, the transaction will fail locally
-- Bitcoin input types
+- Bitcoin input scripts
   - Bitcoin has many different types of scripts
+    - For a detailed primer on this topic see [A breakdown of Bitcoin "standard" script types (crazy long)](https://www.reddit.com/r/Bitcoin/comments/jmiko9/a_breakdown_of_bitcoin_standard_script_types/)
   - [eth_sendTransaction](/pkg/transformer/eth_sendTransaction.go) delegates transaction signing to QTUM so most input scripts should be supported
   - [(Beta) QTUM ethers-js library](https://github.com/earlgreytech/qtum-ethers) deals with signing transactions locally and only supports Pay to public key hash (P2PKH) scripts, other script types will be ignored and not selected.
     - This can result in your spendable balance being lower than your actual balance.
-  - For a detailed primer on this topic see [A breakdown of Bitcoin "standard" script types (crazy long)](https://www.reddit.com/r/Bitcoin/comments/jmiko9/a_breakdown_of_bitcoin_standard_script_types/)
+    - Support for Pay to public key (P2PK) input scripts is on the roadmap
 - [eth_estimateGas](/pkg/transformer/eth_estimateGas.go)
-  - Gas estimation on QTUM is not perfect so a buffer of 10% is added in Janus
+  - Gas estimation on QTUM is not perfect, so a buffer of 10% is added in Janus
 - [eth_sendTransaction](/pkg/transformer/eth_sendTransaction.go)
   - When trying to send all your QTUM Balance in a transaction, in EVM you would do value = total - (gas limit * gas price)
   - Since QTUM uses Bitcoin transactions, the cost of a transaction differs based on how many bytes are in the transaction
