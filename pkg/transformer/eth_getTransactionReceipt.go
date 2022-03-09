@@ -80,6 +80,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 		BlockNumber:       hexutil.EncodeUint64(qtumReceipt.BlockNumber),
 		ContractAddress:   utils.AddHexPrefixIfNotEmpty(qtumReceipt.ContractAddress),
 		CumulativeGasUsed: hexutil.EncodeUint64(qtumReceipt.CumulativeGasUsed),
+		EffectiveGasPrice: "0x0",
 		GasUsed:           hexutil.EncodeUint64(qtumReceipt.GasUsed),
 		From:              utils.AddHexPrefixIfNotEmpty(qtumReceipt.From),
 		To:                utils.AddHexPrefixIfNotEmpty(qtumReceipt.To),
