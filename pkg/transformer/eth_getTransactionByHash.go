@@ -10,7 +10,6 @@ import (
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
-	"github.com/shopspring/decimal"
 )
 
 // ProxyETHGetTransactionByHash implements ETHProxy
@@ -158,13 +157,14 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 		}
 		ethTx.Gas = utils.AddHexPrefix(qtumTxContractInfo.GasLimit)
 		// Gas price is in hex satoshis, convert to wei
-		gasPriceInWei, err := QtumValueToETHAmount(qtumTxContractInfo.GasPrice, decimal.Zero)
+		gasPriceInSatoshis, err := utils.DecodeBig(qtumTxContractInfo.GasPrice)
 		if err != nil {
-			p.GetErrorLogger().Log("msg", "Failed to convert satoshis to wei: "+qtumTxContractInfo.GasPrice, "error", err.Error())
-			return ethTx, eth.NewCallbackError("Failed to convert satoshi gas price to wei")
+			p.GetErrorLogger().Log("msg", "Failed to parse gasPrice: "+qtumTxContractInfo.GasPrice, "error", err.Error())
+			return ethTx, eth.NewCallbackError("Failed to parse gasPrice")
 		}
 
-		ethTx.GasPrice = hexutil.EncodeBig(gasPriceInWei.BigInt())
+		gasPriceInWei := convertFromSatoshiToWei(gasPriceInSatoshis)
+		ethTx.GasPrice = hexutil.EncodeBig(gasPriceInWei)
 
 		return ethTx, nil
 	}

@@ -301,7 +301,7 @@ var (
 		From:             "0x81e872329e767a0487de7e970992b13b644f1f4f",
 		To:               "0xaf1ae4e29253ba755c723bca25e883b8deb777b8",
 		Gas:              "0xd6d8",
-		GasPrice:         "0x22b1c8c1227a00000",
+		GasPrice:         "0x9502f9000",
 		V:                "0x0",
 		R:                "0x0",
 		S:                "0x0",
