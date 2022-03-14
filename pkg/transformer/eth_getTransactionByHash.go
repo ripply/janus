@@ -10,6 +10,7 @@ import (
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
+	"github.com/shopspring/decimal"
 )
 
 // ProxyETHGetTransactionByHash implements ETHProxy
@@ -155,8 +156,15 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 		} else {
 			ethTx.To = utils.AddHexPrefix(qtumTxContractInfo.To)
 		}
-		ethTx.Gas = hexutil.Encode([]byte(qtumTxContractInfo.GasLimit))
-		ethTx.GasPrice = hexutil.Encode([]byte(qtumTxContractInfo.GasPrice))
+		ethTx.Gas = utils.AddHexPrefix(qtumTxContractInfo.GasLimit)
+		// Gas price is in hex satoshis, convert to wei
+		gasPriceInWei, err := QtumValueToETHAmount(qtumTxContractInfo.GasPrice, decimal.Zero)
+		if err != nil {
+			p.GetErrorLogger().Log("msg", "Failed to convert satoshis to wei: "+qtumTxContractInfo.GasPrice, "error", err.Error())
+			return ethTx, eth.NewCallbackError("Failed to convert satoshi gas price to wei")
+		}
+
+		ethTx.GasPrice = hexutil.EncodeBig(gasPriceInWei.BigInt())
 
 		return ethTx, nil
 	}
