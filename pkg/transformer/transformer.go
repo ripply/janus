@@ -90,7 +90,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy 
 	getFilterChanges := &ProxyETHGetFilterChanges{Qtum: qtumRPCClient, filter: filter}
 	ethCall := &ProxyETHCall{Qtum: qtumRPCClient}
 
-	return []ETHProxy{
+	ethProxies := []ETHProxy{
 		ethCall,
 		&ProxyNetListening{Qtum: qtumRPCClient},
 		&ProxyETHPersonalUnlockAccount{},
@@ -135,9 +135,28 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy 
 		&ETHUnsubscribe{Qtum: qtumRPCClient, Agent: agent},
 
 		&ProxyQTUMGetUTXOs{Qtum: qtumRPCClient},
+		&ProxyQTUMGenerateToAddress{Qtum: qtumRPCClient},
 
 		&ProxyNetPeerCount{Qtum: qtumRPCClient},
 	}
+
+	permittedQtumCalls := []string{
+		qtum.MethodGetHexAddress,
+		qtum.MethodFromHexAddress,
+	}
+
+	for _, qtumMethod := range permittedQtumCalls {
+		ethProxies = append(
+			ethProxies,
+			&ProxyQTUMGenericStringArguments{
+				Qtum:   qtumRPCClient,
+				prefix: "dev",
+				method: qtumMethod,
+			},
+		)
+	}
+
+	return ethProxies
 }
 
 func SetDebug(debug bool) func(*Transformer) error {

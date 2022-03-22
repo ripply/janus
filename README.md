@@ -161,6 +161,7 @@ Getting Janus to work with Metamask requires two things
 -   [eth_getLogs](pkg/transformer/eth_getLogs.go)
 
 ## Websocket ETH methods (endpoint at /)
+
 -   (All the above methods)
 -   [eth_subscribe](pkg/transformer/eth_subscribe.go) (only 'logs' for now)
 -   [eth_unsubscribe](pkg/transformer/eth_unsubscribe.go)
@@ -168,6 +169,13 @@ Getting Janus to work with Metamask requires two things
 ## Janus methods
 
 -   [qtum_getUTXOs](pkg/transformer/qtum_getUTXOs.go)
+
+## Development methods
+Use these to speed up development, but don't rely on them in your dapp
+
+-   [dev_gethexaddress](https://docs.qtum.site/en/Qtum-RPC-API/#gethexaddress) Convert Qtum base58 address to hex
+-   [dev_fromhexaddress](https://docs.qtum.site/en/Qtum-RPC-API/#fromhexaddress) Convert from hex to Qtum base58 address for the connected network (strip 0x prefix from address when calling this)
+-   [dev_generatetoaddress](https://docs.qtum.site/en/Qtum-RPC-API/#generatetoaddress) Mines blocks in regtest (accepts hex/base58 addresses - keep in mind that to use these coins, you must mine 2000 blocks)
 
 ## Health checks
 
